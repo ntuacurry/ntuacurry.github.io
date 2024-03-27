@@ -1,131 +1,37 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 	<head>
-		<meta http-equiv=”Content-Type” content=”text/html; charset=utf-8″>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 		<title>消化試驗</title>
 		<script src="https://cdn.staticfile.net/Chart.js/3.9.1/chart.js"></script>
-		<script src='https://cdn.staticfile.net/exceljs/4.4.0/exceljs.js'></script>		
+		<script src="https://cdn.staticfile.net/exceljs/4.4.0/exceljs.js"></script>
+		<script src="./buttonFunc.js"></script>
+		<link rel="stylesheet" type="text/css" href="./style.css">
+		
 	</head>
 	<body>
-		<script>
-			let X = [];
-			let Y = [];
-			let initial_time;
-			let n = 0;
-			function START(){
-				ini = new Date().getTime();
-				X.push(0);	
-				Y.push(0);
-				chart.labels = X;
-				chart.data.datasets[0].data = Y;
-				chart.update()
-				document.getElementById("start").disabled=true;
-				n++;
-			}
-			
-			function ADD_50(){
-				let now = new Date().getTime();
-				time_dif = (((now - ini) / 1000) / 60);
-				document.getElementById("finish").disabled=false;
-				X.push(time_dif);
-				Y.push(Y[n - 1] + 50);
-				chart.labels = X;
-				chart.data.datasets[0].data = Y;
-				chart.update()
-				n++;
-			}
-
-			function ADD_25(){
-				let now = new Date().getTime();
-				time_dif = (((now - ini) / 1000) / 60);
-				document.getElementById("finish").disabled=false;
-				X.push(time_dif);
-				Y.push(Y[n - 1] + 25);
-				chart.labels = X;
-				chart.data.datasets[0].data = Y;
-				chart.update()
-				n++;
-			}
-
-			function NO_ADD(){
-				let now = new Date().getTime();
-				time_dif = (((now - ini) / 1000) / 60);
-				document.getElementById("finish").disabled=false;
-				X.push(time_dif);
-				Y.push(Y[n - 1]);
-				chart.labels = X;
-				chart.data.datasets[0].data = Y;
-				chart.update()
-				n++;
-			}
-
-			function FINISH(){
-				let now = new Date().getTime();
-				alert("自1970.01.01以來過了" + (ini / 1000) + "秒");
-			}
-			
-			function Download() {
-				rows = [];
-				for (let i = 0; i < n; i++) {
-					rows.push([X[i], Y[i]]);
-				};
-
-				const workbook = new ExcelJS.Workbook();
-				const sheet = workbook.addWorksheet("脂解試驗");
-
-				sheet.addTable({
-					name: "digestion",
-					ref: "A1",
-					columns: [{name: "時間 (min)"}, {name: "NaOH使用量 (μL)"}],
-					rows: rows
-				});
-
-				workbook.xlsx.writeBuffer().then((content) => {
-					const link = document.createElement("a");
-					const blobData = new Blob([content], {
-					type: "application / vnd.ms - excel; charset=utf - 8; "
-				});
-				link.download = "消化試驗.xlsx";
-				link.href = URL.createObjectURL(blobData);
-				link.click();
-			  });
-			}
-		</script>
 		<div>
-			<button id="start" style="width:150px;height:60px;font-size:32px;" onclick="START()">消化開始</button>
+			<div class="header">
+				脂解試驗數據紀錄
+			</div>
+			<div>
+				<button id="start" style="width:150px;height:60px;font-size:32px;" onclick="START()">消化開始</button>
+			</div>
+			<hr>
+			<div>
+				<button id="add50" style="width:250px;height:100px;font-size:28px;" onclick="ADD_50()">添加50 µL NaOH</button>
+				<button id="add25" style="width:250px;height:100px;font-size:28px;" onclick="ADD_25()">添加25 µL NaOH</button>
+				<button id="blank" style="width:250px;height:100px;font-size:28px;" onclick="NO_ADD()">什麼都沒加</button>
+			</div>
+			<hr>
+			<div>
+				<button id="finish" style="width:150px;height:60px;font-size:24px;" disabled="disabled" onclick="Download()">結束並存檔</button>
+			</div>
+			<div style="height:50%;width:50%">
+				<canvas id="chart" width="917" height="458" style="display: block; box-sizing: border-box; height: 458px; width: 917px;">
+					<script src="./chartDigest.js"></script>
+				</canvas>
+			</div>
 		</div>
-		<hr>
-		<div>
-			<button id="add50" style="width:250px;height:100px;font-size:28px;" onclick="ADD_50()">添加50 µL NaOH</button>
-			<button id="add25" style="width:250px;height:100px;font-size:28px;" onclick="ADD_25()">添加25 µL NaOH</button>
-			<button id="blank" style="width:250px;height:100px;font-size:28px;" onclick="NO_ADD()">什麼都沒加</button>
-		</div>
-		<hr>
-		<div>
-			<button id="finish" style="width:150px;height:60px;font-size:24px;" disabled="disabled" onclick="Download()">結束並存檔</button>
-		</div>
-		<div style="height:50%;width:50%">
-			<canvas id="chart">
-				<script>
-					let ctx = document.getElementById("chart");
-					let labels = X;
-					let data = {
-						labels: labels, 
-						datasets: [{
-							label: "脂解試驗", 
-							data: Y, 
-							fill: false, 
-							borderColor: "rgb(0, 0, 0)", 
-							tension: 0.1
-						}]
-					};
-					const config = {
-						type: "line", 
-						data: data, 
-					};
-					let chart = new Chart(ctx, config);
-				</script>
-			</canvas>
-		</div>		
 	</body>
 </html>
