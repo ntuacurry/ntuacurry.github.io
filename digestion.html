@@ -5,8 +5,8 @@
 		<title>消化試驗</title>
 		<script src="https://cdn.staticfile.net/Chart.js/3.9.1/chart.js"></script>
 		<script src="https://cdn.staticfile.net/exceljs/4.4.0/exceljs.js"></script>
-		<script src="https://ntuacurry.github.io/buttonFunc.js"></script>
-		<link rel="stylesheet" type="text/css" href="https://ntuacurry.github.io/style.css">
+		<script src="https://ntuacurry.github.io/Repository/buttonFunc.js"></script>
+		<link rel="stylesheet" type="text/css" href="https://ntuacurry.github.io/Repository/style.css">
 		
 	</head>
 	<body>
@@ -14,22 +14,22 @@
 			<div class="header">
 				脂解試驗數據紀錄
 			</div>
-			<div>
-				<button id="start" style="width:150px;height:60px;font-size:32px;" onclick="START()">消化開始</button>
+			<div class="Start">
+				<button id="start" class="start" onclick="START()">消化開始</button>
 			</div>
-			<hr>
-			<div>
-				<button id="add50" style="width:250px;height:100px;font-size:28px;" onclick="ADD_50()">添加50 µL NaOH</button>
-				<button id="add25" style="width:250px;height:100px;font-size:28px;" onclick="ADD_25()">添加25 µL NaOH</button>
-				<button id="blank" style="width:250px;height:100px;font-size:28px;" onclick="NO_ADD()">什麼都沒加</button>
+
+			<div class="Add">
+				<button id="add50" class="add50" onclick="ADD_50()">添加50 µL NaOH</button>
+				<button id="add25" class="add25" onclick="ADD_25()">添加25 µL NaOH</button>
+				<button id="blank" class="blank" onclick="NO_ADD()">什麼都沒加</button>
 			</div>
-			<hr>
-			<div>
+
+			<div class="Finish">
 				<button id="finish" style="width:150px;height:60px;font-size:24px;" disabled="disabled" onclick="Download()">結束並存檔</button>
 			</div>
-			<div style="height:50%;width:50%">
-				<canvas id="chart" width="917" height="458" style="display: block; box-sizing: border-box; height: 458px; width: 917px;">
-					<script src="https://ntuacurry.github.io/chartDigest.js"></script>
+			<div class="chart">
+				<canvas id="chart" class="canvas">
+					<script src="https://ntuacurry.github.io/Repository/chartDigest.js"></script>
 				</canvas>
 			</div>
 		</div>
