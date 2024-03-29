@@ -7,9 +7,8 @@
 		<script src="https://cdn.staticfile.net/exceljs/4.4.0/exceljs.js"></script>
 		<script src="https://ntuacurry.github.io/buttonFunc.js"></script>
 		<link rel="stylesheet" type="text/css" href="https://ntuacurry.github.io/style.css">
-		
 	</head>
-	<body>
+	<body class="body">
 		<div>
 			<div class="header">
 				脂解試驗數據紀錄
@@ -25,11 +24,14 @@
 			</div>
 
 			<div class="Finish">
-				<button id="finish" style="width:150px;height:60px;font-size:24px;" disabled="disabled" onclick="Download()">結束並存檔</button>
+				<button id="finish" class="finish" disabled="disabled" onclick="Download()">結束並存檔</button>
+			</div>
+			<div id="addTime" class="addTime">
+				請按下消化開始以開始記錄數據
 			</div>
 			<div class="chart">
 				<canvas id="chart" class="canvas">
-					<script src="https://ntuacurry.github.io/chartDigest.js"></script>
+					<script src="./chartDigest.js"></script>
 				</canvas>
 			</div>
 		</div>
