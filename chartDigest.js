@@ -14,19 +14,10 @@ const config = {
 	options: {
 		responsive: true, 
 		maintainAspectRatio: false, 
-		plugins: {
-			title: {
-				display: true, 
-				text: "脂解試驗", 
-				font: {
-					size: 36
-				}
-			}, 
-		}, 
 		scales: {
 			x: {
 				type: "linear", 
-				position: "bottom",
+				position: "bottom", 
 				beginAtZero: true,
 				title: {
 					display: true, 
