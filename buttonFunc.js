@@ -12,6 +12,16 @@ function START(){
 	chart.data.datasets[0].data = XY;
 	chart.update()
 	n++;
+	document.getElementById("addTime").innerHTML = "實驗開始";
+}
+
+function ADDTIME(now) {
+		addTime = new Date(now);
+		H = addTime.getHours() < 10 ? "0" + addTime.getHours():addTime.getHours()
+		M = addTime.getMinutes() < 10 ? "0" + addTime.getMinutes():addTime.getMinutes()
+		S = addTime.getSeconds() < 10 ? "0" + addTime.getSeconds():addTime.getSeconds()
+		addTimeStr = ("上次加NaOH的時間為" + H + ":" + M + ":" + S);
+		return addTimeStr
 }
 
 function ADD_50(){
@@ -27,6 +37,7 @@ function ADD_50(){
 		chart.data.datasets[0].data = XY;
 		chart.update()
 		n++;
+		document.getElementById("addTime").innerHTML = ADDTIME(now);
 	}
 }
 
@@ -43,6 +54,7 @@ function ADD_25(){
 		chart.data.datasets[0].data = XY;
 		chart.update()
 		n++;
+		document.getElementById("addTime").innerHTML = ADDTIME(now);
 	}
 }
 
@@ -59,6 +71,7 @@ function NO_ADD(){
 		chart.data.datasets[0].data = XY;
 		chart.update()
 		n++;
+		document.getElementById("addTime").innerHTML = ADDTIME(now);
 	}
 }
 
