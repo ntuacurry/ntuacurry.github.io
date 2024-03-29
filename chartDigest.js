@@ -27,6 +27,7 @@ const config = {
 			x: {
 				type: "linear", 
 				position: "bottom",
+				beginAtZero: true,
 				title: {
 					display: true, 
 					text: "時間 (min)", 
