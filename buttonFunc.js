@@ -13,15 +13,27 @@ function START(){
 	chart.update()
 	n++;
 	document.getElementById("addTime").innerHTML = "實驗開始";
+	document.getElementById("start").innerHTML = ENDTIME(ini);
+	document.getElementById("start").style.width = "400px";
+	document.getElementById("start").style.color = "rgb(255, 0, 0)";
 }
 
-function ADDTIME(now) {
+function ADDTIME(timestamp) {
 		addTime = new Date(now);
 		H = addTime.getHours() < 10 ? "0" + addTime.getHours():addTime.getHours()
 		M = addTime.getMinutes() < 10 ? "0" + addTime.getMinutes():addTime.getMinutes()
 		S = addTime.getSeconds() < 10 ? "0" + addTime.getSeconds():addTime.getSeconds()
 		addTimeStr = ("上次加NaOH的時間為" + H + ":" + M + ":" + S);
 		return addTimeStr
+}
+
+function ENDTIME(timestamp) {
+		endTime = new Date(now);
+		H = (endTime.getHours() + 2) < 10 ? "0" + endTime.getHours():endTime.getHours()
+		M = endTime.getMinutes() < 10 ? "0" + endTime.getMinutes():endTime.getMinutes()
+		S = endTime.getSeconds() < 10 ? "0" + endTime.getSeconds():endTime.getSeconds()
+		endTimeStr = ("預計結束時間為" + H + ":" + M + ":" + S);
+		return endTimeStr
 }
 
 function ADD_50(){
