@@ -18,7 +18,7 @@ function START(){
 	document.getElementById("start").style.color = "rgb(255, 0, 0)";
 }
 
-function ADDTIME(timestamp) {
+function ADDTIME(now) {
 		addTime = new Date(now);
 		H = addTime.getHours() < 10 ? "0" + addTime.getHours():addTime.getHours()
 		M = addTime.getMinutes() < 10 ? "0" + addTime.getMinutes():addTime.getMinutes()
@@ -27,7 +27,7 @@ function ADDTIME(timestamp) {
 		return addTimeStr
 }
 
-function ENDTIME(timestamp) {
+function ENDTIME(now) {
 		endTime = new Date(now);
 		H = (endTime.getHours() + 2) < 10 ? "0" + endTime.getHours():endTime.getHours()
 		M = endTime.getMinutes() < 10 ? "0" + endTime.getMinutes():endTime.getMinutes()
