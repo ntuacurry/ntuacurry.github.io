@@ -29,7 +29,7 @@ function ADDTIME(now) {
 
 function ENDTIME(now) {
 		endTime = new Date(now);
-		H = (endTime.getHours() + 2) < 10 ? "0" + endTime.getHours():endTime.getHours()
+		H = (endTime.getHours() + 2) < 10 ? "0" + (endTime.getHours() + 2):(endTime.getHours() + 2)
 		M = endTime.getMinutes() < 10 ? "0" + endTime.getMinutes():endTime.getMinutes()
 		S = endTime.getSeconds() < 10 ? "0" + endTime.getSeconds():endTime.getSeconds()
 		endTimeStr = ("預計結束時間為" + H + ":" + M + ":" + S);
