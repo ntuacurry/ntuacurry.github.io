@@ -1,27 +1,41 @@
-// 替換為您的 Google Sheets API 憑證
-const CLIENT_ID = '269340063869-hua6h3613jrk1oe4sgaicakod3pm3q20.apps.googleusercontent.com';
-const API_KEY = 'AIzaSyAdQ9w_Y97e8PUXbntYcZwT6i6cm3Qqbrw';
-const SPREADSHEET_ID = '1hZqpxjsez2T8BNYI95F-uEe-XuXJZXZ-8S2sJ7xQ4kc';
+const CLIENT_ID = '您的客戶端ID';
+const API_KEY = '您的API密鑰';
+const SPREADSHEET_ID = '您的試算表ID';
 const RANGE = 'Sheet1!A:D';
 
+let tokenClient;
 let expenses = [];
 let currentDisplayMonth = new Date();
 
-// 初始化 Google Sheets API
 function initClient() {
+    tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: CLIENT_ID,
+        scope: 'https://www.googleapis.com/auth/spreadsheets',
+        callback: (tokenResponse) => {
+            if (tokenResponse && tokenResponse.access_token) {
+                loadExpenses();
+            }
+        },
+    });
+
+    gapi.load('client', initGapiClient);
+}
+
+function initGapiClient() {
     gapi.client.init({
         apiKey: API_KEY,
-        clientId: CLIENT_ID,
         discoveryDocs: ["https://sheets.googleapis.com/$discovery/rest?version=v4"],
-        scope: "https://www.googleapis.com/auth/spreadsheets"
-    }).then(function () {
-        loadExpenses();
-    }, function(error) {
-        console.error('Error initializing Google Sheets API', error);
+    }).then(() => {
+        console.log('GAPI client initialized');
+    }, (error) => {
+        console.error('Error initializing GAPI client', error);
     });
 }
 
-// 載入支出數據
+function getToken() {
+    tokenClient.requestAccessToken();
+}
+
 function loadExpenses() {
     gapi.client.sheets.spreadsheets.values.get({
         spreadsheetId: SPREADSHEET_ID,
@@ -42,7 +56,6 @@ function loadExpenses() {
     });
 }
 
-// 添加新支出
 function addExpense(date, amount, type, note) {
     gapi.client.sheets.spreadsheets.values.append({
         spreadsheetId: SPREADSHEET_ID,
@@ -268,12 +281,10 @@ function updateMonthDisplay() {
         `${currentDisplayMonth.getFullYear()}年 ${monthNames[currentDisplayMonth.getMonth()]}`;
 }
 
-// 初始化頁面
 function init() {
-    gapi.load('client:auth2', initClient);
+    gapi.load('client', initClient);
     updateMonthDisplay();
     openTab('home');
 }
 
-// 當頁面加載完成時調用 init 函數
 window.onload = init;
