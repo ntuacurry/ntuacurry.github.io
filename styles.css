@@ -25,6 +25,16 @@ body, html {
     position: relative;
 }
 
+.daily-expenses {
+    margin: 20px 0;
+    text-align: center;
+    font-size: 18px;
+}
+
+.daily-expenses p {
+    margin: 10px 0;
+}
+
 .tab-button {
     padding: 10px;
     margin-bottom: 10px;
