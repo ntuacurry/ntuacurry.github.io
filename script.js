@@ -41,16 +41,16 @@ function loadExpenses() {
     const sheetName = getCurrentSheetName();
     gapi.client.sheets.spreadsheets.values.get({
         spreadsheetId: SPREADSHEET_ID,
-        range: `${sheetName}!A:D`
+        range: `${sheetName}!A:E`
     }).then(function(response) {
         const values = response.result.values;
         if (values && values.length > 0) {
-            expenses = values.map((row, index) => ({
-                id: index,
-                date: row[0],
-                amount: parseInt(row[1]),
-                type: row[2],
-                note: row[3]
+            expenses = values.slice(1).map((row) => ({
+                id: parseInt(row[0]),
+                date: row[1],
+                amount: parseInt(row[2]),
+                type: row[3],
+                note: row[4]
             }));
             updateContent();
         }
@@ -190,13 +190,35 @@ function openTab(tabName) {
     document.getElementById(tabName).style.display = "block";
     document.querySelector(`[onclick="openTab('${tabName}')"]`).classList.add("active");
 
-    updateContent();
+    loadExpenses();  // 重新加载数据
 }
 
 function updateContent() {
     updateExpenseTable();
     updateMealExpensesChart();
     updateOverallExpensesChart();
+    updateDailyExpenses();
+}
+
+function updateDailyExpenses() {
+    const filteredExpenses = getFilteredExpenses();
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth();
+    const currentYear = currentDate.getFullYear();
+    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+    const daysPassed = Math.min(currentDate.getDate(), daysInMonth);
+
+    const totalFoodExpense = filteredExpenses.filter(expense => 
+        ['早餐', '午餐', '晚餐', '飲料', '食物'].includes(expense.type)
+    ).reduce((sum, expense) => sum + expense.amount, 0);
+
+    const totalExpense = filteredExpenses.reduce((sum, expense) => sum + expense.amount, 0);
+
+    const dailyFoodExpense = (totalFoodExpense / daysPassed).toFixed(1);
+    const dailyTotalExpense = (totalExpense / daysInMonth).toFixed(1);
+
+    document.getElementById('dailyFoodExpense').textContent = `日均飲食花費為${dailyFoodExpense}元`;
+    document.getElementById('dailyTotalExpense').textContent = `本月日均開銷為${dailyTotalExpense}元`;
 }
 
 function updateDateTime() {
