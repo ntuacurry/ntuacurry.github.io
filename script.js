@@ -71,6 +71,7 @@ function addExpense(date, amount, type, note) {
         updateContent();
     }, function(response) {
         console.error('Error adding expense', response.result.error.message);
+        getToken(); // 如果遇到授權錯誤，嘗試重新獲取token
     });
 }
 
