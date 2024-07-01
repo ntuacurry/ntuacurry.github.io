@@ -7,20 +7,69 @@ const RANGE = '2024-Jul!A:E';
 let tokenClient;
 let expenses = [];
 let currentDisplayMonth = new Date();
+let isSignedIn = false;
 
 function initClient() {
     tokenClient = google.accounts.oauth2.initTokenClient({
         client_id: CLIENT_ID,
         scope: 'https://www.googleapis.com/auth/spreadsheets',
-        callback: (tokenResponse) => {
-            if (tokenResponse && tokenResponse.access_token) {
-                loadExpenses();
-            }
-        },
+        callback: handleAuthResponse
     });
 
-    gapi.load('client', initGapiClient);
+    // 檢查本地存儲中的登入狀態
+    isSignedIn = localStorage.getItem('isSignedIn') === 'true';
+    updateUIForAuth();
 }
+
+function handleAuth() {
+    if (!isSignedIn) {
+        tokenClient.requestAccessToken();
+    }
+}
+
+function handleAuthResponse(response) {
+    if (response && response.access_token) {
+        isSignedIn = true;
+        localStorage.setItem('isSignedIn', 'true');
+        updateUIForAuth();
+        loadExpenses();
+    }
+}
+
+function updateUIForAuth() {
+    const loginButton = document.getElementById('loginButton');
+    const logoutButton = document.getElementById('logoutButton');
+    
+    if (isSignedIn) {
+        loginButton.style.display = 'none';
+        logoutButton.style.display = 'block';
+        // 顯示收支儀錶板資訊
+        openTab('dashboard');
+    } else {
+        loginButton.style.display = 'block';
+        logoutButton.style.display = 'none';
+        // 隱藏敏感資訊
+        document.getElementById('dashboard').style.display = 'none';
+        document.getElementById('expenses').style.display = 'none';
+        document.getElementById('budget').style.display = 'none';
+    }
+}
+
+function handleSignOut() {
+    isSignedIn = false;
+    localStorage.removeItem('isSignedIn');
+    updateUIForAuth();
+    // 清除 Google 授權
+    google.accounts.oauth2.revoke(tokenClient.access_token, () => {console.log('Token revoked')});
+}
+
+// 在頁面加載時檢查登入狀態
+window.onload = function() {
+    initClient();
+    if (isSignedIn) {
+        loadExpenses();
+    }
+};
 
 function initGapiClient() {
     gapi.client.init({
@@ -180,6 +229,11 @@ function createNewSheet(sheetName) {
 }
 
 function openTab(tabName) {
+    if (!isSignedIn && tabName !== 'login') {
+        alert('請先登入');
+        return;
+    }
+
     var tabContent = document.getElementsByClassName("tab-content");
     for (var i = 0; i < tabContent.length; i++) {
         tabContent[i].style.display = "none";
@@ -191,10 +245,11 @@ function openTab(tabName) {
     document.getElementById(tabName).style.display = "block";
     document.querySelector(`[onclick="openTab('${tabName}')"]`).classList.add("active");
 
-    loadExpenses();
-
-    if (tabName === 'dashboard' || tabName === 'expenses') {
-        updateDailyExpenses();
+    if (isSignedIn) {
+        loadExpenses();
+        if (tabName === 'dashboard' || tabName === 'expenses') {
+            updateDailyExpenses();
+        }
     }
 }
 
