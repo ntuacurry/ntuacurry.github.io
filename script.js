@@ -44,7 +44,8 @@ function loadExpenses() {
     }).then(function(response) {
         const values = response.result.values;
         if (values && values.length > 0) {
-            expenses = values.map(row => ({
+            expenses = values.map((row, index) => ({
+                id: index,
                 date: row[0],
                 amount: parseInt(row[1]),
                 type: row[2],
@@ -66,12 +67,50 @@ function addExpense(date, amount, type, note) {
             values: [[date, amount, type, note]]
         }
     }).then(function(response) {
-        expenses.push({date, amount: parseInt(amount), type, note});
+        const newExpense = {id: expenses.length, date, amount: parseInt(amount), type, note};
+        expenses.push(newExpense);
         expenses.sort((a, b) => new Date(a.date) - new Date(b.date));
         updateContent();
     }, function(response) {
         console.error('Error adding expense', response.result.error.message);
         getToken(); // 如果遇到授權錯誤，嘗試重新獲取token
+    });
+}
+
+function updateExpense(id, date, amount, type, note) {
+    const index = expenses.findIndex(e => e.id === id);
+    if (index === -1) return;
+
+    gapi.client.sheets.spreadsheets.values.update({
+        spreadsheetId: SPREADSHEET_ID,
+        range: `Sheet1!A${index + 2}:D${index + 2}`,
+        valueInputOption: 'USER_ENTERED',
+        resource: {
+            values: [[date, amount, type, note]]
+        }
+    }).then(function(response) {
+        expenses[index] = {id, date, amount: parseInt(amount), type, note};
+        expenses.sort((a, b) => new Date(a.date) - new Date(b.date));
+        updateContent();
+    }, function(response) {
+        console.error('Error updating expense', response.result.error.message);
+        getToken();
+    });
+}
+
+function deleteExpense(id) {
+    const index = expenses.findIndex(e => e.id === id);
+    if (index === -1) return;
+
+    gapi.client.sheets.spreadsheets.values.clear({
+        spreadsheetId: SPREADSHEET_ID,
+        range: `Sheet1!A${index + 2}:D${index + 2}`
+    }).then(function(response) {
+        expenses.splice(index, 1);
+        updateContent();
+    }, function(response) {
+        console.error('Error deleting expense', response.result.error.message);
+        getToken();
     });
 }
 
@@ -122,6 +161,7 @@ btn.onclick = function() {
 }
 
 function clearModalForm() {
+    document.getElementById('expenseId').value = '';
     document.getElementById('date').value = '';
     document.getElementById('amount').value = '';
     document.getElementById('type').value = '';
@@ -141,13 +181,18 @@ window.onclick = function(event) {
 }
 
 saveButton.onclick = function() {
+    const id = document.getElementById('expenseId').value;
     const date = document.getElementById('date').value;
     const amount = document.getElementById('amount').value;
     const type = document.getElementById('type').value;
     const note = document.getElementById('note').value;
 
     if (date && amount && type) {
-        addExpense(date, amount, type, note);
+        if (id) {
+            updateExpense(parseInt(id), date, amount, type, note);
+        } else {
+            addExpense(date, amount, type, note);
+        }
         modal.style.display = "none";
         clearModalForm();
     } else {
@@ -181,7 +226,27 @@ function updateExpenseTable() {
 
         const noteCell = row.insertCell();
         noteCell.textContent = expense.note;
+
+        const actionCell = row.insertCell();
+        const editButton = document.createElement('button');
+        editButton.textContent = '修改';
+        editButton.onclick = () => editExpense(expense);
+        actionCell.appendChild(editButton);
+
+        const deleteButton = document.createElement('button');
+        deleteButton.textContent = '刪除';
+        deleteButton.onclick = () => deleteExpense(expense.id);
+        actionCell.appendChild(deleteButton);
     });
+}
+
+function editExpense(expense) {
+    document.getElementById('expenseId').value = expense.id;
+    document.getElementById('date').value = expense.date;
+    document.getElementById('amount').value = expense.amount;
+    document.getElementById('type').value = expense.type;
+    document.getElementById('note').value = expense.note;
+    modal.style.display = "block";
 }
 
 function getFilteredExpenses() {
