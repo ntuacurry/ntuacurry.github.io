@@ -265,7 +265,15 @@ var cancelButton = document.getElementById("cancelButton");
 
 btn.onclick = function() {
     modal.style.display = "block";
-    document.getElementById('date').valueAsDate = new Date();
+    
+    // 設置日期選擇器的預設值為當前日期
+    var today = new Date();
+    var dd = String(today.getDate()).padStart(2, '0');
+    var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+    var yyyy = today.getFullYear();
+
+    today = yyyy + '-' + mm + '-' + dd;
+    document.getElementById('date').value = today;
 }
 
 function clearModalForm() {
