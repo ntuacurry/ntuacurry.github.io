@@ -2,7 +2,7 @@
 const CLIENT_ID = '269340063869-hua6h3613jrk1oe4sgaicakod3pm3q20.apps.googleusercontent.com';
 const API_KEY = 'AIzaSyAdQ9w_Y97e8PUXbntYcZwT6i6cm3Qqbrw';
 const SPREADSHEET_ID = '1hZqpxjsez2T8BNYI95F-uEe-XuXJZXZ-8S2sJ7xQ4kc';
-const RANGE = '2024-Jul!A:D';
+const RANGE = '2024-Jul!A:E';
 
 let tokenClient;
 let expenses = [];
@@ -100,7 +100,7 @@ function updateExpense(id, date, amount, type, note) {
         const index = expenses.findIndex(e => e.id === id);
         if (index !== -1) {
             expenses[index] = {id, date, amount: parseInt(amount), type, note};
-            expenses.sort((a, b) => new Date(a.date) - new Date(b.date));
+            updateExpenseTable();
             updateContent();
         }
     }, function(response) {
@@ -118,6 +118,7 @@ function deleteExpense(id) {
         const index = expenses.findIndex(e => e.id === id);
         if (index !== -1) {
             expenses.splice(index, 1);
+            updateExpenseTable();
             updateContent();
         }
     }, function(response) {
