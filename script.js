@@ -2,7 +2,7 @@
 const CLIENT_ID = '269340063869-hua6h3613jrk1oe4sgaicakod3pm3q20.apps.googleusercontent.com';
 const API_KEY = 'AIzaSyAdQ9w_Y97e8PUXbntYcZwT6i6cm3Qqbrw';
 const SPREADSHEET_ID = '1hZqpxjsez2T8BNYI95F-uEe-XuXJZXZ-8S2sJ7xQ4kc';
-const RANGE = 'Sheet1!A:D';
+const RANGE = '2024-Jul!A:D';
 
 let tokenClient;
 let expenses = [];
@@ -38,9 +38,10 @@ function getToken() {
 }
 
 function loadExpenses() {
+    const sheetName = getCurrentSheetName();
     gapi.client.sheets.spreadsheets.values.get({
         spreadsheetId: SPREADSHEET_ID,
-        range: RANGE
+        range: `${sheetName}!A:D`
     }).then(function(response) {
         const values = response.result.values;
         if (values && values.length > 0) {
@@ -59,9 +60,11 @@ function loadExpenses() {
 }
 
 function addExpense(date, amount, type, note) {
+    checkAndCreateSheet();
+    const sheetName = getCurrentSheetName();
     gapi.client.sheets.spreadsheets.values.append({
         spreadsheetId: SPREADSHEET_ID,
-        range: RANGE,
+        range: `${sheetName}!A:D`,
         valueInputOption: 'USER_ENTERED',
         resource: {
             values: [[date, amount, type, note]]
@@ -73,7 +76,7 @@ function addExpense(date, amount, type, note) {
         updateContent();
     }, function(response) {
         console.error('Error adding expense', response.result.error.message);
-        getToken(); // 如果遇到授權錯誤，嘗試重新獲取token
+        getToken();
     });
 }
 
@@ -83,7 +86,7 @@ function updateExpense(id, date, amount, type, note) {
 
     gapi.client.sheets.spreadsheets.values.update({
         spreadsheetId: SPREADSHEET_ID,
-        range: `Sheet1!A${index + 2}:D${index + 2}`,
+        range: `${getCurrentSheetName()}!A${index + 2}:D${index + 2}`,
         valueInputOption: 'USER_ENTERED',
         resource: {
             values: [[date, amount, type, note]]
@@ -104,13 +107,52 @@ function deleteExpense(id) {
 
     gapi.client.sheets.spreadsheets.values.clear({
         spreadsheetId: SPREADSHEET_ID,
-        range: `Sheet1!A${index + 2}:D${index + 2}`
+        range: `${getCurrentSheetName()}!A${index + 2}:D${index + 2}`
     }).then(function(response) {
         expenses.splice(index, 1);
         updateContent();
     }, function(response) {
         console.error('Error deleting expense', response.result.error.message);
         getToken();
+    });
+}
+
+function getCurrentSheetName() {
+    const date = new Date();
+    const year = date.getFullYear();
+    const month = date.toLocaleString('en-US', { month: 'short' });
+    return `${year}-${month}`;
+}
+
+function checkAndCreateSheet() {
+    const sheetName = getCurrentSheetName();
+    gapi.client.sheets.spreadsheets.get({
+        spreadsheetId: SPREADSHEET_ID
+    }).then(function(response) {
+        const sheets = response.result.sheets;
+        const sheetExists = sheets.some(sheet => sheet.properties.title === sheetName);
+        if (!sheetExists) {
+            createNewSheet(sheetName);
+        }
+    });
+}
+
+function createNewSheet(sheetName) {
+    gapi.client.sheets.spreadsheets.batchUpdate({
+        spreadsheetId: SPREADSHEET_ID,
+        resource: {
+            requests: [{
+                addSheet: {
+                    properties: {
+                        title: sheetName
+                    }
+                }
+            }]
+        }
+    }).then(function(response) {
+        console.log('New sheet created:', sheetName);
+    }, function(response) {
+        console.error('Error creating new sheet', response.result.error.message);
     });
 }
 
