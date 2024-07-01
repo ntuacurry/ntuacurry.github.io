@@ -227,24 +227,19 @@ function updateOverallExpensesChart() {
     }
 
     window.overallChart = new Chart(ctx, {
-        type: 'bar',
+        type: 'pie',
         data: {
             labels: categories,
             datasets: [{
-                label: '支出金額',
                 data: categoryExpenses,
-                backgroundColor: 'rgba(75, 192, 192, 0.6)',
-                borderColor: 'rgba(75, 192, 192, 1)',
-                borderWidth: 1
+                backgroundColor: [
+                    '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
+                    '#FF9F40', '#FF6384', '#C9CBCF', '#7CFC00', '#8B4513'
+                ]
             }]
         },
         options: {
             responsive: true,
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
-            },
             title: {
                 display: true,
                 text: '整體支出分布'
