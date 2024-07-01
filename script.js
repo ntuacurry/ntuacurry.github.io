@@ -62,39 +62,47 @@ function loadExpenses() {
 function addExpense(date, amount, type, note) {
     checkAndCreateSheet();
     const sheetName = getCurrentSheetName();
-    gapi.client.sheets.spreadsheets.values.append({
+    gapi.client.sheets.spreadsheets.values.get({
         spreadsheetId: SPREADSHEET_ID,
-        range: `${sheetName}!A:D`,
-        valueInputOption: 'USER_ENTERED',
-        resource: {
-            values: [[date, amount, type, note]]
-        }
+        range: `${sheetName}!A:A`
     }).then(function(response) {
-        const newExpense = {id: expenses.length, date, amount: parseInt(amount), type, note};
-        expenses.push(newExpense);
-        expenses.sort((a, b) => new Date(a.date) - new Date(b.date));
-        updateContent();
-    }, function(response) {
-        console.error('Error adding expense', response.result.error.message);
-        getToken();
+        const values = response.result.values;
+        const newIndex = values ? values.length : 1;
+        gapi.client.sheets.spreadsheets.values.append({
+            spreadsheetId: SPREADSHEET_ID,
+            range: `${sheetName}!A:E`,
+            valueInputOption: 'USER_ENTERED',
+            resource: {
+                values: [[newIndex, date, amount, type, note]]
+            }
+        }).then(function(response) {
+            const newExpense = {id: newIndex, date, amount: parseInt(amount), type, note};
+            expenses.push(newExpense);
+            expenses.sort((a, b) => new Date(a.date) - new Date(b.date));
+            updateContent();
+        }, function(response) {
+            console.error('Error adding expense', response.result.error.message);
+            getToken();
+        });
     });
 }
 
 function updateExpense(id, date, amount, type, note) {
-    const index = expenses.findIndex(e => e.id === id);
-    if (index === -1) return;
-
+    const sheetName = getCurrentSheetName();
     gapi.client.sheets.spreadsheets.values.update({
         spreadsheetId: SPREADSHEET_ID,
-        range: `${getCurrentSheetName()}!A${index + 2}:D${index + 2}`,
+        range: `${sheetName}!A${id + 1}:E${id + 1}`,
         valueInputOption: 'USER_ENTERED',
         resource: {
-            values: [[date, amount, type, note]]
+            values: [[id, date, amount, type, note]]
         }
     }).then(function(response) {
-        expenses[index] = {id, date, amount: parseInt(amount), type, note};
-        expenses.sort((a, b) => new Date(a.date) - new Date(b.date));
-        updateContent();
+        const index = expenses.findIndex(e => e.id === id);
+        if (index !== -1) {
+            expenses[index] = {id, date, amount: parseInt(amount), type, note};
+            expenses.sort((a, b) => new Date(a.date) - new Date(b.date));
+            updateContent();
+        }
     }, function(response) {
         console.error('Error updating expense', response.result.error.message);
         getToken();
@@ -102,15 +110,16 @@ function updateExpense(id, date, amount, type, note) {
 }
 
 function deleteExpense(id) {
-    const index = expenses.findIndex(e => e.id === id);
-    if (index === -1) return;
-
+    const sheetName = getCurrentSheetName();
     gapi.client.sheets.spreadsheets.values.clear({
         spreadsheetId: SPREADSHEET_ID,
-        range: `${getCurrentSheetName()}!A${index + 2}:D${index + 2}`
+        range: `${sheetName}!A${id + 1}:E${id + 1}`
     }).then(function(response) {
-        expenses.splice(index, 1);
-        updateContent();
+        const index = expenses.findIndex(e => e.id === id);
+        if (index !== -1) {
+            expenses.splice(index, 1);
+            updateContent();
+        }
     }, function(response) {
         console.error('Error deleting expense', response.result.error.message);
         getToken();
@@ -151,6 +160,19 @@ function createNewSheet(sheetName) {
         }
     }).then(function(response) {
         console.log('New sheet created:', sheetName);
+        // 添加表頭
+        gapi.client.sheets.spreadsheets.values.update({
+            spreadsheetId: SPREADSHEET_ID,
+            range: `${sheetName}!A1:E1`,
+            valueInputOption: 'USER_ENTERED',
+            resource: {
+                values: [["Index", "Date", "Amount", "Type", "Remark"]]
+            }
+        }).then(function(response) {
+            console.log('Header added to new sheet');
+        }, function(response) {
+            console.error('Error adding header to new sheet', response.result.error.message);
+        });
     }, function(response) {
         console.error('Error creating new sheet', response.result.error.message);
     });
@@ -336,11 +358,32 @@ function updateMealExpensesChart() {
 function updateOverallExpensesChart() {
     const filteredExpenses = getFilteredExpenses();
 
-    const categories = ['食物', '房租+電費', '交通', '手機費', '日常開銷', '投資', '投資自己', '儲蓄', '外幣', '其他'];
-    const categoryExpenses = categories.map(category => 
-        filteredExpenses.filter(expense => expense.type === category)
-                       .reduce((sum, expense) => sum + expense.amount, 0)
-    );
+    const categories = ['飲食', '居住', '交通', '日常生活開銷', '投資自己', '儲蓄', '投資'];
+    const categoryExpenses = categories.map(category => {
+        switch(category) {
+            case '飲食':
+                return filteredExpenses.filter(expense => ['早餐', '午餐', '晚餐', '飲料', '食物'].includes(expense.type))
+                                       .reduce((sum, expense) => sum + expense.amount, 0);
+            case '居住':
+                return filteredExpenses.filter(expense => expense.type === '房租')
+                                       .reduce((sum, expense) => sum + expense.amount, 0);
+            case '交通':
+                return filteredExpenses.filter(expense => expense.type === '交通')
+                                       .reduce((sum, expense) => sum + expense.amount, 0);
+            case '日常生活開銷':
+                return filteredExpenses.filter(expense => ['手機費', '電費', '其他', '日常開銷'].includes(expense.type))
+                                       .reduce((sum, expense) => sum + expense.amount, 0);
+            case '投資自己':
+                return filteredExpenses.filter(expense => expense.type === '投資自己')
+                                       .reduce((sum, expense) => sum + expense.amount, 0);
+            case '儲蓄':
+                return filteredExpenses.filter(expense => expense.type === '儲蓄')
+                                       .reduce((sum, expense) => sum + expense.amount, 0);
+            case '投資':
+                return filteredExpenses.filter(expense => ['投資', '外幣'].includes(expense.type))
+                                       .reduce((sum, expense) => sum + expense.amount, 0);
+        }
+    });
 
     const ctx = document.getElementById('overallExpensesChart').getContext('2d');
     
@@ -356,7 +399,7 @@ function updateOverallExpensesChart() {
                 data: categoryExpenses,
                 backgroundColor: [
                     '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
-                    '#FF9F40', '#FF6384', '#C9CBCF', '#7CFC00', '#8B4513'
+                    '#FF9F40', '#FF6384'
                 ]
             }]
         },
