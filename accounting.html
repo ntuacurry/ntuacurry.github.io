@@ -11,13 +11,18 @@
 </head>
 <body>
     <div class="container">
-        <div class="sidebar">
-            <button class="tab-button active" onclick="openTab('dashboard')">收支儀錶板</button>
-            <button class="tab-button" onclick="openTab('budget')">預算</button>
-            <button class="tab-button" onclick="openTab('expenses')">消費紀錄</button>
-            <button id="addButton" class="add-button">新增</button>
-            <button onclick="getToken()" class="auth-button">授權訪問</button>
-        </div>
+		<div class="sidebar">
+			<div class="sidebar-top">
+				<button class="tab-button active" onclick="openTab('dashboard')">收支儀錶板</button>
+				<button class="tab-button" onclick="openTab('budget')">預算</button>
+				<button class="tab-button" onclick="openTab('expenses')">消費紀錄</button>
+				<button id="addButton" class="add-button">新增</button>
+				<button id="loginButton" onclick="handleAuth()" class="auth-button">以Google帳戶登入</button>
+			</div>
+			<div class="sidebar-bottom">
+				<button id="logoutButton" onclick="handleSignOut()" class="auth-button" style="display: none;">登出</button>
+			</div>
+		</div>
         <div class="content">
             <div id="datetime" class="datetime"></div>
             <div class="month-selector">
@@ -25,10 +30,6 @@
                 <span id="currentMonth"></span>
                 <button id="nextMonth">&gt;</button>
             </div>
-			<div id="dailyExpenses" class="daily-expenses">
-				<p id="dailyFoodExpense"></p>
-				<p id="dailyTotalExpense"></p>
-			</div>
 			<div id="dashboard" class="tab-content active">
 				<h2>收支儀錶板</h2>
 				<div id="dailyExpenses" class="daily-expenses">
