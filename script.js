@@ -191,7 +191,7 @@ function openTab(tabName) {
     document.getElementById(tabName).style.display = "block";
     document.querySelector(`[onclick="openTab('${tabName}')"]`).classList.add("active");
 
-    loadExpenses();  // 重新加载数据
+    loadExpenses();
 }
 
 function updateContent() {
@@ -207,6 +207,8 @@ function updateDailyExpenses() {
     const currentMonth = currentDate.getMonth();
     const currentYear = currentDate.getFullYear();
     const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+    
+    // 計算到當月底
     const daysPassed = Math.min(currentDate.getDate(), daysInMonth);
 
     const totalFoodExpense = filteredExpenses.filter(expense => 
@@ -218,8 +220,22 @@ function updateDailyExpenses() {
     const dailyFoodExpense = (totalFoodExpense / daysPassed).toFixed(1);
     const dailyTotalExpense = (totalExpense / daysInMonth).toFixed(1);
 
-    document.getElementById('dailyFoodExpense').textContent = `日均飲食花費為${dailyFoodExpense}元`;
-    document.getElementById('dailyTotalExpense').textContent = `本月日均開銷為${dailyTotalExpense}元`;
+    // 更新收支儀錶板頁面
+    const dashboardDailyFoodExpenseElement = document.getElementById('dailyFoodExpense');
+    const dashboardDailyTotalExpenseElement = document.getElementById('dailyTotalExpense');
+
+    if (dashboardDailyFoodExpenseElement) {
+        dashboardDailyFoodExpenseElement.textContent = `日均飲食花費為${dailyFoodExpense}元`;
+    }
+    if (dashboardDailyTotalExpenseElement) {
+        dashboardDailyTotalExpenseElement.textContent = `本月日均開銷為${dailyTotalExpense}元`;
+    }
+
+    // 更新消費紀錄頁面
+    const expenseDailyFoodExpenseElement = document.getElementById('expenseDailyFoodExpenseText');
+    if (expenseDailyFoodExpenseElement) {
+        expenseDailyFoodExpenseElement.textContent = `日均飲食花費為${dailyFoodExpense}元`;
+    }
 }
 
 function updateDateTime() {
