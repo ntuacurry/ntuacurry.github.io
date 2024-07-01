@@ -1,6 +1,7 @@
-const CLIENT_ID = '您的客戶端ID';
-const API_KEY = '您的API密鑰';
-const SPREADSHEET_ID = '您的試算表ID';
+// 替換為您的 Google Sheets API 憑證
+const CLIENT_ID = '269340063869-hua6h3613jrk1oe4sgaicakod3pm3q20.apps.googleusercontent.com';
+const API_KEY = 'AIzaSyAdQ9w_Y97e8PUXbntYcZwT6i6cm3Qqbrw';
+const SPREADSHEET_ID = '1hZqpxjsez2T8BNYI95F-uEe-XuXJZXZ-8S2sJ7xQ4kc';
 const RANGE = 'Sheet1!A:D';
 
 let tokenClient;
