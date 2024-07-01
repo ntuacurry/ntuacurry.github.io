@@ -12,7 +12,7 @@
 <body>
     <div class="container">
         <div class="sidebar">
-            <button class="tab-button active" onclick="openTab('home')">首頁</button>
+            <button class="tab-button active" onclick="openTab('dashboard')">收支儀錶板</button>
             <button class="tab-button" onclick="openTab('budget')">預算</button>
             <button class="tab-button" onclick="openTab('expenses')">消費紀錄</button>
             <button id="addButton" class="add-button">新增</button>
@@ -29,8 +29,8 @@
 				<p id="dailyFoodExpense"></p>
 				<p id="dailyTotalExpense"></p>
 			</div>
-			<div id="home" class="tab-content active">
-				<h2>首頁內容</h2>
+			<div id="dashboard" class="tab-content active">
+				<h2>收支儀錶板</h2>
 				<div id="dailyExpenses" class="daily-expenses">
 					<p id="dailyFoodExpense"></p>
 					<p id="dailyTotalExpense"></p>
@@ -48,9 +48,12 @@
                 <h2>預算內容</h2>
                 <!-- 預算內容 -->
             </div>
-            <div id="expenses" class="tab-content">
-                <h2>消費紀錄</h2>
-                <table id="expenseTable">
+			<div id="expenses" class="tab-content">
+				<h2>消費紀錄</h2>
+				<div id="expenseDailyFoodExpense" class="daily-expenses">
+					<p id="expenseDailyFoodExpenseText"></p>
+				</div>
+				<table id="expenseTable">
                     <thead>
                         <tr>
                             <th>日期</th>
@@ -62,8 +65,8 @@
                     <tbody>
                         <!-- 消費紀錄將在這裡動態添加 -->
                     </tbody>
-                </table>
-            </div>
+				</table>
+			</div>
         </div>
     </div>
     <div id="modal" class="modal">
