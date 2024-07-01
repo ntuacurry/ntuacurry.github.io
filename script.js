@@ -192,6 +192,10 @@ function openTab(tabName) {
     document.querySelector(`[onclick="openTab('${tabName}')"]`).classList.add("active");
 
     loadExpenses();
+
+    if (tabName === 'dashboard' || tabName === 'expenses') {
+        updateDailyExpenses();
+    }
 }
 
 function updateContent() {
@@ -221,20 +225,21 @@ function updateDailyExpenses() {
     const dailyTotalExpense = (totalExpense / daysInMonth).toFixed(1);
 
     // 更新收支儀錶板頁面
-    const dashboardDailyFoodExpenseElement = document.getElementById('dailyFoodExpense');
-    const dashboardDailyTotalExpenseElement = document.getElementById('dailyTotalExpense');
-
-    if (dashboardDailyFoodExpenseElement) {
-        dashboardDailyFoodExpenseElement.textContent = `日均飲食花費為${dailyFoodExpense}元`;
-    }
-    if (dashboardDailyTotalExpenseElement) {
-        dashboardDailyTotalExpenseElement.textContent = `本月日均開銷為${dailyTotalExpense}元`;
-    }
+    updatePageDailyExpenses('dashboard', dailyFoodExpense, dailyTotalExpense);
 
     // 更新消費紀錄頁面
-    const expenseDailyFoodExpenseElement = document.getElementById('expenseDailyFoodExpenseText');
-    if (expenseDailyFoodExpenseElement) {
-        expenseDailyFoodExpenseElement.textContent = `日均飲食花費為${dailyFoodExpense}元`;
+    updatePageDailyExpenses('expense', dailyFoodExpense, dailyTotalExpense);
+}
+
+function updatePageDailyExpenses(page, dailyFoodExpense, dailyTotalExpense) {
+    const dailyFoodExpenseElement = document.getElementById(`${page}DailyFoodExpense`);
+    const dailyTotalExpenseElement = document.getElementById(`${page}DailyTotalExpense`);
+
+    if (dailyFoodExpenseElement) {
+        dailyFoodExpenseElement.textContent = `日均飲食花費為${dailyFoodExpense}元`;
+    }
+    if (dailyTotalExpenseElement) {
+        dailyTotalExpenseElement.textContent = `本月日均開銷為${dailyTotalExpense}元`;
     }
 }
 
