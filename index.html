@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>預算管理系統</title>
+    <link rel="stylesheet" href="https://ntuacurry.github.io/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://apis.google.com/js/api.js"></script>
+    <script src="https://accounts.google.com/gsi/client"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <button class="tab-button active" onclick="openTab('home')">首頁</button>
+            <button class="tab-button" onclick="openTab('budget')">預算</button>
+            <button class="tab-button" onclick="openTab('expenses')">消費紀錄</button>
+            <button id="addButton" class="add-button">新增</button>
+        </div>
+        <div class="content">
+            <div id="datetime" class="datetime"></div>
+            <div class="month-selector">
+                <button id="prevMonth">&lt;</button>
+                <span id="currentMonth"></span>
+                <button id="nextMonth">&gt;</button>
+            </div>
+            <div id="home" class="tab-content active">
+                <h2>首頁內容</h2>
+                <div class="chart-container">
+                    <div class="chart">
+                        <canvas id="mealExpensesChart"></canvas>
+                    </div>
+                    <div class="chart">
+                        <canvas id="overallExpensesChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div id="budget" class="tab-content">
+                <h2>預算內容</h2>
+                <!-- 預算內容 -->
+            </div>
+            <div id="expenses" class="tab-content">
+                <h2>消費紀錄</h2>
+                <table id="expenseTable">
+                    <thead>
+                        <tr>
+                            <th>日期</th>
+                            <th>金額</th>
+                            <th>消費類型</th>
+                            <th>備註</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- 消費紀錄將在這裡動態添加 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="date">日期</label>
+                    <input type="date" id="date" required>
+                </div>
+                <div class="form-group">
+                    <label for="type">消費類型</label>
+                    <select id="type" required>
+                        <option value="">請選擇</option>
+                        <option value="早餐">早餐</option>
+                        <option value="午餐">午餐</option>
+                        <option value="晚餐">晚餐</option>
+                        <option value="飲料">飲料</option>
+                        <option value="食物">食物</option>
+                        <option value="房租+電費">房租+電費</option>
+                        <option value="交通">交通</option>
+                        <option value="手機費">手機費</option>
+                        <option value="日常開銷">日常開銷</option>
+                        <option value="投資">投資</option>
+                        <option value="儲蓄">儲蓄</option>
+                        <option value="外幣">外幣</option>
+                        <option value="其他">其他</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="amount">消費金額</label>
+                <input type="number" id="amount" required min="0">
+            </div>
+            <div class="form-group">
+                <label for="note">備註</label>
+                <textarea id="note"></textarea>
+            </div>
+            <div class="form-buttons">
+                <button type="button" id="saveButton">儲存</button>
+                <button type="button" id="cancelButton">退出</button>
+            </div>
+        </div>
+    </div>
+    <script src="https://ntuacurry.github.io/script.js"></script>
+</body>
+</html>
