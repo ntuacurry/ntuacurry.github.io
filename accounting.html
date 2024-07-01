@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>預算管理系統</title>
-    <link rel="stylesheet" href="https://ntuacurry.github.io/styles.css">
+    <link rel="stylesheet" href="./styles.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="https://apis.google.com/js/api.js"></script>
@@ -25,6 +25,10 @@
                 <span id="currentMonth"></span>
                 <button id="nextMonth">&gt;</button>
             </div>
+			<div id="dailyExpenses" class="daily-expenses">
+				<p id="dailyFoodExpense"></p>
+				<p id="dailyTotalExpense"></p>
+			</div>
             <div id="home" class="tab-content active">
                 <h2>首頁內容</h2>
                 <div class="chart-container">
@@ -102,6 +106,6 @@
             </div>
         </div>
     </div>
-    <script src="https://ntuacurry.github.io/script.js"></script>
+    <script src="./script.js"></script>
 </body>
 </html>
