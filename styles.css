@@ -2,12 +2,12 @@ body, html {
     margin: 0;
     padding: 0;
     font-family: Arial, sans-serif;
-    height: 100%;
+    min-height: 100vh;
 }
 
 .container {
     display: flex;
-    height: 100%;
+    min-height: 100vh;
 }
 
 .sidebar {
@@ -22,7 +22,52 @@ body, html {
     flex-grow: 1;
     padding: 20px;
     background-color: #e8f5e9;
-    position: relative;
+}
+
+.detail-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.detail-table th,
+.detail-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+.detail-table th {
+    background-color: #f2f2f2;
+}
+
+.income-table .main-income td { background-color: #FFD700; }
+.income-table .main-income-total td { background-color: #FFD700; }
+.income-table .other-income td { background-color: #98FB98; }
+.income-table .other-income-total td { background-color: #98FB98; }
+.income-table .interest-income td { background-color: #87CEFA; }
+.income-table .interest-income-total td { background-color: #87CEFA; }
+
+.expense-table .general-expense td { background-color: #ADD8E6; }
+.expense-table .general-expense-total td { background-color: #ADD8E6; }
+.expense-table .savings-expense td { background-color: #FFA500; }
+.expense-table .savings-expense-total td { background-color: #FFA500; }
+
+.monthly-detail-content {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+
+.monthly-detail-content > div {
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+@media (min-width: 768px) {
+    .monthly-detail-content > div {
+        width: 48%;
+    }
 }
 
 .daily-expenses {
@@ -264,4 +309,17 @@ body, html {
 
 #incomeTable th, #expenseTable th {
   background-color: #f2f2f2;
+}
+
+#monthlyDetailContainer {
+    margin-top: 20px;
+}
+
+.monthly-detail-content {
+    display: flex;
+    justify-content: space-between;
+}
+
+.monthly-detail-content > div {
+    width: 48%;
 }
