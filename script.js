@@ -314,7 +314,9 @@ function initBudgetTable() {
     const headerRow = table.rows[0];
   
     for (let i = 1; i < headerRow.cells.length - 1; i++) {
-        headerRow.cells[i].addEventListener('click', function() {
+        const cell = headerRow.cells[i];
+        cell.removeEventListener('click', openMonthlyDetailModal);
+        cell.addEventListener('click', function() {
             openMonthlyDetailModal(i);
         });
     }
@@ -333,9 +335,25 @@ function openMonthlyDetailModal(monthIndex) {
             <style>
                 body { font-family: Arial, sans-serif; }
                 .container { display: flex; justify-content: space-around; }
-                table { border-collapse: collapse; }
+                table { border-collapse: collapse; width: 45%; }
                 th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
                 th { background-color: #f2f2f2; }
+                .income-table tr:nth-child(1) td:first-child,
+                .income-table tr:nth-child(2) td:first-child { background-color: #FFD700; }
+                .income-table tr:nth-child(3) td:first-child,
+                .income-table tr:nth-child(4) td:first-child,
+                .income-table tr:nth-child(5) td:first-child { background-color: #98FB98; }
+                .income-table tr:nth-child(6) td:first-child,
+                .income-table tr:nth-child(7) td:first-child,
+                .income-table tr:nth-child(8) td:first-child { background-color: #87CEFA; }
+                .expense-table tr:nth-child(1) td:first-child,
+                .expense-table tr:nth-child(2) td:first-child,
+                .expense-table tr:nth-child(3) td:first-child,
+                .expense-table tr:nth-child(4) td:first-child { background-color: #ADD8E6; }
+                .expense-table tr:nth-child(5) td:first-child,
+                .expense-table tr:nth-child(6) td:first-child,
+                .expense-table tr:nth-child(7) td:first-child,
+                .expense-table tr:nth-child(8) td:first-child { background-color: #FFA500; }
             </style>
         </head>
         <body>
@@ -343,11 +361,15 @@ function openMonthlyDetailModal(monthIndex) {
             <div class="container">
                 <div>
                     <h2>收入</h2>
-                    ${generateIncomeTable()}
+                    <div class="income-table">
+                        ${generateIncomeTable()}
+                    </div>
                 </div>
                 <div>
                     <h2>支出</h2>
-                    ${generateExpenseTable()}
+                    <div class="expense-table">
+                        ${generateExpenseTable()}
+                    </div>
                 </div>
             </div>
         </body>
@@ -373,7 +395,7 @@ function generateIncomeTable() {
             <td colspan="2">本業收入總計</td>
         </tr>
         <tr>
-            <td rowspan="2">業外收入</td>
+            <td rowspan="3">業外收入</td>
             <td>租屋補助</td>
             <td></td>
         </tr>
@@ -385,7 +407,7 @@ function generateIncomeTable() {
             <td colspan="2">業外收入總計</td>
         </tr>
         <tr>
-            <td rowspan="2">利息股息收入</td>
+            <td rowspan="3">利息股息收入</td>
             <td>利息</td>
             <td></td>
         </tr>
@@ -409,7 +431,7 @@ function generateExpenseTable() {
             <th>備註</th>
         </tr>
         <tr>
-            <td rowspan="3">一般預算</td>
+            <td rowspan="4">一般預算</td>
             <td>飲食</td>
             <td></td>
         </tr>
@@ -422,10 +444,10 @@ function generateExpenseTable() {
             <td></td>
         </tr>
         <tr>
-            <td colspan="3">一般預算總計</td>
+            <td colspan="2">一般預算總計</td>
         </tr>
         <tr>
-            <td rowspan="3">儲蓄投資預算</td>
+            <td rowspan="4">儲蓄投資預算</td>
             <td>旅遊基金</td>
             <td></td>
         </tr>
@@ -438,7 +460,7 @@ function generateExpenseTable() {
             <td></td>
         </tr>
         <tr>
-            <td colspan="3">儲蓄投資預算總計</td>
+            <td colspan="2">儲蓄投資預算總計</td>
         </tr>
     </table>
     `;
