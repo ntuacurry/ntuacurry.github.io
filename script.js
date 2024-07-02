@@ -27,6 +27,8 @@ function initGapiClient() {
         discoveryDocs: ["https://sheets.googleapis.com/$discovery/rest?version=v4"],
     }).then(() => {
         console.log('GAPI client initialized');
+        // 在這裡調用loadExpenses
+        loadExpenses();
     }, (error) => {
         console.error('Error initializing GAPI client', error);
     });
@@ -188,8 +190,6 @@ function openTab(tabName) {
     }
     document.getElementById(tabName).style.display = "block";
     document.querySelector(`[onclick="openTab('${tabName}')"]`).classList.add("active");
-
-    loadExpenses();
 
     if (tabName === 'dashboard' || tabName === 'expenses') {
         updateDailyExpenses();
@@ -445,6 +445,7 @@ document.addEventListener('DOMContentLoaded', initBudgetTable);
 // 在適當的地方調用 initBudgetTable
 document.addEventListener('DOMContentLoaded', function() {
     initBudgetTable();
+	init();
 });
 
 // 在init函數中調用initBudgetTable
@@ -624,7 +625,9 @@ function updateMonthDisplay() {
 }
 
 function init() {
-    gapi.load('client', initClient);
+    gapi.load('client', function() {
+        initGapiClient();
+    });
     updateMonthDisplay();
     openTab('home');
 }
