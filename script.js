@@ -6,20 +6,18 @@ const SPREADSHEET_ID = '1hZqpxjsez2T8BNYI95F-uEe-XuXJZXZ-8S2sJ7xQ4kc';
 let tokenClient;
 let expenses = [];
 let currentDisplayMonth = new Date();
+let isAuthorized = false;
 
-function initClient() {
-    tokenClient = google.accounts.oauth2.initTokenClient({
-        client_id: CLIENT_ID,
-        scope: 'https://www.googleapis.com/auth/spreadsheets',
-        callback: (tokenResponse) => {
-            if (tokenResponse && tokenResponse.access_token) {
-                loadExpenses();
-            }
-        },
-    });
-
+function init() {
     gapi.load('client', initGapiClient);
+    updateMonthDisplay();
+    document.addEventListener('DOMContentLoaded', function() {
+        openTab('home');
+        initBudgetTable();
+    });
 }
+
+window.onload = init;
 
 function initGapiClient() {
     gapi.client.init({
@@ -191,44 +189,34 @@ function createNewSheet(sheetName) {
     });
 }
 
-javascriptCopylet isAuthorized = false;
-
-function init() {
-    gapi.load('client', initGapiClient);
-    updateMonthDisplay();
-    document.addEventListener('DOMContentLoaded', function() {
-        openTab('home');
-        initBudgetTable();
-    });
+function updateContent() {
+    updateExpenseTable();
+    updateMealExpensesChart();
+    updateOverallExpensesChart();
+    updateDailyExpenses();
 }
 
-function initGapiClient() {
-    gapi.client.init({
-        apiKey: API_KEY,
-        discoveryDocs: ["https://sheets.googleapis.com/$discovery/rest?version=v4"],
-    }).then(() => {
-        console.log('GAPI client initialized');
-        tokenClient = google.accounts.oauth2.initTokenClient({
-            client_id: CLIENT_ID,
-            scope: 'https://www.googleapis.com/auth/spreadsheets',
-            callback: (tokenResponse) => {
-                if (tokenResponse && tokenResponse.access_token) {
-                    isAuthorized = true;
-                    loadExpenses();
-                }
-            },
-        });
-    }, (error) => {
-        console.error('Error initializing GAPI client', error);
-    });
+function updateDateTime() {
+    var now = new Date();
+    var year = now.getFullYear() - 1911;
+    var month = (now.getMonth() + 1).toString().padStart(2, '0');
+    var day = now.getDate().toString().padStart(2, '0');
+    var hours = now.getHours().toString().padStart(2, '0');
+    var minutes = now.getMinutes().toString().padStart(2, '0');
+    var seconds = now.getSeconds().toString().padStart(2, '0');
+    
+    var dateTimeString = year + '/' + month + '/' + day + ' ' + hours + ':' + minutes + ':' + seconds;
+    document.getElementById('datetime').textContent = dateTimeString;
 }
 
-function getToken() {
-    if (!isAuthorized) {
-        tokenClient.requestAccessToken();
-    } else {
-        console.log('Already authorized');
-    }
+setInterval(updateDateTime, 1000);
+
+function updateMonthDisplay() {
+    const monthNames = ["一月", "二月", "三月", "四月", "五月", "六月",
+        "七月", "八月", "九月", "十月", "十一月", "十二月"
+    ];
+    document.getElementById('currentMonth').textContent = 
+        `${currentDisplayMonth.getFullYear()}年 ${monthNames[currentDisplayMonth.getMonth()]}`;
 }
 
 function openTab(tabName) {
@@ -256,13 +244,6 @@ function openTab(tabName) {
     if (tabName === 'budget') {
         initBudgetTable();
     }
-}
-
-function updateContent() {
-    updateExpenseTable();
-    updateMealExpensesChart();
-    updateOverallExpensesChart();
-    updateDailyExpenses();
 }
 
 function updateDailyExpenses() {
@@ -297,230 +278,6 @@ function updatePageDailyExpenses(page, dailyFoodExpense, dailyTotalExpense) {
     if (dailyTotalExpenseElement) {
         dailyTotalExpenseElement.textContent = `本月日均開銷為${dailyTotalExpense}元`;
     }
-}
-
-function updateDateTime() {
-    var now = new Date();
-    var year = now.getFullYear() - 1911;
-    var month = (now.getMonth() + 1).toString().padStart(2, '0');
-    var day = now.getDate().toString().padStart(2, '0');
-    var hours = now.getHours().toString().padStart(2, '0');
-    var minutes = now.getMinutes().toString().padStart(2, '0');
-    var seconds = now.getSeconds().toString().padStart(2, '0');
-    
-    var dateTimeString = year + '/' + month + '/' + day + ' ' + hours + ':' + minutes + ':' + seconds;
-    document.getElementById('datetime').textContent = dateTimeString;
-}
-
-setInterval(updateDateTime, 1000);
-
-var modal = document.getElementById("modal");
-var btn = document.getElementById("addButton");
-var saveButton = document.getElementById("saveButton");
-var cancelButton = document.getElementById("cancelButton");
-
-btn.onclick = function() {
-    modal.style.display = "block";
-    
-    var today = new Date();
-    var dd = String(today.getDate()).padStart(2, '0');
-    var mm = String(today.getMonth() + 1).padStart(2, '0');
-    var yyyy = today.getFullYear();
-
-    today = yyyy + '-' + mm + '-' + dd;
-    document.getElementById('date').value = today;
-}
-
-function clearModalForm() {
-    document.getElementById('expenseId').value = '';
-    document.getElementById('date').value = '';
-    document.getElementById('amount').value = '';
-    document.getElementById('type').value = '';
-    document.getElementById('note').value = '';
-}
-
-cancelButton.onclick = function() {
-    modal.style.display = "none";
-    clearModalForm();
-}
-
-window.onclick = function(event) {
-    if (event.target == modal) {
-        modal.style.display = "none";
-        clearModalForm();
-    }
-}
-
-saveButton.onclick = function() {
-    const id = document.getElementById('expenseId').value;
-    const date = document.getElementById('date').value;
-    const amount = document.getElementById('amount').value;
-    const type = document.getElementById('type').value;
-    const note = document.getElementById('note').value;
-
-    if (date && amount && type) {
-        if (id) {
-            updateExpense(parseInt(id), date, amount, type, note);
-        } else {
-            addExpense(date, amount, type, note);
-        }
-        modal.style.display = "none";
-        clearModalForm();
-    } else {
-        alert('請填寫所有必填欄位');
-    }
-}
-
-function initBudgetTable() {
-    const table = document.getElementById('yearlyBudgetTable');
-    if (!table) return;
-
-    // 在這裡生成全年預算表格的內容
-    // ...
-
-    const headerRow = table.rows[0];
-    if (headerRow) {
-        for (let i = 1; i < headerRow.cells.length - 1; i++) {
-            const cell = headerRow.cells[i];
-            cell.removeEventListener('click', openMonthlyDetailModal);
-            cell.addEventListener('click', function() {
-                openMonthlyDetailModal(i);
-            });
-        }
-    }
-}
-
-function openMonthlyDetailModal(monthIndex) {
-    const months = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
-    const year = document.getElementById('yearSelector').value;
-    const month = months[monthIndex - 1];
-    
-    document.getElementById('monthlyDetailTitle').textContent = `${year}年${month} 收入及預算`;
-    document.getElementById('incomeTableContainer').innerHTML = generateIncomeTable();
-    document.getElementById('expenseTableContainer').innerHTML = generateExpenseTable();
-    document.getElementById('monthlyDetailContainer').style.display = 'block';
-}
-
-function generateIncomeTable() {
-    return `
-    <table class="detail-table income-table">
-        <tr>
-            <th>類型</th>
-            <th>項目</th>
-            <th>金額</th>
-            <th>備註</th>
-        </tr>
-        <tr class="main-income">
-            <td rowspan="2">本業收入</td>
-            <td>薪水</td>
-            <td>41000</td>
-            <td>本薪</td>
-        </tr>
-        <tr class="main-income-total">
-            <td colspan="3">本業收入總計</td>
-            <td>41000</td>
-        </tr>
-        <tr class="other-income">
-            <td rowspan="3">業外收入</td>
-            <td>租屋補助</td>
-            <td>3600</td>
-            <td>7月租屋補助</td>
-        </tr>
-        <tr class="other-income">
-            <td>過年紅包</td>
-            <td>10000</td>
-            <td>外婆</td>
-        </tr>
-        <tr class="other-income-total">
-            <td colspan="3">業外收入總計</td>
-            <td>13600</td>
-        </tr>
-        <tr class="interest-income">
-            <td rowspan="3">利息股息收入</td>
-            <td>利息</td>
-            <td>21</td>
-            <td>LINEBANK</td>
-        </tr>
-        <tr class="interest-income">
-            <td>股息</td>
-            <td>100</td>
-            <td>富邦台50</td>
-        </tr>
-        <tr class="interest-income-total">
-            <td colspan="3">利息股息收入總計</td>
-            <td>121</td>
-        </tr>
-    </table>
-    `;
-}
-
-function generateExpenseTable() {
-    return `
-    <table class="detail-table expense-table">
-        <tr>
-            <th>類型</th>
-            <th>項目</th>
-            <th>金額</th>
-            <th>備註</th>
-        </tr>
-        <tr class="general-expense">
-            <td rowspan="4">一般預算</td>
-            <td>飲食</td>
-            <td>7500</td>
-            <td>7月伙食費</td>
-        </tr>
-        <tr class="general-expense">
-            <td>居住</td>
-            <td>9500</td>
-            <td>7月房租</td>
-        </tr>
-        <tr class="general-expense">
-            <td>交通</td>
-            <td>1200</td>
-            <td>月票</td>
-        </tr>
-        <tr class="general-expense-total">
-            <td colspan="3">一般預算總計</td>
-            <td>18200</td>
-        </tr>
-        <tr class="savings-expense">
-            <td rowspan="4">儲蓄投資預算</td>
-            <td>旅遊基金</td>
-            <td>1000</td>
-            <td>每月7日扣款</td>
-        </tr>
-        <tr class="savings-expense">
-            <td>稅務基金</td>
-            <td>2000</td>
-            <td>綜所稅</td>
-        </tr>
-        <tr class="savings-expense">
-            <td>定期定額</td>
-            <td>9000</td>
-            <td>006208和2633</td>
-        </tr>
-        <tr class="savings-expense-total">
-            <td colspan="3">儲蓄投資預算總計</td>
-            <td>12000</td>
-        </tr>
-    </table>
-    `;
-}
-
-// 確保在頁面加載完成後初始化預算表格
-document.addEventListener('DOMContentLoaded', initBudgetTable);
-
-// 在適當的地方調用 initBudgetTable
-document.addEventListener('DOMContentLoaded', function() {
-    initBudgetTable();
-	init();
-});
-
-// 在init函數中調用initBudgetTable
-function init() {
-    gapi.load('client', initClient);
-    openTab('home');
-    initBudgetTable();
 }
 
 function updateExpenseTable() {
@@ -561,15 +318,6 @@ function updateExpenseTable() {
         deleteButton.onclick = () => deleteExpense(expense.id);
         actionCell.appendChild(deleteButton);
     });
-}
-
-function editExpense(expense) {
-    document.getElementById('expenseId').value = expense.id;
-    document.getElementById('date').value = expense.date;
-    document.getElementById('amount').value = expense.amount;
-    document.getElementById('type').value = expense.type;
-    document.getElementById('note').value = expense.note;
-    modal.style.display = "block";
 }
 
 function getFilteredExpenses() {
@@ -672,6 +420,46 @@ function updateOverallExpensesChart() {
     });
 }
 
+function initBudgetTable() {
+    const table = document.getElementById('yearlyBudgetTable');
+    if (!table) return;
+
+    // 在這裡生成全年預算表格的內容
+    // ...
+
+    const headerRow = table.rows[0];
+    if (headerRow) {
+        for (let i = 1; i < headerRow.cells.length - 1; i++) {
+            const cell = headerRow.cells[i];
+            cell.removeEventListener('click', openMonthlyDetailModal);
+            cell.addEventListener('click', function() {
+                openMonthlyDetailModal(i);
+            });
+        }
+    }
+}
+
+function openMonthlyDetailModal(monthIndex) {
+    const months = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
+    const year = document.getElementById('yearSelector').value;
+    const month = months[monthIndex - 1];
+    
+    document.getElementById('monthlyDetailTitle').textContent = `${year}年${month} 收入及預算`;
+    document.getElementById('incomeTableContainer').innerHTML = generateIncomeTable();
+    document.getElementById('expenseTableContainer').innerHTML = generateExpenseTable();
+    document.getElementById('monthlyDetailContainer').style.display = 'block';
+}
+
+function generateIncomeTable() {
+    // 生成收入表格的 HTML
+    // ...
+}
+
+function generateExpenseTable() {
+    // 生成支出表格的 HTML
+    // ...
+}
+
 document.getElementById('prevMonth').addEventListener('click', function() {
     currentDisplayMonth.setMonth(currentDisplayMonth.getMonth() - 1);
     updateMonthDisplay();
@@ -683,24 +471,3 @@ document.getElementById('nextMonth').addEventListener('click', function() {
     updateMonthDisplay();
     updateContent();
 });
-
-function updateMonthDisplay() {
-    const monthNames = ["一月", "二月", "三月", "四月", "五月", "六月",
-        "七月", "八月", "九月", "十月", "十一月", "十二月"
-    ];
-    document.getElementById('currentMonth').textContent = 
-        `${currentDisplayMonth.getFullYear()}年 ${monthNames[currentDisplayMonth.getMonth()]}`;
-}
-
-let isAuthorized = false;
-
-function init() {
-    gapi.load('client', initGapiClient);
-    updateMonthDisplay();
-    document.addEventListener('DOMContentLoaded', function() {
-        openTab('home');
-        initBudgetTable();
-    });
-}
-
-window.onload = init;
