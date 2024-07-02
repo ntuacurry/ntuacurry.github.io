@@ -13,7 +13,7 @@ function init() {
     updateMonthDisplay();
     document.addEventListener('DOMContentLoaded', function() {
         openTab('home');
-        initBudgetTable();
+        initBudgetTables();
     });
 }
 
@@ -242,7 +242,7 @@ function openTab(tabName) {
     }
 
     if (tabName === 'budget') {
-        initBudgetTable();
+        initBudgetTables();
     }
 }
 
