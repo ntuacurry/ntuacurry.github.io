@@ -427,24 +427,27 @@ function initBudgetTable() {
         return;
     }
 
-    // 在這裡生成全年預算表格的內容
-    // 這部分代碼需要根據您的具體需求來實現
-    // ...
+    // 檢查表格是否有 thead
+    const thead = table.querySelector('thead');
+    if (!thead) {
+        console.error('Table header (thead) not found');
+        return;
+    }
 
-    const headerRow = table.rows[0];
+    const headerRow = thead.rows[0];
     if (headerRow) {
         for (let i = 1; i < headerRow.cells.length - 1; i++) {
             const cell = headerRow.cells[i];
             if (cell) {
-                cell.removeEventListener('click', openMonthlyDetailModal);
-                cell.addEventListener('click', function() {
-                    openMonthlyDetailModal(i);
-                });
+                cell.removeEventListener('click', () => openMonthlyDetailModal(i));
+                cell.addEventListener('click', () => openMonthlyDetailModal(i));
             }
         }
     } else {
         console.error('Header row not found in the table');
     }
+
+    // 這裡可以添加其他初始化邏輯，比如填充表格數據等
 }
 
 function openMonthlyDetailModal(monthIndex) {
