@@ -199,18 +199,6 @@ body, html {
         width: 100%;
     }
 }
-.budget-header {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 20px;
-}
-
-.budget-header select {
-    margin-right: 10px;
-    padding: 5px;
-    font-size: 16px;
-}
 
 #budgetTable {
     width: 100%;
@@ -230,20 +218,34 @@ body, html {
 #budgetTable td:first-child {
     font-weight: bold;
     text-align: left;
+    background-color: #f0f0f0;
 }
 
-.free-cash td {
+.free-cash td:not(:first-child) {
     background-color: #fffaeb;
 }
 
-.expense td {
+.expense td:not(:first-child) {
     background-color: #e8f5e9;
 }
 
-.income td {
+.income td:not(:first-child) {
     background-color: #ffebee;
 }
 
 #budgetTable td:last-child {
     background-color: #f0f0f0;
+}
+
+.budget-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.budget-header select {
+    margin-right: 10px;
+    padding: 5px;
+    font-size: 16px;
 }
