@@ -422,20 +422,28 @@ function updateOverallExpensesChart() {
 
 function initBudgetTable() {
     const table = document.getElementById('yearlyBudgetTable');
-    if (!table) return;
+    if (!table) {
+        console.error('Table with id "yearlyBudgetTable" not found');
+        return;
+    }
 
     // 在這裡生成全年預算表格的內容
+    // 這部分代碼需要根據您的具體需求來實現
     // ...
 
     const headerRow = table.rows[0];
     if (headerRow) {
         for (let i = 1; i < headerRow.cells.length - 1; i++) {
             const cell = headerRow.cells[i];
-            cell.removeEventListener('click', openMonthlyDetailModal);
-            cell.addEventListener('click', function() {
-                openMonthlyDetailModal(i);
-            });
+            if (cell) {
+                cell.removeEventListener('click', openMonthlyDetailModal);
+                cell.addEventListener('click', function() {
+                    openMonthlyDetailModal(i);
+                });
+            }
         }
+    } else {
+        console.error('Header row not found in the table');
     }
 }
 
