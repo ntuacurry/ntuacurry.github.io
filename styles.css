@@ -199,3 +199,35 @@ body, html {
         width: 100%;
     }
 }
+.budget-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.budget-header select {
+    margin-right: 10px;
+    padding: 5px;
+    font-size: 16px;
+}
+
+#budgetTable {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#budgetTable th, #budgetTable td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+}
+
+#budgetTable th {
+    background-color: #f2f2f2;
+}
+
+#budgetTable td:first-child {
+    font-weight: bold;
+    background-color: #f2f2f2;
+}
