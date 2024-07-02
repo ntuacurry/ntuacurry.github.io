@@ -319,7 +319,14 @@ saveButton.onclick = function() {
 function initBudgetTable() {
     const table = document.getElementById('budgetTable');
     const cells = table.getElementsByTagName('td');
-    
+    const table = document.getElementById('budgetTable');
+    const headerRow = table.rows[0];
+  
+    for (let i = 1; i < headerRow.cells.length - 1; i++) {
+      headerRow.cells[i].addEventListener('click', function() {
+        openMonthlyDetailModal(i);
+      });
+    }
     for (let cell of cells) {
         if (cell.cellIndex !== 0) {  // 跳過第一列（項目名稱）
             cell.textContent = '';  // 清空單元格內容
@@ -387,6 +394,143 @@ function updateTotals() {
         rows[1].cells[j].textContent = income - expense;
     }
 }
+
+javascriptCopyfunction initBudgetTable() {
+  const table = document.getElementById('budgetTable');
+  const headerRow = table.rows[0];
+  
+  for (let i = 1; i < headerRow.cells.length - 1; i++) {
+    headerRow.cells[i].addEventListener('click', function() {
+      openMonthlyDetailModal(i);
+    });
+  }
+  
+  // ... 其他初始化代碼 ...
+}
+
+function openMonthlyDetailModal(monthIndex) {
+  const modal = document.getElementById('monthlyDetailModal');
+  const monthlyDetailTitle = document.getElementById('monthlyDetailTitle');
+  const months = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
+  
+  monthlyDetailTitle.textContent = `2024年${months[monthIndex - 1]} 收入及預算`;
+  
+  generateIncomeTable();
+  generateExpenseTable();
+  
+  modal.style.display = 'block';
+  
+  const span = document.getElementsByClassName('close')[0];
+  span.onclick = function() {
+    modal.style.display = 'none';
+  }
+  
+  window.onclick = function(event) {
+    if (event.target == modal) {
+      modal.style.display = 'none';
+    }
+  }
+}
+
+function generateIncomeTable() {
+  const incomeTable = document.getElementById('incomeTable');
+  incomeTable.innerHTML = `
+    <tr>
+      <th>種類</th>
+      <th>金額</th>
+      <th>備註</th>
+    </tr>
+    <tr>
+      <td rowspan="2">本業收入</td>
+      <td>薪水</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td colspan="3">本業收入總計</td>
+    </tr>
+    <tr>
+      <td rowspan="2">業外收入</td>
+      <td>租屋補助</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>過年紅包</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td colspan="3">業外收入總計</td>
+    </tr>
+    <tr>
+      <td rowspan="2">利息股息收入</td>
+      <td>利息</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>股息</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td colspan="3">利息股息收入總計</td>
+    </tr>
+  `;
+}
+
+function generateExpenseTable() {
+  const expenseTable = document.getElementById('expenseTable');
+  expenseTable.innerHTML = `
+    <tr>
+      <th>種類</th>
+      <th>金額</th>
+      <th>備註</th>
+    </tr>
+    <tr>
+      <td rowspan="3">一般預算</td>
+      <td>飲食</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>居住</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>交通</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td colspan="3">一般預算總計</td>
+    </tr>
+    <tr>
+      <td rowspan="3">儲蓄投資預算</td>
+      <td>旅遊基金</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>稅務基金</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>定期定額</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td colspan="3">儲蓄投資預算總計</td>
+    </tr>
+  `;
+}
+
+// 確保在頁面加載完成後初始化預算表格
+document.addEventListener('DOMContentLoaded', initBudgetTable);
 
 // 在適當的地方調用 initBudgetTable
 document.addEventListener('DOMContentLoaded', function() {
