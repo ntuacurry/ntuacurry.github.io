@@ -315,8 +315,18 @@ body, html {
     margin-top: 20px;
 }
 
+#yearlyBudgetTable {
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+#monthlyDetailContainer {
+    margin-top: 20px;
+}
+
 .monthly-detail-content {
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-between;
 }
 
