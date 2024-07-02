@@ -318,40 +318,37 @@ saveButton.onclick = function() {
 
 function initBudgetTable() {
     const table = document.getElementById('budgetTable');
-    const rows = table.getElementsByTagName('tr');
+    const cells = table.getElementsByTagName('td');
     
-    for (let i = 1; i < rows.length; i++) {
-        for (let j = 0; j < 13; j++) {
-            const cell = rows[i].insertCell();
-            cell.textContent = '0';
+    for (let cell of cells) {
+        if (cell.cellIndex !== 0) {  // 跳過第一列（項目名稱）
+            cell.textContent = '';  // 清空單元格內容
             cell.addEventListener('click', function() {
-                openBudgetModal(i - 1, j);
+                openBudgetModal(this);
             });
         }
     }
 }
 
-function openBudgetModal(rowIndex, colIndex) {
+function openBudgetModal(cell) {
     const modal = document.getElementById('modal');
     const modalContent = document.querySelector('.modal-content');
     
-    // 清空現有內容
     modalContent.innerHTML = '';
     
-    // 添加新內容
     const title = document.createElement('h2');
-    title.textContent = `編輯 ${rowIndex === 0 ? '自由現金' : rowIndex === 1 ? '支出預算' : '收入'}`;
+    title.textContent = `編輯 ${cell.parentElement.cells[0].textContent}`;
     modalContent.appendChild(title);
     
     const input = document.createElement('input');
     input.type = 'number';
-    input.value = document.getElementById('budgetTable').rows[rowIndex + 1].cells[colIndex + 1].textContent;
+    input.value = cell.textContent || '0';
     modalContent.appendChild(input);
     
     const saveButton = document.createElement('button');
     saveButton.textContent = '保存';
     saveButton.onclick = function() {
-        saveBudgetData(rowIndex, colIndex, input.value);
+        saveBudgetData(cell, input.value);
         modal.style.display = 'none';
     };
     modalContent.appendChild(saveButton);
@@ -366,35 +363,34 @@ function openBudgetModal(rowIndex, colIndex) {
     modal.style.display = 'block';
 }
 
-function saveBudgetData(rowIndex, colIndex, value) {
-    const table = document.getElementById('budgetTable');
-    table.rows[rowIndex + 1].cells[colIndex + 1].textContent = value;
-    
-    // 更新自由現金
-    if (rowIndex !== 0) {
-        const income = parseInt(table.rows[3].cells[colIndex + 1].textContent);
-        const expense = parseInt(table.rows[2].cells[colIndex + 1].textContent);
-        table.rows[1].cells[colIndex + 1].textContent = income - expense;
-    }
-    
+function saveBudgetData(cell, value) {
+    cell.textContent = value;
     updateTotals();
 }
 
 function updateTotals() {
     const table = document.getElementById('budgetTable');
+    const rows = table.rows;
     
-    for (let i = 1; i < 4; i++) {
+    for (let i = 1; i < rows.length; i++) {  // 跳過表頭
         let total = 0;
-        for (let j = 1; j <= 12; j++) {
-            total += parseInt(table.rows[i].cells[j].textContent);
+        for (let j = 1; j <= 12; j++) {  // 1月到12月
+            total += parseInt(rows[i].cells[j].textContent || '0');
         }
-        table.rows[i].cells[13].textContent = total;
+        rows[i].cells[13].textContent = total;  // 設置總計
+    }
+    
+    // 更新自由現金
+    for (let j = 1; j <= 13; j++) {  // 包括總計列
+        const income = parseInt(rows[3].cells[j].textContent || '0');
+        const expense = parseInt(rows[2].cells[j].textContent || '0');
+        rows[1].cells[j].textContent = income - expense;
     }
 }
 
-document.getElementById('yearSelector').addEventListener('change', function() {
-    // 這裡可以添加載入不同年份數據的邏輯
-    console.log('Selected year:', this.value);
+// 在適當的地方調用 initBudgetTable
+document.addEventListener('DOMContentLoaded', function() {
+    initBudgetTable();
 });
 
 // 在init函數中調用initBudgetTable
