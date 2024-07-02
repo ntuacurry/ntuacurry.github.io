@@ -27,15 +27,27 @@ function initGapiClient() {
         discoveryDocs: ["https://sheets.googleapis.com/$discovery/rest?version=v4"],
     }).then(() => {
         console.log('GAPI client initialized');
-        // 在這裡調用loadExpenses
-        loadExpenses();
+        tokenClient = google.accounts.oauth2.initTokenClient({
+            client_id: CLIENT_ID,
+            scope: 'https://www.googleapis.com/auth/spreadsheets',
+            callback: (tokenResponse) => {
+                if (tokenResponse && tokenResponse.access_token) {
+                    isAuthorized = true;
+                    loadExpenses();
+                }
+            },
+        });
     }, (error) => {
         console.error('Error initializing GAPI client', error);
     });
 }
 
 function getToken() {
-    tokenClient.requestAccessToken();
+    if (!isAuthorized) {
+        tokenClient.requestAccessToken();
+    } else {
+        console.log('Already authorized');
+    }
 }
 
 function loadExpenses() {
@@ -179,6 +191,46 @@ function createNewSheet(sheetName) {
     });
 }
 
+javascriptCopylet isAuthorized = false;
+
+function init() {
+    gapi.load('client', initGapiClient);
+    updateMonthDisplay();
+    document.addEventListener('DOMContentLoaded', function() {
+        openTab('home');
+        initBudgetTable();
+    });
+}
+
+function initGapiClient() {
+    gapi.client.init({
+        apiKey: API_KEY,
+        discoveryDocs: ["https://sheets.googleapis.com/$discovery/rest?version=v4"],
+    }).then(() => {
+        console.log('GAPI client initialized');
+        tokenClient = google.accounts.oauth2.initTokenClient({
+            client_id: CLIENT_ID,
+            scope: 'https://www.googleapis.com/auth/spreadsheets',
+            callback: (tokenResponse) => {
+                if (tokenResponse && tokenResponse.access_token) {
+                    isAuthorized = true;
+                    loadExpenses();
+                }
+            },
+        });
+    }, (error) => {
+        console.error('Error initializing GAPI client', error);
+    });
+}
+
+function getToken() {
+    if (!isAuthorized) {
+        tokenClient.requestAccessToken();
+    } else {
+        console.log('Already authorized');
+    }
+}
+
 function openTab(tabName) {
     var tabContent = document.getElementsByClassName("tab-content");
     for (var i = 0; i < tabContent.length; i++) {
@@ -188,11 +240,21 @@ function openTab(tabName) {
     for (var i = 0; i < tabButtons.length; i++) {
         tabButtons[i].classList.remove("active");
     }
-    document.getElementById(tabName).style.display = "block";
-    document.querySelector(`[onclick="openTab('${tabName}')"]`).classList.add("active");
+    var selectedTab = document.getElementById(tabName);
+    if (selectedTab) {
+        selectedTab.style.display = "block";
+    }
+    var selectedButton = document.querySelector(`[onclick="openTab('${tabName}')"]`);
+    if (selectedButton) {
+        selectedButton.classList.add("active");
+    }
 
     if (tabName === 'dashboard' || tabName === 'expenses') {
         updateDailyExpenses();
+    }
+
+    if (tabName === 'budget') {
+        initBudgetTable();
     }
 }
 
@@ -310,15 +372,21 @@ saveButton.onclick = function() {
 }
 
 function initBudgetTable() {
-    const table = document.getElementById('budgetTable');
+    const table = document.getElementById('yearlyBudgetTable');
+    if (!table) return;
+
+    // 在這裡生成全年預算表格的內容
+    // ...
+
     const headerRow = table.rows[0];
-  
-    for (let i = 1; i < headerRow.cells.length - 1; i++) {
-        const cell = headerRow.cells[i];
-        cell.removeEventListener('click', openMonthlyDetailModal);
-        cell.addEventListener('click', function() {
-            openMonthlyDetailModal(i);
-        });
+    if (headerRow) {
+        for (let i = 1; i < headerRow.cells.length - 1; i++) {
+            const cell = headerRow.cells[i];
+            cell.removeEventListener('click', openMonthlyDetailModal);
+            cell.addEventListener('click', function() {
+                openMonthlyDetailModal(i);
+            });
+        }
     }
 }
 
@@ -624,12 +692,15 @@ function updateMonthDisplay() {
         `${currentDisplayMonth.getFullYear()}年 ${monthNames[currentDisplayMonth.getMonth()]}`;
 }
 
+let isAuthorized = false;
+
 function init() {
-    gapi.load('client', function() {
-        initGapiClient();
-    });
+    gapi.load('client', initGapiClient);
     updateMonthDisplay();
-    openTab('home');
+    document.addEventListener('DOMContentLoaded', function() {
+        openTab('home');
+        initBudgetTable();
+    });
 }
 
 window.onload = init;
