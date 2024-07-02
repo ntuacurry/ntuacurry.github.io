@@ -327,96 +327,60 @@ function openMonthlyDetailModal(monthIndex) {
     const year = document.getElementById('yearSelector').value;
     const month = months[monthIndex - 1];
     
-    const newWindow = window.open('', '_blank');
-    newWindow.document.write(`
-        <html>
-        <head>
-            <title>${year}年${month} 收入及預算</title>
-            <style>
-                body { font-family: Arial, sans-serif; }
-                .container { display: flex; justify-content: space-around; }
-                table { border-collapse: collapse; width: 45%; }
-                th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-                th { background-color: #f2f2f2; }
-                .income-table tr:nth-child(1) td:first-child,
-                .income-table tr:nth-child(2) td:first-child { background-color: #FFD700; }
-                .income-table tr:nth-child(3) td:first-child,
-                .income-table tr:nth-child(4) td:first-child,
-                .income-table tr:nth-child(5) td:first-child { background-color: #98FB98; }
-                .income-table tr:nth-child(6) td:first-child,
-                .income-table tr:nth-child(7) td:first-child,
-                .income-table tr:nth-child(8) td:first-child { background-color: #87CEFA; }
-                .expense-table tr:nth-child(1) td:first-child,
-                .expense-table tr:nth-child(2) td:first-child,
-                .expense-table tr:nth-child(3) td:first-child,
-                .expense-table tr:nth-child(4) td:first-child { background-color: #ADD8E6; }
-                .expense-table tr:nth-child(5) td:first-child,
-                .expense-table tr:nth-child(6) td:first-child,
-                .expense-table tr:nth-child(7) td:first-child,
-                .expense-table tr:nth-child(8) td:first-child { background-color: #FFA500; }
-            </style>
-        </head>
-        <body>
-            <h1>${year}年${month} 收入及預算</h1>
-            <div class="container">
-                <div>
-                    <h2>收入</h2>
-                    <div class="income-table">
-                        ${generateIncomeTable()}
-                    </div>
-                </div>
-                <div>
-                    <h2>支出</h2>
-                    <div class="expense-table">
-                        ${generateExpenseTable()}
-                    </div>
-                </div>
-            </div>
-        </body>
-        </html>
-    `);
-    newWindow.document.close();
+    document.getElementById('monthlyDetailTitle').textContent = `${year}年${month} 收入及預算`;
+    document.getElementById('incomeTableContainer').innerHTML = generateIncomeTable();
+    document.getElementById('expenseTableContainer').innerHTML = generateExpenseTable();
+    document.getElementById('monthlyDetailContainer').style.display = 'block';
 }
 
 function generateIncomeTable() {
     return `
-    <table>
+    <table class="detail-table income-table">
         <tr>
-            <th>種類</th>
+            <th>類型</th>
+            <th>項目</th>
             <th>金額</th>
             <th>備註</th>
         </tr>
-        <tr>
+        <tr class="main-income">
             <td rowspan="2">本業收入</td>
             <td>薪水</td>
-            <td></td>
+            <td>41000</td>
+            <td>本薪</td>
         </tr>
-        <tr>
-            <td colspan="2">本業收入總計</td>
+        <tr class="main-income-total">
+            <td colspan="3">本業收入總計</td>
+            <td>41000</td>
         </tr>
-        <tr>
+        <tr class="other-income">
             <td rowspan="3">業外收入</td>
             <td>租屋補助</td>
-            <td></td>
+            <td>3600</td>
+            <td>7月租屋補助</td>
         </tr>
-        <tr>
+        <tr class="other-income">
             <td>過年紅包</td>
-            <td></td>
+            <td>10000</td>
+            <td>外婆</td>
         </tr>
-        <tr>
-            <td colspan="2">業外收入總計</td>
+        <tr class="other-income-total">
+            <td colspan="3">業外收入總計</td>
+            <td>13600</td>
         </tr>
-        <tr>
+        <tr class="interest-income">
             <td rowspan="3">利息股息收入</td>
             <td>利息</td>
-            <td></td>
+            <td>21</td>
+            <td>LINEBANK</td>
         </tr>
-        <tr>
+        <tr class="interest-income">
             <td>股息</td>
-            <td></td>
+            <td>100</td>
+            <td>富邦台50</td>
         </tr>
-        <tr>
-            <td colspan="2">利息股息收入總計</td>
+        <tr class="interest-income-total">
+            <td colspan="3">利息股息收入總計</td>
+            <td>121</td>
         </tr>
     </table>
     `;
@@ -424,43 +388,52 @@ function generateIncomeTable() {
 
 function generateExpenseTable() {
     return `
-    <table>
+    <table class="detail-table expense-table">
         <tr>
-            <th>種類</th>
+            <th>類型</th>
+            <th>項目</th>
             <th>金額</th>
             <th>備註</th>
         </tr>
-        <tr>
+        <tr class="general-expense">
             <td rowspan="4">一般預算</td>
             <td>飲食</td>
-            <td></td>
+            <td>7500</td>
+            <td>7月伙食費</td>
         </tr>
-        <tr>
+        <tr class="general-expense">
             <td>居住</td>
-            <td></td>
+            <td>9500</td>
+            <td>7月房租</td>
         </tr>
-        <tr>
+        <tr class="general-expense">
             <td>交通</td>
-            <td></td>
+            <td>1200</td>
+            <td>月票</td>
         </tr>
-        <tr>
-            <td colspan="2">一般預算總計</td>
+        <tr class="general-expense-total">
+            <td colspan="3">一般預算總計</td>
+            <td>18200</td>
         </tr>
-        <tr>
+        <tr class="savings-expense">
             <td rowspan="4">儲蓄投資預算</td>
             <td>旅遊基金</td>
-            <td></td>
+            <td>1000</td>
+            <td>每月7日扣款</td>
         </tr>
-        <tr>
+        <tr class="savings-expense">
             <td>稅務基金</td>
-            <td></td>
+            <td>2000</td>
+            <td>綜所稅</td>
         </tr>
-        <tr>
+        <tr class="savings-expense">
             <td>定期定額</td>
-            <td></td>
+            <td>9000</td>
+            <td>006208和2633</td>
         </tr>
-        <tr>
-            <td colspan="2">儲蓄投資預算總計</td>
+        <tr class="savings-expense-total">
+            <td colspan="3">儲蓄投資預算總計</td>
+            <td>12000</td>
         </tr>
     </table>
     `;
