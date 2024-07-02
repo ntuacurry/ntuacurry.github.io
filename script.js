@@ -400,7 +400,6 @@ document.getElementById('yearSelector').addEventListener('change', function() {
 // 在init函數中調用initBudgetTable
 function init() {
     gapi.load('client', initClient);
-    updateMonthDisplay();
     openTab('home');
     initBudgetTable();
 }
