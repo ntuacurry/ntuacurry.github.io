@@ -316,6 +316,95 @@ saveButton.onclick = function() {
     }
 }
 
+function initBudgetTable() {
+    const table = document.getElementById('budgetTable');
+    const rows = table.getElementsByTagName('tr');
+    
+    for (let i = 1; i < rows.length; i++) {
+        for (let j = 0; j < 13; j++) {
+            const cell = rows[i].insertCell();
+            cell.textContent = '0';
+            cell.addEventListener('click', function() {
+                openBudgetModal(i - 1, j);
+            });
+        }
+    }
+}
+
+function openBudgetModal(rowIndex, colIndex) {
+    const modal = document.getElementById('modal');
+    const modalContent = document.querySelector('.modal-content');
+    
+    // 清空現有內容
+    modalContent.innerHTML = '';
+    
+    // 添加新內容
+    const title = document.createElement('h2');
+    title.textContent = `編輯 ${rowIndex === 0 ? '自由現金' : rowIndex === 1 ? '支出預算' : '收入'}`;
+    modalContent.appendChild(title);
+    
+    const input = document.createElement('input');
+    input.type = 'number';
+    input.value = document.getElementById('budgetTable').rows[rowIndex + 1].cells[colIndex + 1].textContent;
+    modalContent.appendChild(input);
+    
+    const saveButton = document.createElement('button');
+    saveButton.textContent = '保存';
+    saveButton.onclick = function() {
+        saveBudgetData(rowIndex, colIndex, input.value);
+        modal.style.display = 'none';
+    };
+    modalContent.appendChild(saveButton);
+    
+    const cancelButton = document.createElement('button');
+    cancelButton.textContent = '取消';
+    cancelButton.onclick = function() {
+        modal.style.display = 'none';
+    };
+    modalContent.appendChild(cancelButton);
+    
+    modal.style.display = 'block';
+}
+
+function saveBudgetData(rowIndex, colIndex, value) {
+    const table = document.getElementById('budgetTable');
+    table.rows[rowIndex + 1].cells[colIndex + 1].textContent = value;
+    
+    // 更新自由現金
+    if (rowIndex !== 0) {
+        const income = parseInt(table.rows[3].cells[colIndex + 1].textContent);
+        const expense = parseInt(table.rows[2].cells[colIndex + 1].textContent);
+        table.rows[1].cells[colIndex + 1].textContent = income - expense;
+    }
+    
+    updateTotals();
+}
+
+function updateTotals() {
+    const table = document.getElementById('budgetTable');
+    
+    for (let i = 1; i < 4; i++) {
+        let total = 0;
+        for (let j = 1; j <= 12; j++) {
+            total += parseInt(table.rows[i].cells[j].textContent);
+        }
+        table.rows[i].cells[13].textContent = total;
+    }
+}
+
+document.getElementById('yearSelector').addEventListener('change', function() {
+    // 這裡可以添加載入不同年份數據的邏輯
+    console.log('Selected year:', this.value);
+});
+
+// 在init函數中調用initBudgetTable
+function init() {
+    gapi.load('client', initClient);
+    updateMonthDisplay();
+    openTab('home');
+    initBudgetTable();
+}
+
 function updateExpenseTable() {
     const tbody = document.querySelector('#expenseTable tbody');
     tbody.innerHTML = '';
