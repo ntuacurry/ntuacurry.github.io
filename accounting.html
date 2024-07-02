@@ -41,54 +41,27 @@
 				</div>
 			</div>
 			<div id="budget" class="tab-content">
-			    <div class="budget-header">
-			        <select id="yearSelector">
-			            <option value="2024">2024年</option>
-			            <option value="2025">2025年</option>
-			            <option value="2026">2026年</option>
-			        </select>
-			        <span>全年預算</span>
-			    </div>
-			    <table id="budgetTable">
-			        <thead>
-			            <tr>
-			                <th>項目</th>
-			                <th>1月</th>
-			                <th>2月</th>
-			                <th>3月</th>
-			                <th>4月</th>
-			                <th>5月</th>
-			                <th>6月</th>
-			                <th>7月</th>
-			                <th>8月</th>
-			                <th>9月</th>
-			                <th>10月</th>
-			                <th>11月</th>
-			                <th>12月</th>
-			                <th>全年總計</th>
-			            </tr>
-			        </thead>
-			        <tbody>
-			            <tr class="free-cash">
-			                <td>自由現金</td>
-			                <td></td><td></td><td></td><td></td><td></td><td></td>
-			                <td></td><td></td><td></td><td></td><td></td><td></td>
-			                <td></td>
-			            </tr>
-			            <tr class="expense">
-			                <td>支出預算</td>
-			                <td></td><td></td><td></td><td></td><td></td><td></td>
-			                <td></td><td></td><td></td><td></td><td></td><td></td>
-			                <td></td>
-			            </tr>
-			            <tr class="income">
-			                <td>收入</td>
-			                <td></td><td></td><td></td><td></td><td></td><td></td>
-			                <td></td><td></td><td></td><td></td><td></td><td></td>
-			                <td></td>
-			            </tr>
-			        </tbody>
-			    </table>
+				<div class="budget-header">
+					<select id="yearSelector">
+						<option value="2024">2024年</option>
+						<option value="2025">2025年</option>
+						<option value="2026">2026年</option>
+					</select>
+					<span>全年預算</span>
+				</div>
+				<div id="monthlyDetailContainer">
+					<h2 id="monthlyDetailTitle"></h2>
+					<div class="monthly-detail-content">
+						<div>
+							<h3>收入</h3>
+							<div id="incomeTableContainer"></div>
+						</div>
+						<div>
+							<h3>支出</h3>
+							<div id="expenseTableContainer"></div>
+						</div>
+					</div>
+				</div>
 			</div>
 			<div id="expenses" class="tab-content">
 				<h2>消費紀錄</h2>
