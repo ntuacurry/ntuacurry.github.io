@@ -321,117 +321,127 @@ function initBudgetTable() {
 }
 
 function openMonthlyDetailModal(monthIndex) {
-    const modal = document.getElementById('monthlyDetailModal');
-    const monthlyDetailTitle = document.getElementById('monthlyDetailTitle');
     const months = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
-  
-    monthlyDetailTitle.textContent = `2024年${months[monthIndex - 1]} 收入及預算`;
-  
-    generateIncomeTable();
-    generateExpenseTable();
-  
-    modal.style.display = 'block';
-  
-    const span = document.getElementsByClassName('close')[0];
-    span.onclick = function() {
-        modal.style.display = 'none';
-    }
-  
-    window.onclick = function(event) {
-        if (event.target == modal) {
-            modal.style.display = 'none';
-        }
-    }
+    const year = document.getElementById('yearSelector').value;
+    const month = months[monthIndex - 1];
+    
+    const newWindow = window.open('', '_blank');
+    newWindow.document.write(`
+        <html>
+        <head>
+            <title>${year}年${month} 收入及預算</title>
+            <style>
+                body { font-family: Arial, sans-serif; }
+                .container { display: flex; justify-content: space-around; }
+                table { border-collapse: collapse; }
+                th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                th { background-color: #f2f2f2; }
+            </style>
+        </head>
+        <body>
+            <h1>${year}年${month} 收入及預算</h1>
+            <div class="container">
+                <div>
+                    <h2>收入</h2>
+                    ${generateIncomeTable()}
+                </div>
+                <div>
+                    <h2>支出</h2>
+                    ${generateExpenseTable()}
+                </div>
+            </div>
+        </body>
+        </html>
+    `);
+    newWindow.document.close();
 }
 
 function generateIncomeTable() {
-    const incomeTable = document.getElementById('incomeTable');
-    incomeTable.innerHTML = `
-    <tr>
-      <th>種類</th>
-      <th>金額</th>
-      <th>備註</th>
-    </tr>
-    <tr>
-      <td rowspan="2">本業收入</td>
-      <td>薪水</td>
-      <td></td>
-    </tr>
-    <tr>
-      <td colspan="2">本業收入總計</td>
-    </tr>
-    <tr>
-      <td rowspan="2">業外收入</td>
-      <td>租屋補助</td>
-      <td></td>
-    </tr>
-    <tr>
-      <td>過年紅包</td>
-      <td></td>
-    </tr>
-    <tr>
-      <td colspan="2">業外收入總計</td>
-    </tr>
-    <tr>
-      <td rowspan="2">利息股息收入</td>
-      <td>利息</td>
-      <td></td>
-    </tr>
-    <tr>
-      <td>股息</td>
-      <td></td>
-    </tr>
-    <tr>
-      <td colspan="2">利息股息收入總計</td>
-    </tr>
-  `;
+    return `
+    <table>
+        <tr>
+            <th>種類</th>
+            <th>金額</th>
+            <th>備註</th>
+        </tr>
+        <tr>
+            <td rowspan="2">本業收入</td>
+            <td>薪水</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td colspan="2">本業收入總計</td>
+        </tr>
+        <tr>
+            <td rowspan="2">業外收入</td>
+            <td>租屋補助</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>過年紅包</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td colspan="2">業外收入總計</td>
+        </tr>
+        <tr>
+            <td rowspan="2">利息股息收入</td>
+            <td>利息</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>股息</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td colspan="2">利息股息收入總計</td>
+        </tr>
+    </table>
+    `;
 }
 
 function generateExpenseTable() {
-    const expenseTable = document.getElementById('expenseTable');
-    expenseTable.innerHTML = `
-    <tr>
-      <th>種類</th>
-      <th>金額</th>
-      <th>備註</th>
-    </tr>
-    <tr>
-      <td rowspan="3">一般預算</td>
-      <td>飲食</td>
-      <td></td>
-    </tr>
-    <tr>
-      <td>居住</td>
-      <td></td>
-    </tr>
-    <tr>
-      <td>交通</td>
-      <td></td>
-      <td></td>
-    </tr>
-    <tr>
-      <td colspan="3">一般預算總計</td>
-    </tr>
-    <tr>
-      <td rowspan="3">儲蓄投資預算</td>
-      <td>旅遊基金</td>
-      <td></td>
-      <td></td>
-    </tr>
-    <tr>
-      <td>稅務基金</td>
-      <td></td>
-      <td></td>
-    </tr>
-    <tr>
-      <td>定期定額</td>
-      <td></td>
-      <td></td>
-    </tr>
-    <tr>
-      <td colspan="3">儲蓄投資預算總計</td>
-    </tr>
-  `;
+    return `
+    <table>
+        <tr>
+            <th>種類</th>
+            <th>金額</th>
+            <th>備註</th>
+        </tr>
+        <tr>
+            <td rowspan="3">一般預算</td>
+            <td>飲食</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>居住</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>交通</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td colspan="3">一般預算總計</td>
+        </tr>
+        <tr>
+            <td rowspan="3">儲蓄投資預算</td>
+            <td>旅遊基金</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>稅務基金</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>定期定額</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td colspan="3">儲蓄投資預算總計</td>
+        </tr>
+    </table>
+    `;
 }
 
 // 確保在頁面加載完成後初始化預算表格
