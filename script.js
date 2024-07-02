@@ -2,7 +2,6 @@
 const CLIENT_ID = '269340063869-hua6h3613jrk1oe4sgaicakod3pm3q20.apps.googleusercontent.com';
 const API_KEY = 'AIzaSyAdQ9w_Y97e8PUXbntYcZwT6i6cm3Qqbrw';
 const SPREADSHEET_ID = '1hZqpxjsez2T8BNYI95F-uEe-XuXJZXZ-8S2sJ7xQ4kc';
-const RANGE = '2024-Jul!A:E';
 
 let tokenClient;
 let expenses = [];
@@ -161,7 +160,6 @@ function createNewSheet(sheetName) {
         }
     }).then(function(response) {
         console.log('New sheet created:', sheetName);
-        // 添加表頭
         gapi.client.sheets.spreadsheets.values.update({
             spreadsheetId: SPREADSHEET_ID,
             range: `${sheetName}!A1:E1`,
@@ -212,7 +210,6 @@ function updateDailyExpenses() {
     const currentYear = currentDate.getFullYear();
     const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
     
-    // 計算到當月底
     const daysPassed = Math.min(currentDate.getDate(), daysInMonth);
 
     const totalFoodExpense = filteredExpenses.filter(expense => 
@@ -224,10 +221,7 @@ function updateDailyExpenses() {
     const dailyFoodExpense = (totalFoodExpense / daysPassed).toFixed(1);
     const dailyTotalExpense = (totalExpense / daysInMonth).toFixed(1);
 
-    // 更新收支儀錶板頁面
     updatePageDailyExpenses('dashboard', dailyFoodExpense, dailyTotalExpense);
-
-    // 更新消費紀錄頁面
     updatePageDailyExpenses('expense', dailyFoodExpense, dailyTotalExpense);
 }
 
@@ -245,7 +239,7 @@ function updatePageDailyExpenses(page, dailyFoodExpense, dailyTotalExpense) {
 
 function updateDateTime() {
     var now = new Date();
-    var year = now.getFullYear() - 1911; // 轉換為民國年
+    var year = now.getFullYear() - 1911;
     var month = (now.getMonth() + 1).toString().padStart(2, '0');
     var day = now.getDate().toString().padStart(2, '0');
     var hours = now.getHours().toString().padStart(2, '0');
@@ -266,10 +260,9 @@ var cancelButton = document.getElementById("cancelButton");
 btn.onclick = function() {
     modal.style.display = "block";
     
-    // 設置日期選擇器的預設值為當前日期
     var today = new Date();
     var dd = String(today.getDate()).padStart(2, '0');
-    var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+    var mm = String(today.getMonth() + 1).padStart(2, '0');
     var yyyy = today.getFullYear();
 
     today = yyyy + '-' + mm + '-' + dd;
@@ -318,123 +311,42 @@ saveButton.onclick = function() {
 
 function initBudgetTable() {
     const table = document.getElementById('budgetTable');
-    const cells = table.getElementsByTagName('td');
-    const table = document.getElementById('budgetTable');
     const headerRow = table.rows[0];
   
     for (let i = 1; i < headerRow.cells.length - 1; i++) {
-      headerRow.cells[i].addEventListener('click', function() {
-        openMonthlyDetailModal(i);
-      });
+        headerRow.cells[i].addEventListener('click', function() {
+            openMonthlyDetailModal(i);
+        });
     }
-    for (let cell of cells) {
-        if (cell.cellIndex !== 0) {  // 跳過第一列（項目名稱）
-            cell.textContent = '';  // 清空單元格內容
-            cell.addEventListener('click', function() {
-                openBudgetModal(this);
-            });
-        }
-    }
-}
-
-function openBudgetModal(cell) {
-    const modal = document.getElementById('modal');
-    const modalContent = document.querySelector('.modal-content');
-    
-    modalContent.innerHTML = '';
-    
-    const title = document.createElement('h2');
-    title.textContent = `編輯 ${cell.parentElement.cells[0].textContent}`;
-    modalContent.appendChild(title);
-    
-    const input = document.createElement('input');
-    input.type = 'number';
-    input.value = cell.textContent || '0';
-    modalContent.appendChild(input);
-    
-    const saveButton = document.createElement('button');
-    saveButton.textContent = '保存';
-    saveButton.onclick = function() {
-        saveBudgetData(cell, input.value);
-        modal.style.display = 'none';
-    };
-    modalContent.appendChild(saveButton);
-    
-    const cancelButton = document.createElement('button');
-    cancelButton.textContent = '取消';
-    cancelButton.onclick = function() {
-        modal.style.display = 'none';
-    };
-    modalContent.appendChild(cancelButton);
-    
-    modal.style.display = 'block';
-}
-
-function saveBudgetData(cell, value) {
-    cell.textContent = value;
-    updateTotals();
-}
-
-function updateTotals() {
-    const table = document.getElementById('budgetTable');
-    const rows = table.rows;
-    
-    for (let i = 1; i < rows.length; i++) {  // 跳過表頭
-        let total = 0;
-        for (let j = 1; j <= 12; j++) {  // 1月到12月
-            total += parseInt(rows[i].cells[j].textContent || '0');
-        }
-        rows[i].cells[13].textContent = total;  // 設置總計
-    }
-    
-    // 更新自由現金
-    for (let j = 1; j <= 13; j++) {  // 包括總計列
-        const income = parseInt(rows[3].cells[j].textContent || '0');
-        const expense = parseInt(rows[2].cells[j].textContent || '0');
-        rows[1].cells[j].textContent = income - expense;
-    }
-}
-
-javascriptCopyfunction initBudgetTable() {
-  const table = document.getElementById('budgetTable');
-  const headerRow = table.rows[0];
-  
-  for (let i = 1; i < headerRow.cells.length - 1; i++) {
-    headerRow.cells[i].addEventListener('click', function() {
-      openMonthlyDetailModal(i);
-    });
-  }
-  
-  // ... 其他初始化代碼 ...
 }
 
 function openMonthlyDetailModal(monthIndex) {
-  const modal = document.getElementById('monthlyDetailModal');
-  const monthlyDetailTitle = document.getElementById('monthlyDetailTitle');
-  const months = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
+    const modal = document.getElementById('monthlyDetailModal');
+    const monthlyDetailTitle = document.getElementById('monthlyDetailTitle');
+    const months = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
   
-  monthlyDetailTitle.textContent = `2024年${months[monthIndex - 1]} 收入及預算`;
+    monthlyDetailTitle.textContent = `2024年${months[monthIndex - 1]} 收入及預算`;
   
-  generateIncomeTable();
-  generateExpenseTable();
+    generateIncomeTable();
+    generateExpenseTable();
   
-  modal.style.display = 'block';
+    modal.style.display = 'block';
   
-  const span = document.getElementsByClassName('close')[0];
-  span.onclick = function() {
-    modal.style.display = 'none';
-  }
-  
-  window.onclick = function(event) {
-    if (event.target == modal) {
-      modal.style.display = 'none';
+    const span = document.getElementsByClassName('close')[0];
+    span.onclick = function() {
+        modal.style.display = 'none';
     }
-  }
+  
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            modal.style.display = 'none';
+        }
+    }
 }
 
 function generateIncomeTable() {
-  const incomeTable = document.getElementById('incomeTable');
-  incomeTable.innerHTML = `
+    const incomeTable = document.getElementById('incomeTable');
+    incomeTable.innerHTML = `
     <tr>
       <th>種類</th>
       <th>金額</th>
@@ -444,45 +356,40 @@ function generateIncomeTable() {
       <td rowspan="2">本業收入</td>
       <td>薪水</td>
       <td></td>
-      <td></td>
     </tr>
     <tr>
-      <td colspan="3">本業收入總計</td>
+      <td colspan="2">本業收入總計</td>
     </tr>
     <tr>
       <td rowspan="2">業外收入</td>
       <td>租屋補助</td>
       <td></td>
-      <td></td>
     </tr>
     <tr>
       <td>過年紅包</td>
       <td></td>
-      <td></td>
     </tr>
     <tr>
-      <td colspan="3">業外收入總計</td>
+      <td colspan="2">業外收入總計</td>
     </tr>
     <tr>
       <td rowspan="2">利息股息收入</td>
       <td>利息</td>
       <td></td>
-      <td></td>
     </tr>
     <tr>
       <td>股息</td>
       <td></td>
-      <td></td>
     </tr>
     <tr>
-      <td colspan="3">利息股息收入總計</td>
+      <td colspan="2">利息股息收入總計</td>
     </tr>
   `;
 }
 
 function generateExpenseTable() {
-  const expenseTable = document.getElementById('expenseTable');
-  expenseTable.innerHTML = `
+    const expenseTable = document.getElementById('expenseTable');
+    expenseTable.innerHTML = `
     <tr>
       <th>種類</th>
       <th>金額</th>
@@ -492,11 +399,9 @@ function generateExpenseTable() {
       <td rowspan="3">一般預算</td>
       <td>飲食</td>
       <td></td>
-      <td></td>
     </tr>
     <tr>
       <td>居住</td>
-      <td></td>
       <td></td>
     </tr>
     <tr>
