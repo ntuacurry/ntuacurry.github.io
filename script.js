@@ -426,6 +426,7 @@ function updateMealExpensesChart() {
         options: {
             responsive: true, 
             maintainAspectRatio: false, 
+            aspectRatio: 1, 
             title: {
                 display: true,
                 text: '飲食支出分布'
@@ -487,6 +488,7 @@ function updateOverallExpensesChart() {
             title: {
                 display: true, 
                 maintainAspectRatio: false, 
+                aspectRatio: 1, 
                 text: '整體支出分布'
             }
         }
