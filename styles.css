@@ -229,3 +229,41 @@ body, html {
         width: 100%;
     }
 }
+
+.chart-container {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 1200px; /* 或者您想要的最大寬度 */
+    margin: 0 auto;
+}
+
+.chart-wrapper {
+    width: 48%; /* 略小於50%，為了留一些間距 */
+}
+
+.chart {
+    width: 100%;
+    height: 0;
+    padding-bottom: 100%; /* 使圖表保持正方形 */
+    position: relative;
+}
+
+.chart canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+@media (max-width: 768px) {
+    .chart-container {
+        flex-direction: column;
+    }
+
+    .chart-wrapper {
+        width: 100%;
+        margin-bottom: 20px;
+    }
+}
