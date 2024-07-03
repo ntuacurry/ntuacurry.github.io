@@ -8,6 +8,11 @@ let expenses = [];
 let currentDisplayMonth = new Date();
 let isAuthorized = false;
 
+var modal = document.getElementById("modal");
+var btn = document.getElementById("addButton");
+var saveButton = document.getElementById("saveButton");
+var cancelButton = document.getElementById("cancelButton");
+
 function init() {
     gapi.load('client', initGapiClient);
     updateMonthDisplay();
@@ -213,12 +218,6 @@ function updateDateTime() {
     document.getElementById('datetime').textContent = dateTimeString;
 }
 
-// 模態框相關操作
-var modal = document.getElementById("modal");
-var btn = document.getElementById("addButton");
-var saveButton = document.getElementById("saveButton");
-var cancelButton = document.getElementById("cancelButton");
-
 btn.onclick = function() {
     modal.style.display = "block";
     
@@ -379,6 +378,15 @@ function updateExpenseTable() {
         deleteButton.onclick = () => deleteExpense(expense.id);
         actionCell.appendChild(deleteButton);
     });
+}
+
+function editExpense(expense) {
+    document.getElementById('expenseId').value = expense.id;
+    document.getElementById('date').value = expense.date;
+    document.getElementById('amount').value = expense.amount;
+    document.getElementById('type').value = expense.type;
+    document.getElementById('note').value = expense.note;
+    modal.style.display = "block";
 }
 
 function getFilteredExpenses() {
