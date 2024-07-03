@@ -48,9 +48,17 @@ function initGapiClient() {
 
 function getToken() {
     if (!isAuthorized) {
-        tokenClient.requestAccessToken();
+        tokenClient.requestAccessToken({
+            callback: (tokenResponse) => {
+                if (tokenResponse && tokenResponse.access_token) {
+                    isAuthorized = true;
+                    loadExpenses();
+                }
+            }
+        });
     } else {
         console.log('Already authorized');
+	loadExpenses();
     }
 }
 
@@ -199,10 +207,14 @@ function createNewSheet(sheetName) {
 }
 
 function updateContent() {
-    updateExpenseTable();
-    updateMealExpensesChart();
-    updateOverallExpensesChart();
-    updateDailyExpenses();
+    openTab('dashboard');
+
+    setTimeout(() => {
+	updateExpenseTable();
+	updateMealExpensesChart();
+	updateOverallExpensesChart();
+	updateDailyExpenses();
+    }, 100);
 }
 
 function updateDateTime() {
