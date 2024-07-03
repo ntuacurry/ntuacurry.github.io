@@ -7,6 +7,9 @@ let tokenClient;
 let expenses = [];
 let currentDisplayMonth = new Date();
 let isAuthorized = false;
+//預算頁面所需的變數
+let currentBudgetMonth = new Date().getMonth() + 1;
+let currentBudgetYear = new Date().getFullYear();
 
 var modal = document.getElementById("modal");
 var btn = document.getElementById("addButton");
@@ -311,6 +314,10 @@ function openTab(tabName) {
             loadBudgetData(currentYear);
         });
     }
+
+    if (tabName === 'budget') {
+        initBudgetPage();
+    }
 }
 
 function updateDailyExpenses() {
@@ -499,6 +506,46 @@ function updateOverallExpensesChart() {
 }
 
 //預算頁面功能區
+//初始化預算頁面
+function initBudgetPage() {
+    updateBudgetMonthDisplay();
+    checkAndCreateBudgetSheet(currentBudgetYear).then(() => {
+        updateYearlyBudgetTable(currentBudgetYear);
+        loadBudgetData(currentBudgetYear, currentBudgetMonth);
+    });
+    
+    document.getElementById('prevMonthBudget').addEventListener('click', function() {
+        if (currentBudgetMonth === 1) {
+            currentBudgetMonth = 12;
+            currentBudgetYear--;
+        } else {
+            currentBudgetMonth--;
+        }
+        updateBudgetMonthDisplay();
+        loadBudgetData(currentBudgetYear, currentBudgetMonth);
+    });
+
+    document.getElementById('nextMonthBudget').addEventListener('click', function() {
+        if (currentBudgetMonth === 12) {
+            currentBudgetMonth = 1;
+            currentBudgetYear++;
+        } else {
+            currentBudgetMonth++;
+        }
+        updateBudgetMonthDisplay();
+        loadBudgetData(currentBudgetYear, currentBudgetMonth);
+    });
+}
+
+//更新月份預算的部分
+function updateBudgetMonthDisplay() {
+    const monthNames = ["一月", "二月", "三月", "四月", "五月", "六月",
+        "七月", "八月", "九月", "十月", "十一月", "十二月"
+    ];
+    document.getElementById('currentMonthBudget').textContent = 
+        `${currentBudgetYear}年 ${monthNames[currentBudgetMonth - 1]}`;
+}
+
 function initBudgetTables() {
     updateYearlyBudgetTable();
     updateMonthlyIncomeTables();
@@ -593,7 +640,7 @@ function updateIncomeTable(budgetData, year, month) {
     const incomeTypes = ["本業收入", "業外收入", "利息股息收入"];
     let html = `<thead><tr><th>類型</th><th>項目</th><th>金額</th><th>備註</th></tr></thead><tbody>`;
 
-    incomeTypes.forEach(type => {
+	incomeTypes.forEach(type => {
         const typeData = budgetData.filter(item => item.type === type);
         if (typeData.length === 0) {
             html += `<tr class="${type.replace(/\s+/g, '-')}">
@@ -612,6 +659,7 @@ function updateIncomeTable(budgetData, year, month) {
         html += `<tr class="${type.replace(/\s+/g, '-')}-total">
             <td colspan="2">${type}總計</td><td>${total}</td><td></td>
         </tr>`;
+
     });
 
     html += '</tbody>';
@@ -721,9 +769,9 @@ function updateYearlyBudgetCell(budgetData, month) {
         .reduce((sum, item) => sum + item.amount, 0);
     const freeCash = incomeTotal - expenseTotal;
 
-    document.getElementById(`收入-${month}`).textContent = incomeTotal;
-    document.getElementById(`支出預算-${month}`).textContent = expenseTotal;
-    document.getElementById(`自由現金-${month}`).textContent = freeCash;
+    document.getElementById(`收入-${month}`).textContent = incomeTotal || '0';
+    document.getElementById(`支出預算-${month}`).textContent = expenseTotal || '0';
+    document.getElementById(`自由現金-${month}`).textContent = freeCash || '0';
 
     updateYearlyTotals();
 }
@@ -735,153 +783,6 @@ function updateYearlyTotals() {
             .reduce((sum, month) => sum + parseFloat(document.getElementById(`${row.replace(/\s+/g, '-').toLowerCase()}-${month}`).textContent), 0);
         document.getElementById(`${row.replace(/\s+/g, '-').toLowerCase()}-total`).textContent = total;
     });
-}
-
-function updateMonthlyIncomeTables() {
-    const incomeTable = document.getElementById('incomeTable');
-    const currentMonth = new Date().getMonth();
-    const currentYear = new Date().getFullYear();
-    
-    // 这里应该从API获取数据，这里用模拟数据作为示例
-    const incomeData = [
-        { type: '本業收入', item: '薪水', amount: 41000, note: '本薪' },
-        { type: '業外收入', item: '租屋補助', amount: 3600, note: '7月租屋補助' },
-        { type: '業外收入', item: '過年紅包', amount: 10000, note: '外婆' },
-        { type: '利息股息收入', item: '利息', amount: 21, note: 'LINEBANK' },
-        { type: '利息股息收入', item: '股息', amount: 100, note: '富邦台50' }
-    ];
-
-    let html = `
-        <thead>
-            <tr>
-                <th>類型</th>
-                <th>項目</th>
-                <th>金額</th>
-                <th>備註</th>
-            </tr>
-        </thead>
-        <tbody>
-    `;
-
-    let totalMainIncome = 0;
-    let totalOtherIncome = 0;
-    let totalInterestIncome = 0;
-
-    incomeData.forEach(income => {
-        html += `
-            <tr class="${income.type === '本業收入' ? 'main-income' : income.type === '業外收入' ? 'other-income' : 'interest-income'}">
-                <td>${income.type}</td>
-                <td>${income.item}</td>
-                <td>${income.amount}</td>
-                <td>${income.note}</td>
-            </tr>
-        `;
-        if (income.type === '本業收入') totalMainIncome += income.amount;
-        else if (income.type === '業外收入') totalOtherIncome += income.amount;
-        else totalInterestIncome += income.amount;
-    });
-
-    html += `
-            <tr class="main-income">
-                <td colspan="2">本業收入總計</td>
-                <td>${totalMainIncome}</td>
-                <td></td>
-            </tr>
-            <tr class="other-income">
-                <td colspan="2">業外收入總計</td>
-                <td>${totalOtherIncome}</td>
-                <td></td>
-            </tr>
-            <tr class="interest-income">
-                <td colspan="2">利息股息收入總計</td>
-                <td>${totalInterestIncome}</td>
-                <td></td>
-            </tr>
-        </tbody>
-    `;
-
-    incomeTable.innerHTML = html;
-}
-
-function updateMonthlyExpenseTables() {
-    const expenseTable = document.getElementById('expenseTable');
-    const currentMonth = new Date().getMonth();
-    const currentYear = new Date().getFullYear();
-    
-    // 这里应该从API获取数据，这里用模拟数据作为示例
-    const expenseData = [
-        { type: '一般預算', item: '飲食', amount: 7500, note: '7月伙食費' },
-        { type: '一般預算', item: '居住', amount: 9500, note: '7月房租' },
-        { type: '一般預算', item: '交通', amount: 1200, note: '月票' },
-        { type: '儲蓄投資預算', item: '旅遊基金', amount: 1000, note: '每月7日扣款' },
-        { type: '儲蓄投資預算', item: '稅務基金', amount: 2000, note: '綜所稅' },
-        { type: '儲蓄投資預算', item: '定期定額', amount: 9000, note: '006208和2633' }
-    ];
-
-    let html = `
-        <thead>
-            <tr>
-                <th>類型</th>
-                <th>項目</th>
-                <th>金額</th>
-                <th>備註</th>
-            </tr>
-        </thead>
-        <tbody>
-    `;
-
-    let totalGeneralExpense = 0;
-    let totalSavingsExpense = 0;
-
-    expenseData.forEach(expense => {
-        html += `
-            <tr class="${expense.type === '一般預算' ? 'general-expense' : 'savings-expense'}">
-                <td>${expense.type}</td>
-                <td>${expense.item}</td>
-                <td>${expense.amount}</td>
-                <td>${expense.note}</td>
-            </tr>
-        `;
-        if (expense.type === '一般預算') totalGeneralExpense += expense.amount;
-        else totalSavingsExpense += expense.amount;
-    });
-
-    html += `
-            <tr class="general-expense">
-                <td colspan="2">一般預算總計</td>
-                <td>${totalGeneralExpense}</td>
-                <td></td>
-            </tr>
-            <tr class="savings-expense">
-                <td colspan="2">儲蓄投資預算總計</td>
-                <td>${totalSavingsExpense}</td>
-                <td></td>
-            </tr>
-        </tbody>
-    `;
-
-    expenseTable.innerHTML = html;
-}
-
-function openMonthlyDetailModal(monthIndex) {
-    const months = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
-    const year = document.getElementById('yearSelector').value;
-    const month = months[monthIndex - 1];
-    
-    document.getElementById('monthlyDetailTitle').textContent = `${year}年${month} 收入及預算`;
-    document.getElementById('incomeTableContainer').innerHTML = generateIncomeTable();
-    document.getElementById('expenseTableContainer').innerHTML = generateExpenseTable();
-    document.getElementById('monthlyDetailContainer').style.display = 'block';
-}
-
-function generateIncomeTable() {
-    // 生成收入表格的 HTML
-    // ...
-}
-
-function generateExpenseTable() {
-    // 生成支出表格的 HTML
-    // ...
 }
 
 document.getElementById('prevMonth').addEventListener('click', function() {
