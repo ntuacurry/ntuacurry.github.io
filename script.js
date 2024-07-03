@@ -14,6 +14,7 @@ function init() {
     document.addEventListener('DOMContentLoaded', function() {
         openTab('home');
         initBudgetTables();
+	setInterval(updateDateTime, 1000);
     });
 }
 
@@ -63,7 +64,10 @@ function loadExpenses() {
                 type: row[3],
                 note: row[4]
             }));
+            console.log('Expenses loaded:', expenses); // 添加此行以檢查數據
             updateContent();
+        } else {
+            console.log('No expenses data found');
         }
     }, function(response) {
         console.error('Error loading expenses', response.result.error.message);
@@ -209,7 +213,63 @@ function updateDateTime() {
     document.getElementById('datetime').textContent = dateTimeString;
 }
 
-setInterval(updateDateTime, 1000);
+// 模態框相關操作
+var modal = document.getElementById("modal");
+var btn = document.getElementById("addButton");
+var saveButton = document.getElementById("saveButton");
+var cancelButton = document.getElementById("cancelButton");
+
+btn.onclick = function() {
+    modal.style.display = "block";
+    
+    var today = new Date();
+    var dd = String(today.getDate()).padStart(2, '0');
+    var mm = String(today.getMonth() + 1).padStart(2, '0');
+    var yyyy = today.getFullYear();
+
+    today = yyyy + '-' + mm + '-' + dd;
+    document.getElementById('date').value = today;
+}
+
+function clearModalForm() {
+    document.getElementById('expenseId').value = '';
+    document.getElementById('date').value = '';
+    document.getElementById('amount').value = '';
+    document.getElementById('type').value = '';
+    document.getElementById('note').value = '';
+}
+
+cancelButton.onclick = function() {
+    modal.style.display = "none";
+    clearModalForm();
+}
+
+window.onclick = function(event) {
+    if (event.target == modal) {
+        modal.style.display = "none";
+        clearModalForm();
+    }
+}
+
+saveButton.onclick = function() {
+    const id = document.getElementById('expenseId').value;
+    const date = document.getElementById('date').value;
+    const amount = document.getElementById('amount').value;
+    const type = document.getElementById('type').value;
+    const note = document.getElementById('note').value;
+
+    if (date && amount && type) {
+        if (id) {
+            updateExpense(parseInt(id), date, amount, type, note);
+        } else {
+            addExpense(date, amount, type, note);
+        }
+        modal.style.display = "none";
+        clearModalForm();
+    } else {
+        alert('請填寫所有必填欄位');
+    }
+}
 
 function updateMonthDisplay() {
     const monthNames = ["一月", "二月", "三月", "四月", "五月", "六月",
@@ -219,6 +279,7 @@ function updateMonthDisplay() {
         `${currentDisplayMonth.getFullYear()}年 ${monthNames[currentDisplayMonth.getMonth()]}`;
 }
 
+//打開標籤頁
 function openTab(tabName) {
     var tabContent = document.getElementsByClassName("tab-content");
     for (var i = 0; i < tabContent.length; i++) {
