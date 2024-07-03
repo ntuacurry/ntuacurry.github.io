@@ -304,6 +304,13 @@ function openTab(tabName) {
     if (tabName === 'budget') {
         initBudgetTables();
     }
+
+    if (tabName === 'budget') {
+        const currentYear = new Date().getFullYear();
+        checkAndCreateBudgetSheet(currentYear).then(() => {
+            loadBudgetData(currentYear);
+        });
+    }
 }
 
 function updateDailyExpenses() {
@@ -491,11 +498,103 @@ function updateOverallExpensesChart() {
     });
 }
 
+//預算頁面功能區
 function initBudgetTables() {
     updateYearlyBudgetTable();
     updateMonthlyIncomeTables();
     updateMonthlyExpenseTables();
 }
+
+function checkAndCreateBudgetSheet(year) {
+    const sheetName = `${year}-budget`;
+    return gapi.client.sheets.spreadsheets.get({
+        spreadsheetId: SPREADSHEET_ID
+    }).then(response => {
+        const sheets = response.result.sheets;
+        const sheetExists = sheets.some(sheet => sheet.properties.title === sheetName);
+        if (!sheetExists) {
+            return createNewBudgetSheet(sheetName);
+        }
+        return Promise.resolve();
+    });
+}
+
+//檢查是否有所需資料的活頁簿
+function createNewBudgetSheet(sheetName) {
+    return gapi.client.sheets.spreadsheets.batchUpdate({
+        spreadsheetId: SPREADSHEET_ID,
+        resource: {
+            requests: [{
+                addSheet: {
+                    properties: {
+                        title: sheetName
+                    }
+                }
+            }]
+        }
+    }).then(() => {
+        return gapi.client.sheets.spreadsheets.values.update({
+            spreadsheetId: SPREADSHEET_ID,
+            range: `${sheetName}!A1:F1`,
+            valueInputOption: 'USER_ENTERED',
+            resource: {
+                values: [["Index", "Month", "Amount", "Type", "Item", "Note"]]
+            }
+        });
+    });
+}
+
+//載入預算數據
+function loadBudgetData(year) {
+    const sheetName = `${year}-budget`;
+    gapi.client.sheets.spreadsheets.values.get({
+        spreadsheetId: SPREADSHEET_ID,
+        range: `${sheetName}!A:F`
+    }).then(response => {
+        const values = response.result.values;
+        if (values && values.length > 1) {
+            const budgetData = values.slice(1).map(row => ({
+                index: parseInt(row[0]),
+                month: parseInt(row[1]),
+                amount: parseFloat(row[2]),
+                type: row[3],
+                item: row[4],
+                note: row[5]
+            }));
+            updateBudgetTable(budgetData);
+        } else {
+            console.log('No budget data found');
+        }
+    }, response => {
+        console.error('Error loading budget data', response.result.error.message);
+    });
+}
+
+//更新預算表格
+function updateBudgetTable(budgetData) {
+    const yearlyBudgetTable = document.getElementById('yearlyBudgetTable');
+    const incomeTable = document.getElementById('incomeTable');
+    const expenseTable = document.getElementById('expenseTable');
+
+    // Clear existing data
+    yearlyBudgetTable.querySelector('tbody').innerHTML = '';
+    incomeTable.innerHTML = '';
+    expenseTable.innerHTML = '';
+
+    // Update yearly budget table
+    const yearlyBudget = calculateYearlyBudget(budgetData);
+    updateYearlyBudgetTable(yearlyBudget);
+
+    // Update monthly income and expense tables
+    updateMonthlyTables(budgetData);
+}
+
+//計算全年預算表格中要顯示的數據
+function calculateYearlyBudget(budgetData) {
+    // Calculate yearly budget from monthly data
+    // ...
+}
+
 
 function updateYearlyBudgetTable() {
     // 这里添加更新全年預算表格的逻辑
