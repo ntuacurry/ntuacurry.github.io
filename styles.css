@@ -240,13 +240,12 @@ body, html {
 
 .chart-wrapper {
     width: 48%; /* 略小於50%，為了留一些間距 */
-    height: 48%;
 }
 
 .chart {
     width: 100%;
     height: 0;
-    
+    padding-bottom: 100%; /* 使圖表保持正方形 */
     position: relative;
 }
 
@@ -266,5 +265,8 @@ body, html {
     .chart-wrapper {
         width: 100%;
         margin-bottom: 20px;
+    }
+    .chart {
+        padding-bottom: 75%; /* 调整为3:4的宽高比 */
     }
 }
