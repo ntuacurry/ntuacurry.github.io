@@ -245,7 +245,7 @@ body, html {
 .chart {
     width: 100%;
     height: 0;
-    padding-bottom: 100%; /* 使圖表保持正方形 */
+
     position: relative;
 }
 
