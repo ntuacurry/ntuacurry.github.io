@@ -48,17 +48,9 @@ function initGapiClient() {
 
 function getToken() {
     if (!isAuthorized) {
-        tokenClient.requestAccessToken({
-            callback: (tokenResponse) => {
-                if (tokenResponse && tokenResponse.access_token) {
-                    isAuthorized = true;
-                    loadExpenses();
-                }
-            }
-        });
+        tokenClient.requestAccessToken();
     } else {
         console.log('Already authorized');
-	loadExpenses();
     }
 }
 
@@ -207,14 +199,10 @@ function createNewSheet(sheetName) {
 }
 
 function updateContent() {
-    openTab('dashboard');
-
-    setTimeout(() => {
-	updateExpenseTable();
-	updateMealExpensesChart();
-	updateOverallExpensesChart();
-	updateDailyExpenses();
-    }, 100);
+    updateExpenseTable();
+    updateMealExpensesChart();
+    updateOverallExpensesChart();
+    updateDailyExpenses();
 }
 
 function updateDateTime() {
@@ -436,9 +424,7 @@ function updateMealExpensesChart() {
             }]
         },
         options: {
-            responsive: true, 
-            maintainAspectRatio: false, 
-            aspectRatio: 1, 
+            responsive: true,
             title: {
                 display: true,
                 text: '飲食支出分布'
@@ -498,9 +484,7 @@ function updateOverallExpensesChart() {
         options: {
             responsive: true,
             title: {
-                display: true, 
-                maintainAspectRatio: false, 
-                aspectRatio: 1, 
+                display: true,
                 text: '整體支出分布'
             }
         }
