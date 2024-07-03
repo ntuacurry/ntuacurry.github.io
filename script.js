@@ -545,48 +545,107 @@ function createNewBudgetSheet(sheetName) {
 }
 
 //載入預算數據
-function loadBudgetData(year) {
+function loadBudgetData(year, month) {
     const sheetName = `${year}-budget`;
+    const monthName = getMonthName(month);
+    
     gapi.client.sheets.spreadsheets.values.get({
         spreadsheetId: SPREADSHEET_ID,
         range: `${sheetName}!A:F`
     }).then(response => {
         const values = response.result.values;
         if (values && values.length > 1) {
-            const budgetData = values.slice(1).map(row => ({
-                index: parseInt(row[0]),
-                month: parseInt(row[1]),
-                amount: parseFloat(row[2]),
-                type: row[3],
-                item: row[4],
-                note: row[5]
-            }));
-            updateBudgetTable(budgetData);
+            const budgetData = values.slice(1)
+                .filter(row => row[1] === monthName)
+                .map(row => ({
+                    index: parseInt(row[0]),
+                    month: row[1],
+                    amount: parseFloat(row[2]),
+                    type: row[3],
+                    item: row[4],
+                    note: row[5]
+                }));
+            updateBudgetTables(budgetData, year, month);
         } else {
             console.log('No budget data found');
+            updateBudgetTables([], year, month);
         }
     }, response => {
         console.error('Error loading budget data', response.result.error.message);
     });
 }
 
+function getMonthName(month) {
+    const monthNames = ["January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"];
+    return monthNames[month - 1];
+}
+
 //更新預算表格
-function updateBudgetTable(budgetData) {
-    const yearlyBudgetTable = document.getElementById('yearlyBudgetTable');
+function updateBudgetTables(budgetData, year, month) {
+    updateIncomeTable(budgetData, year, month);
+    updateExpenseTable(budgetData, year, month);
+    updateYearlyBudgetTable(year);
+}
+
+function updateIncomeTable(budgetData, year, month) {
     const incomeTable = document.getElementById('incomeTable');
+    const incomeTypes = ["本業收入", "業外收入", "利息股息收入"];
+    let html = `<thead><tr><th>類型</th><th>項目</th><th>金額</th><th>備註</th></tr></thead><tbody>`;
+
+    incomeTypes.forEach(type => {
+        const typeData = budgetData.filter(item => item.type === type);
+        if (typeData.length === 0) {
+            html += `<tr class="${type.replace(/\s+/g, '-')}">
+                <td rowspan="2">${type}</td>
+                <td></td><td>0</td><td></td>
+            </tr>`;
+        } else {
+            typeData.forEach((item, index) => {
+                html += `<tr class="${type.replace(/\s+/g, '-')}">
+                    ${index === 0 ? `<td rowspan="${typeData.length}">${type}</td>` : ''}
+                    <td>${item.item}</td><td>${item.amount}</td><td>${item.note}</td>
+                </tr>`;
+            });
+        }
+        const total = typeData.reduce((sum, item) => sum + item.amount, 0);
+        html += `<tr class="${type.replace(/\s+/g, '-')}-total">
+            <td colspan="2">${type}總計</td><td>${total}</td><td></td>
+        </tr>`;
+    });
+
+    html += '</tbody>';
+    incomeTable.innerHTML = html;
+}
+
+function updateExpenseTable(budgetData, year, month) {
     const expenseTable = document.getElementById('expenseTable');
+    const expenseTypes = ["一般預算", "儲蓄投資預算"];
+    let html = `<thead><tr><th>類型</th><th>項目</th><th>金額</th><th>備註</th></tr></thead><tbody>`;
 
-    // Clear existing data
-    yearlyBudgetTable.querySelector('tbody').innerHTML = '';
-    incomeTable.innerHTML = '';
-    expenseTable.innerHTML = '';
+    expenseTypes.forEach(type => {
+        const typeData = budgetData.filter(item => item.type === type);
+        if (typeData.length === 0) {
+            html += `<tr class="${type.replace(/\s+/g, '-')}">
+                <td rowspan="2">${type}</td>
+                <td></td><td>0</td><td></td>
+            </tr>`;
+        } else {
+            typeData.forEach((item, index) => {
+                html += `<tr class="${type.replace(/\s+/g, '-')}">
+                    ${index === 0 ? `<td rowspan="${typeData.length}">${type}</td>` : ''}
+                    <td>${item.item}</td><td>${item.amount}</td><td>${item.note}</td>
+                </tr>`;
+            });
+        }
+        const total = typeData.reduce((sum, item) => sum + item.amount, 0);
+        html += `<tr class="${type.replace(/\s+/g, '-')}-total">
+            <td colspan="2">${type}總計</td><td>${total}</td><td></td>
+        </tr>`;
+    });
 
-    // Update yearly budget table
-    const yearlyBudget = calculateYearlyBudget(budgetData);
-    updateYearlyBudgetTable(yearlyBudget);
-
-    // Update monthly income and expense tables
-    updateMonthlyTables(budgetData);
+    html += '</tbody>';
+    expenseTable.innerHTML = html;
 }
 
 //計算全年預算表格中要顯示的數據
@@ -595,10 +654,87 @@ function calculateYearlyBudget(budgetData) {
     // ...
 }
 
+//更新年度預算表格
+function updateYearlyBudgetTable(year) {
+    const yearlyBudgetTable = document.getElementById('yearlyBudgetTable');
+    const tbody = yearlyBudgetTable.querySelector('tbody');
+    tbody.innerHTML = '';
 
-function updateYearlyBudgetTable() {
-    // 这里添加更新全年預算表格的逻辑
-    // 可以从API获取数据或使用本地存储的数据
+    const months = Array.from({length: 12}, (_, i) => i + 1);
+    const rows = ['自由現金', '支出預算', '收入'];
+
+    rows.forEach(row => {
+        const tr = document.createElement('tr');
+        tr.className = row.replace(/\s+/g, '-').toLowerCase();
+        tr.innerHTML = `<td>${row}</td>`;
+
+        months.forEach(month => {
+            const cell = document.createElement('td');
+            cell.id = `${row.replace(/\s+/g, '-').toLowerCase()}-${month}`;
+            cell.textContent = '0';  // 預設值
+            tr.appendChild(cell);
+        });
+
+        const totalCell = document.createElement('td');
+        totalCell.id = `${row.replace(/\s+/g, '-').toLowerCase()}-total`;
+        totalCell.textContent = '0';  // 預設值
+        tr.appendChild(totalCell);
+
+        tbody.appendChild(tr);
+    });
+
+    // 加載每個月的數據
+    months.forEach(month => {
+        loadMonthlyBudgetData(year, month);
+    });
+}
+
+//載入特定月份的預算數據
+function loadMonthlyBudgetData(year, month) {
+    const sheetName = `${year}-budget`;
+    const monthName = getMonthName(month);
+    
+    gapi.client.sheets.spreadsheets.values.get({
+        spreadsheetId: SPREADSHEET_ID,
+        range: `${sheetName}!A:F`
+    }).then(response => {
+        const values = response.result.values;
+        if (values && values.length > 1) {
+            const budgetData = values.slice(1)
+                .filter(row => row[1] === monthName)
+                .map(row => ({
+                    type: row[3],
+                    amount: parseFloat(row[2])
+                }));
+            updateYearlyBudgetCell(budgetData, month);
+        }
+    }, response => {
+        console.error('Error loading monthly budget data', response.result.error.message);
+    });
+}
+
+//更新年度預算儲存格
+function updateYearlyBudgetCell(budgetData, month) {
+    const incomeTotal = budgetData.filter(item => ['本業收入', '業外收入', '利息股息收入'].includes(item.type))
+        .reduce((sum, item) => sum + item.amount, 0);
+    const expenseTotal = budgetData.filter(item => ['一般預算', '儲蓄投資預算'].includes(item.type))
+        .reduce((sum, item) => sum + item.amount, 0);
+    const freeCash = incomeTotal - expenseTotal;
+
+    document.getElementById(`收入-${month}`).textContent = incomeTotal;
+    document.getElementById(`支出預算-${month}`).textContent = expenseTotal;
+    document.getElementById(`自由現金-${month}`).textContent = freeCash;
+
+    updateYearlyTotals();
+}
+
+//更新年預算總和
+function updateYearlyTotals() {
+    ['自由現金', '支出預算', '收入'].forEach(row => {
+        const total = Array.from({length: 12}, (_, i) => i + 1)
+            .reduce((sum, month) => sum + parseFloat(document.getElementById(`${row.replace(/\s+/g, '-').toLowerCase()}-${month}`).textContent), 0);
+        document.getElementById(`${row.replace(/\s+/g, '-').toLowerCase()}-total`).textContent = total;
+    });
 }
 
 function updateMonthlyIncomeTables() {
