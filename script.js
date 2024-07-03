@@ -41,7 +41,11 @@ function initGapiClient() {
             callback: (tokenResponse) => {
                 if (tokenResponse && tokenResponse.access_token) {
                     isAuthorized = true;
-                    loadExpenses();
+					loadExpenses().then(() => {
+						updateContent();
+					}).catch((error) => {
+						console.error('Failed to load expenses:', error);
+					});
                 }
             },
         });
@@ -74,27 +78,31 @@ const throttle = (func, limit) => {
 const throttledLoadExpenses = throttle(loadExpenses, 1000);
 
 function loadExpenses() {
-    const sheetName = getCurrentSheetName();
-    gapi.client.sheets.spreadsheets.values.get({
-        spreadsheetId: SPREADSHEET_ID,
-        range: `${sheetName}!A:E`
-    }).then(function(response) {
-        const values = response.result.values;
-        if (values && values.length > 0) {
-            expenses = values.slice(1).map((row) => ({
-                id: parseInt(row[0]),
-                date: row[1],
-                amount: parseInt(row[2]),
-                type: row[3],
-                note: row[4]
-            }));
-            console.log('Expenses loaded:', expenses);
-            updateContent();
-        } else {
-            console.log('No expenses data found');
-        }
-    }, function(response) {
-        console.error('Error loading expenses', response.result.error.message);
+    return new Promise((resolve, reject) => {
+        const sheetName = getCurrentSheetName();
+        gapi.client.sheets.spreadsheets.values.get({
+            spreadsheetId: SPREADSHEET_ID,
+            range: `${sheetName}!A:E`
+        }).then(function(response) {
+            const values = response.result.values;
+            if (values && values.length > 0) {
+                expenses = values.slice(1).map((row) => ({
+                    id: parseInt(row[0]),
+                    date: row[1],
+                    amount: parseInt(row[2]),
+                    type: row[3],
+                    note: row[4]
+                }));
+                console.log('Expenses loaded:', expenses);
+                resolve();
+            } else {
+                console.log('No expenses data found');
+                resolve();
+            }
+        }, function(response) {
+            console.error('Error loading expenses', response.result.error.message);
+            reject(response.result.error);
+        });
     });
 }
 
@@ -366,7 +374,11 @@ function updatePageDailyExpenses(page, dailyFoodExpense, dailyTotalExpense) {
 }
 
 function updateExpenseTable() {
-    const tbody = document.querySelector('#expenseTable tbody');
+	if (!expenses || !Array.isArray(expenses)) {
+        console.log('Expenses data not available yet');
+        return;
+    }
+	const tbody = document.querySelector('#expenseTable tbody');
     tbody.innerHTML = '';
 
     const filteredExpenses = getFilteredExpenses();
