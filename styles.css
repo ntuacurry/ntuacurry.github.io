@@ -267,6 +267,6 @@ body, html {
         margin-bottom: 20px;
     }
     .chart {
-        padding-bottom: 133%; /* 调整为3:4的宽高比 */
+        padding-bottom: 100%; /* 调整为3:4的宽高比 */
     }
 }
