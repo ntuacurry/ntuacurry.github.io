@@ -330,7 +330,9 @@ function openTab(tabName) {
     if (tabName === 'budget') {
         const currentYear = new Date().getFullYear();
         checkAndCreateBudgetSheet(currentYear).then(() => {
-            loadBudgetData(currentYear);
+            loadBudgetData(currentYear, currentBudgetMonth).then(data => {
+                updateBudgetTables(data, currentYear, currentBudgetMonth);
+            });
         });
     }
 
@@ -524,6 +526,86 @@ function updateOverallExpensesChart() {
     });
 }
 
+//預算頁面功能區
+//初始化預算頁面
+function initBudgetPage() {
+    updateBudgetMonthDisplay();
+    const currentYear = new Date().getFullYear();
+    checkAndCreateBudgetSheet(currentYear).then(() => {
+        updateYearlyBudgetTable(currentYear);
+        getCachedBudgetData(currentYear, currentBudgetMonth).then(data => {
+	    updateBudgetTables(data, currentYear, currentBudgetMonth);
+	});
+    });
+    
+    document.getElementById('prevMonthBudget').addEventListener('click', function() {
+        if (currentBudgetMonth === 1) {
+            currentBudgetMonth = 12;
+            currentYear--;
+        } else {
+            currentBudgetMonth--;
+        }
+        updateBudgetMonthDisplay();
+        getCachedBudgetData(currentYear, currentBudgetMonth).then(data => {
+	    updateBudgetTables(data, currentYear, currentBudgetMonth);
+	});
+    });
+
+    document.getElementById('nextMonthBudget').addEventListener('click', function() {
+        if (currentBudgetMonth === 12) {
+            currentBudgetMonth = 1;
+            currentYear++;
+        } else {
+            currentBudgetMonth++;
+        }
+        updateBudgetMonthDisplay();
+        getCachedBudgetData(currentYear, currentBudgetMonth).then(data => {
+	    updateBudgetTables(data, currentYear, currentBudgetMonth);
+	});
+    });
+}
+
+//檢查和建立新活頁簿
+function checkAndCreateBudgetSheet(year) {
+    const sheetName = `${year}-budget`;
+    return gapi.client.sheets.spreadsheets.get({
+        spreadsheetId: SPREADSHEET_ID
+    }).then(response => {
+        const sheets = response.result.sheets;
+        const sheetExists = sheets.some(sheet => sheet.properties.title === sheetName);
+        if (!sheetExists) {
+            return createNewBudgetSheet(sheetName);
+        }
+        return Promise.resolve();
+    });
+}
+
+//建立新的預算活頁簿
+function createNewBudgetSheet(sheetName) {
+    return gapi.client.sheets.spreadsheets.batchUpdate({
+        spreadsheetId: SPREADSHEET_ID,
+        resource: {
+            requests: [{
+                addSheet: {
+                    properties: {
+                        title: sheetName
+                    }
+                }
+            }]
+        }
+    }).then(() => {
+        return gapi.client.sheets.spreadsheets.values.update({
+            spreadsheetId: SPREADSHEET_ID,
+            range: `${sheetName}!A1:F1`,
+            valueInputOption: 'USER_ENTERED',
+            resource: {
+                values: [["Index", "Month", "Amount", "Type", "Item", "Note"]]
+            }
+        });
+    });
+}
+
+
 function batchLoadMonthlyBudgetData(year) {
     const sheetName = `${year}-budget`;
     const ranges = Array.from({length: 12}, (_, i) => 
@@ -609,6 +691,13 @@ function loadBudgetDataWithRetry(year, month) {
         .catch(error => console.error('加載預算數據失敗', error));
 }
 
+
+function getMonthName(month) {
+    const monthNames = ["January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"];
+    return monthNames[month - 1];
+}
+
 //從Google Sheets API加載指定年月的預算數據。如果該月份沒有數據，它會創建預設數據。
 function loadBudgetDataFromAPI(year, month) {
     const sheetName = `${year}-budget`;
@@ -620,15 +709,9 @@ function loadBudgetDataFromAPI(year, month) {
     }).then(response => {
         const values = response.result.values;
         if (values && values.length > 1) {
-            const monthData = values.slice(1).filter(row => row[1] === monthName);
-            if (monthData.length === 0) {
-                // 如果沒有該月份的數據，創建預設數據
-                return createDefaultMonthData(year, month);
-            } else {
-                return processMonthData(monthData);
-            }
+            return processMonthData(values.filter(row => row[1] === monthName));
         } else {
-            // 如果整個表格為空，創建預設數據
+            console.log('No budget data found');
             return createDefaultMonthData(year, month);
         }
     }).catch(error => {
