@@ -387,11 +387,7 @@ function updatePageDailyExpenses(page, dailyFoodExpense, dailyTotalExpense) {
 }
 
 function updateExpenseTable() {
-	if (!expenses || !Array.isArray(expenses)) {
-        console.log('Expenses data not available yet');
-        return;
-    }
-	const tbody = document.querySelector('#expenseTable tbody');
+    const tbody = document.querySelector('#expenseTable tbody');
     tbody.innerHTML = '';
 
     const filteredExpenses = getFilteredExpenses();
@@ -448,6 +444,11 @@ function getFilteredExpenses() {
 function updateMealExpensesChart() {
     const filteredExpenses = getFilteredExpenses();
 
+    if (!filteredExpenses || filteredExpenses.length === 0) {
+        document.getElementById('mealExpensesChart').innerHTML = '暫無飲食支出數據';
+        return;
+    }
+
     const mealCategories = ['早餐', '午餐', '晚餐', '飲料'];
     const mealExpenses = mealCategories.map(category => 
         filteredExpenses.filter(expense => expense.type === category)
@@ -481,6 +482,11 @@ function updateMealExpensesChart() {
 
 function updateOverallExpensesChart() {
     const filteredExpenses = getFilteredExpenses();
+
+    if (!filteredExpenses || filteredExpenses.length === 0) {
+        document.getElementById('overallExpensesChart').innerHTML = '暫無支出數據';
+        return;
+    }
 
     const categories = ['飲食', '居住', '交通', '日常生活開銷', '投資自己', '儲蓄', '投資'];
     const categoryExpenses = categories.map(category => {
