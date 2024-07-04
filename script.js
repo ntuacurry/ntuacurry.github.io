@@ -16,14 +16,12 @@ var btn = document.getElementById("addButton");
 var saveButton = document.getElementById("saveButton");
 var cancelButton = document.getElementById("cancelButton");
 
-const budgetCache = new Map();
-
 function init() {
     gapi.load('client', initGapiClient);
     updateMonthDisplay();
     document.addEventListener('DOMContentLoaded', function() {
         openTab('home');
-        setInterval(updateDateTime, 1000);
+	setInterval(updateDateTime, 1000);
     });
 }
 
@@ -41,11 +39,7 @@ function initGapiClient() {
             callback: (tokenResponse) => {
                 if (tokenResponse && tokenResponse.access_token) {
                     isAuthorized = true;
-					loadExpenses().then(() => {
-						updateContent();
-					}).catch((error) => {
-						console.error('Failed to load expenses:', error);
-					});
+                    loadExpenses();
                 }
             },
         });
@@ -56,64 +50,34 @@ function initGapiClient() {
 
 function getToken() {
     if (!isAuthorized) {
-        tokenClient.requestAccessToken({
-            callback: (tokenResponse) => {
-                if (tokenResponse && tokenResponse.access_token) {
-                    isAuthorized = true;
-                    loadExpenses().then(() => {
-                        updateContent();
-                        // 更新預算頁面
-                        initBudgetPage();
-                    });
-                }
-            }
-        });
+        tokenClient.requestAccessToken();
     } else {
         console.log('Already authorized');
     }
 }
 
-const throttle = (func, limit) => {
-    let inThrottle;
-    return function() {
-        const args = arguments;
-        const context = this;
-        if (!inThrottle) {
-            func.apply(context, args);
-            inThrottle = true;
-            setTimeout(() => inThrottle = false, limit);
-        }
-    }
-}
-
-const throttledLoadExpenses = throttle(loadExpenses, 1000);
-
 function loadExpenses() {
-    return new Promise((resolve, reject) => {
-        const sheetName = getCurrentSheetName();
-        gapi.client.sheets.spreadsheets.values.get({
-            spreadsheetId: SPREADSHEET_ID,
-            range: `${sheetName}!A:E`
-        }).then(function(response) {
-            const values = response.result.values;
-            if (values && values.length > 0) {
-                expenses = values.slice(1).map((row) => ({
-                    id: parseInt(row[0]),
-                    date: row[1],
-                    amount: parseInt(row[2]),
-                    type: row[3],
-                    note: row[4]
-                }));
-                console.log('Expenses loaded:', expenses);
-                resolve();
-            } else {
-                console.log('No expenses data found');
-                resolve();
-            }
-        }, function(response) {
-            console.error('Error loading expenses', response.result.error.message);
-            reject(response.result.error);
-        });
+    const sheetName = getCurrentSheetName();
+    gapi.client.sheets.spreadsheets.values.get({
+        spreadsheetId: SPREADSHEET_ID,
+        range: `${sheetName}!A:E`
+    }).then(function(response) {
+        const values = response.result.values;
+        if (values && values.length > 0) {
+            expenses = values.slice(1).map((row) => ({
+                id: parseInt(row[0]),
+                date: row[1],
+                amount: parseInt(row[2]),
+                type: row[3],
+                note: row[4]
+            }));
+            console.log('Expenses loaded:', expenses); // 添加此行以檢查數據
+            updateContent();
+        } else {
+            console.log('No expenses data found');
+        }
+    }, function(response) {
+        console.error('Error loading expenses', response.result.error.message);
     });
 }
 
@@ -316,6 +280,7 @@ function updateMonthDisplay() {
         `${currentDisplayMonth.getFullYear()}年 ${monthNames[currentDisplayMonth.getMonth()]}`;
 }
 
+//打開標籤頁
 function openTab(tabName) {
     var tabContent = document.getElementsByClassName("tab-content");
     for (var i = 0; i < tabContent.length; i++) {
@@ -341,9 +306,7 @@ function openTab(tabName) {
     if (tabName === 'budget') {
         const currentYear = new Date().getFullYear();
         checkAndCreateBudgetSheet(currentYear).then(() => {
-            loadBudgetData(currentYear, currentBudgetMonth).then(data => {
-                updateBudgetTables(data, currentYear, currentBudgetMonth);
-            });
+            loadBudgetData(currentYear);
         });
     }
 
@@ -392,11 +355,6 @@ function updateExpenseTable() {
 
     const filteredExpenses = getFilteredExpenses();
 
-    if (!filteredExpenses || filteredExpenses.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4">暫無支出數據</td></tr>';
-        return;
-    }
-
     let currentDate = null;
     filteredExpenses.forEach((expense) => {
         const row = tbody.insertRow();
@@ -422,8 +380,8 @@ function updateExpenseTable() {
         const editButton = document.createElement('button');
         editButton.textContent = '修改';
         editButton.addEventListener('click', function() {
-            editExpense(expense);
-        });
+    		editExpense(expense);
+	});
         actionCell.appendChild(editButton);
 
         const deleteButton = document.createElement('button');
@@ -431,6 +389,15 @@ function updateExpenseTable() {
         deleteButton.onclick = () => deleteExpense(expense.id);
         actionCell.appendChild(deleteButton);
     });
+}
+
+function editExpense(expense) {
+    document.getElementById('expenseId').value = expense.id;
+    document.getElementById('date').value = expense.date;
+    document.getElementById('amount').value = expense.amount;
+    document.getElementById('type').value = expense.type;
+    document.getElementById('note').value = expense.note;
+    modal.style.display = "block";
 }
 
 function getFilteredExpenses() {
@@ -443,11 +410,6 @@ function getFilteredExpenses() {
 
 function updateMealExpensesChart() {
     const filteredExpenses = getFilteredExpenses();
-
-    if (!filteredExpenses || filteredExpenses.length === 0) {
-        document.getElementById('mealExpensesChart').innerHTML = '暫無飲食支出數據';
-        return;
-    }
 
     const mealCategories = ['早餐', '午餐', '晚餐', '飲料'];
     const mealExpenses = mealCategories.map(category => 
@@ -482,11 +444,6 @@ function updateMealExpensesChart() {
 
 function updateOverallExpensesChart() {
     const filteredExpenses = getFilteredExpenses();
-
-    if (!filteredExpenses || filteredExpenses.length === 0) {
-        document.getElementById('overallExpensesChart').innerHTML = '暫無支出數據';
-        return;
-    }
 
     const categories = ['飲食', '居住', '交通', '日常生活開銷', '投資自己', '儲蓄', '投資'];
     const categoryExpenses = categories.map(category => {
@@ -548,47 +505,50 @@ function updateOverallExpensesChart() {
 function initBudgetPage() {
     updateBudgetMonthDisplay();
     const currentYear = new Date().getFullYear();
-    if (isAuthorized) {
-        checkAndCreateBudgetSheet(currentYear).then(() => {
-            updateYearlyBudgetTable(currentYear);
-            getCachedBudgetData(currentYear, currentBudgetMonth).then(data => {
-	        updateBudgetTables(data, currentYear, currentBudgetMonth);
-	    });
+    checkAndCreateBudgetSheet(currentYear).then(() => {
+        updateYearlyBudgetTable(currentYear);
+        getCachedBudgetData(currentYear, currentBudgetMonth).then(data => {
+            updateBudgetTables(data, currentYear, currentBudgetMonth);
         });
-    } else {
-        document.getElementById('incomeTable').innerHTML = '<tr><td colspan="4">請先進行授權</td></tr>';
-        document.getElementById('expenseTable').innerHTML = '<tr><td colspan="4">請先進行授權</td></tr>';
-        document.getElementById('yearlyBudgetTable').innerHTML = '<tr><td colspan="14">請先進行授權</td></tr>';
-    }
-
+    });
+    
+    // 添加月份切換事件監聽器
     document.getElementById('prevMonthBudget').addEventListener('click', function() {
         if (currentBudgetMonth === 1) {
             currentBudgetMonth = 12;
-            currentYear--;
+            currentBudgetYear--;
         } else {
             currentBudgetMonth--;
         }
         updateBudgetMonthDisplay();
-        getCachedBudgetData(currentYear, currentBudgetMonth).then(data => {
-	    updateBudgetTables(data, currentYear, currentBudgetMonth);
-	});
+        getCachedBudgetData(currentBudgetYear, currentBudgetMonth).then(data => {
+            updateBudgetTables(data, currentBudgetYear, currentBudgetMonth);
+        });
     });
 
     document.getElementById('nextMonthBudget').addEventListener('click', function() {
         if (currentBudgetMonth === 12) {
             currentBudgetMonth = 1;
-            currentYear++;
+            currentBudgetYear++;
         } else {
             currentBudgetMonth++;
         }
         updateBudgetMonthDisplay();
-        getCachedBudgetData(currentYear, currentBudgetMonth).then(data => {
-	    updateBudgetTables(data, currentYear, currentBudgetMonth);
-	});
+        getCachedBudgetData(currentBudgetYear, currentBudgetMonth).then(data => {
+            updateBudgetTables(data, currentBudgetYear, currentBudgetMonth);
+        });
     });
 }
 
-//檢查和建立新活頁簿
+//更新月份預算的部分
+function updateBudgetMonthDisplay() {
+    const monthNames = ["一月", "二月", "三月", "四月", "五月", "六月",
+        "七月", "八月", "九月", "十月", "十一月", "十二月"
+    ];
+    document.getElementById('currentMonthBudget').textContent = 
+        `${currentBudgetYear}年 ${monthNames[currentBudgetMonth - 1]}`;
+}
+
 function checkAndCreateBudgetSheet(year) {
     const sheetName = `${year}-budget`;
     return gapi.client.sheets.spreadsheets.get({
@@ -603,7 +563,7 @@ function checkAndCreateBudgetSheet(year) {
     });
 }
 
-//建立新的預算活頁簿
+//檢查是否有所需資料的活頁簿
 function createNewBudgetSheet(sheetName) {
     return gapi.client.sheets.spreadsheets.batchUpdate({
         spreadsheetId: SPREADSHEET_ID,
@@ -628,84 +588,41 @@ function createNewBudgetSheet(sheetName) {
     });
 }
 
-
-function batchLoadMonthlyBudgetData(year) {
+//載入預算數據
+function loadBudgetData(year, month) {
     const sheetName = `${year}-budget`;
-    const ranges = Array.from({length: 12}, (_, i) => 
-        `${sheetName}!A${i*100+1}:F${(i+1)*100}`
-    );
+    const monthName = getMonthName(month);
     
-    gapi.client.sheets.spreadsheets.values.batchGet({
+    gapi.client.sheets.spreadsheets.values.get({
         spreadsheetId: SPREADSHEET_ID,
-        ranges: ranges
+        range: `${sheetName}!A:F`
     }).then(response => {
-        const valueRanges = response.result.valueRanges;
-        valueRanges.forEach((range, index) => {
-            const month = index + 1;
-            const values = range.values;
-            if (values && values.length > 0) {
-                
-getCell(processMonthData(values), month);
-            }
-        });
-    }, response => {
-        console.error('批量加載預算數據時出錯', response.result.error.message);
-    });
-}
-
-//處理從API獲取的原始數據，將其組織成結構化的格式，包括收入和支出數據，並計算各類型的總計。
-function processMonthData(values) {
-    const incomeData = {
-        '本業收入': [],
-        '業外收入': [],
-        '利息股息收入': []
-    };
-    const expenseData = {
-        '一般預算': [],
-        '儲蓄投資預算': []
-    };
-
-    values.forEach(row => {
-        const [_, __, amount, type, item, note] = row;
-        if (incomeData.hasOwnProperty(type)) {
-            incomeData[type].push({ item, amount: parseFloat(amount), note });
-        } else if (expenseData.hasOwnProperty(type)) {
-            expenseData[type].push({ item, amount: parseFloat(amount), note });
+        const values = response.result.values;
+        if (values && values.length > 1) {
+            const budgetData = values.slice(1)
+                .filter(row => row[1] === monthName)
+                .map(row => ({
+                    index: parseInt(row[0]),
+                    month: row[1],
+                    amount: parseFloat(row[2]),
+                    type: row[3],
+                    item: row[4],
+                    note: row[5]
+                }));
+            updateBudgetTables(budgetData, year, month);
+        } else {
+            console.log('No budget data found');
+            updateBudgetTables([], year, month);
         }
-    });
-
-    // 計算總計
-    Object.keys(incomeData).forEach(type => {
-        const total = incomeData[type].reduce((sum, item) => sum + item.amount, 0);
-        incomeData[type].push({ item: '總計', amount: total, note: '' });
-    });
-
-    Object.keys(expenseData).forEach(type => {
-        const total = expenseData[type].reduce((sum, item) => sum + item.amount, 0);
-        expenseData[type].push({ item: '總計', amount: total, note: '' });
-    });
-
-    return { incomeData, expenseData };
-}
-
-function retryOperation(operation, delay, tries) {
-    return new Promise((resolve, reject) => {
-        return operation()
-            .then(resolve)
-            .catch((reason) => {
-                if (tries > 0) {
-                    return wait(delay)
-                        .then(retryOperation.bind(null, operation, delay * 2, tries - 1))
-                        .then(resolve)
-                        .catch(reject);
-                }
-                return reject(reason);
-            });
+    }, response => {
+        console.error('Error loading budget data', response.result.error.message);
     });
 }
 
-function wait(delay) {
-    return new Promise((resolve) => setTimeout(resolve, delay));
+function getMonthName(month) {
+    const monthNames = ["January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"];
+    return monthNames[month - 1];
 }
 
 //更新預算表格
@@ -714,57 +631,6 @@ function updateBudgetTables(budgetData, year, month) {
     updateExpenseTable(budgetData, year, month);
     updateYearlyBudgetTable(year);
 }
-
-//更新年度預算表格
-function updateYearlyBudgetTable(year) {
-    const yearlyBudgetTable = document.getElementById('yearlyBudgetTable');
-    const tbody = yearlyBudgetTable.querySelector('tbody');
-    tbody.innerHTML = '';
-
-    const months = Array.from({length: 12}, (_, i) => i + 1);
-    const rows = ['自由現金', '支出預算', '收入'];
-
-    rows.forEach(row => {
-        const tr = document.createElement('tr');
-        tr.className = row.replace(/\s+/g, '-').toLowerCase();
-        tr.innerHTML = `<td>${row}</td>`;
-
-        months.forEach(month => {
-            const cell = document.createElement('td');
-            cell.id = `${row.replace(/\s+/g, '-').toLowerCase()}-${month}`;
-            cell.textContent = '0';  // 預設值
-            tr.appendChild(cell);
-        });
-
-        const totalCell = document.createElement('td');
-        totalCell.id = `${row.replace(/\s+/g, '-').toLowerCase()}-total`;
-        totalCell.textContent = '0';  // 預設值
-        tr.appendChild(totalCell);
-
-        tbody.appendChild(tr);
-    });
-
-    // 加載每個月的數據
-    months.forEach(month => {
-        loadMonthlyBudgetData(year, month);
-    });
-}
-
-//更新年度預算儲存格
-function updateYearlyBudgetCell(budgetData, month) {
-    const incomeTotal = budgetData.filter(item => ['本業收入', '業外收入', '利息股息收入'].includes(item.type))
-        .reduce((sum, item) => sum + item.amount, 0);
-    const expenseTotal = budgetData.filter(item => ['一般預算', '儲蓄投資預算'].includes(item.type))
-        .reduce((sum, item) => sum + item.amount, 0);
-    const freeCash = incomeTotal - expenseTotal;
-
-    document.getElementById(`收入-${month}`).textContent = incomeTotal || '0';
-    document.getElementById(`支出預算-${month}`).textContent = expenseTotal || '0';
-    document.getElementById(`自由現金-${month}`).textContent = freeCash || '0';
-
-    updateYearlyTotals();
-}
-
 
 function updateIncomeTable(budgetData, year, month) {
     const incomeTable = document.getElementById('incomeTable');
@@ -827,84 +693,98 @@ function updateExpenseTable(budgetData, year, month) {
     expenseTable.innerHTML = html;
 }
 
-// 使用重試機制的例子
-function loadBudgetDataWithRetry(year, month) {
-    return retryOperation(() => loadBudgetDataFromAPI(year, month), 1000, 3)
-        .then(data => updateBudgetTables(data, year, month))
-        .catch(error => console.error('加載預算數據失敗', error));
+//更新年度預算表格
+function updateYearlyBudgetTable(year) {
+    const yearlyBudgetTable = document.getElementById('yearlyBudgetTable');
+    const tbody = yearlyBudgetTable.querySelector('tbody');
+    tbody.innerHTML = '';
+
+    const months = Array.from({length: 12}, (_, i) => i + 1);
+    const rows = ['自由現金', '支出預算', '收入'];
+
+    rows.forEach(row => {
+        const tr = document.createElement('tr');
+        tr.className = row.replace(/\s+/g, '-').toLowerCase();
+        tr.innerHTML = `<td>${row}</td>`;
+
+        months.forEach(month => {
+            const cell = document.createElement('td');
+            cell.id = `${row.replace(/\s+/g, '-').toLowerCase()}-${month}`;
+            cell.textContent = '0';  // 預設值
+            tr.appendChild(cell);
+        });
+
+        const totalCell = document.createElement('td');
+        totalCell.id = `${row.replace(/\s+/g, '-').toLowerCase()}-total`;
+        totalCell.textContent = '0';  // 預設值
+        tr.appendChild(totalCell);
+
+        tbody.appendChild(tr);
+    });
+
+    // 加載每個月的數據
+    months.forEach(month => {
+        loadMonthlyBudgetData(year, month);
+    });
 }
 
-
-function getMonthName(month) {
-    const monthNames = ["January", "February", "March", "April", "May", "June",
-        "July", "August", "September", "October", "November", "December"];
-    return monthNames[month - 1];
-}
-
-function updateBudgetMonthDisplay() {
-    const monthNames = ["一月", "二月", "三月", "四月", "五月", "六月",
-        "七月", "八月", "九月", "十月", "十一月", "十二月"
-    ];
-    document.getElementById('currentMonthBudget').textContent = 
-        `${currentBudgetYear}年 ${monthNames[currentBudgetMonth - 1]}`;
-}
-
-//從Google Sheets API加載指定年月的預算數據。如果該月份沒有數據，它會創建預設數據。
-function loadBudgetDataFromAPI(year, month) {
+//載入特定月份的預算數據
+function loadMonthlyBudgetData(year, month) {
     const sheetName = `${year}-budget`;
     const monthName = getMonthName(month);
     
-    return gapi.client.sheets.spreadsheets.values.get({
+    gapi.client.sheets.spreadsheets.values.get({
         spreadsheetId: SPREADSHEET_ID,
         range: `${sheetName}!A:F`
     }).then(response => {
         const values = response.result.values;
         if (values && values.length > 1) {
-            return processMonthData(values.filter(row => row[1] === monthName));
-        } else {
-            console.log('No budget data found');
-            return createDefaultMonthData(year, month);
+            const budgetData = values.slice(1)
+                .filter(row => row[1] === monthName)
+                .map(row => ({
+                    type: row[3],
+                    amount: parseFloat(row[2])
+                }));
+            updateYearlyBudgetCell(budgetData, month);
         }
-    }).catch(error => {
-        console.error('Error loading budget data', error);
-        return null;
+    }, response => {
+        console.error('Error loading monthly budget data', response.result.error.message);
     });
 }
 
-//當指定月份沒有數據時，創建預設數據並將其添加到電子表格中。
-function createDefaultMonthData(year, month) {
-    const sheetName = `${year}-budget`;
-    const monthName = getMonthName(month);
-    const defaultData = [
-        [1, monthName, 0, '本業收入', '', ''],
-        [2, monthName, 0, '業外收入', '', ''],
-        [3, monthName, 0, '利息股息收入', '', ''],
-        [4, monthName, 0, '一般預算', '', ''],
-        [5, monthName, 0, '儲蓄投資預算', '', '']
-    ];
+//更新年度預算儲存格
+function updateYearlyBudgetCell(budgetData, month) {
+    const incomeTotal = budgetData.filter(item => ['本業收入', '業外收入', '利息股息收入'].includes(item.type))
+        .reduce((sum, item) => sum + item.amount, 0);
+    const expenseTotal = budgetData.filter(item => ['一般預算', '儲蓄投資預算'].includes(item.type))
+        .reduce((sum, item) => sum + item.amount, 0);
+    const freeCash = incomeTotal - expenseTotal;
 
-    return gapi.client.sheets.spreadsheets.values.append({
-        spreadsheetId: SPREADSHEET_ID,
-        range: `${sheetName}!A:F`,
-        valueInputOption: 'USER_ENTERED',
-        resource: { values: defaultData }
-    }).then(() => {
-        return processMonthData(defaultData);
-    }).catch(error => {
-        console.error('Error creating default month data', error);
-        return null;
+    document.getElementById(`收入-${month}`).textContent = incomeTotal || '0';
+    document.getElementById(`支出預算-${month}`).textContent = expenseTotal || '0';
+    document.getElementById(`自由現金-${month}`).textContent = freeCash || '0';
+
+    updateYearlyTotals();
+}
+
+//更新年預算總和
+function updateYearlyTotals() {
+    ['自由現金', '支出預算', '收入'].forEach(row => {
+        const total = Array.from({length: 12}, (_, i) => i + 1)
+            .reduce((sum, month) => sum + parseFloat(document.getElementById(`${row.replace(/\s+/g, '-').toLowerCase()}-${month}`).textContent), 0);
+        document.getElementById(`${row.replace(/\s+/g, '-').toLowerCase()}-total`).textContent = total;
     });
 }
 
-function getCachedBudgetData(year, month) {
-    const key = `${year}-${month}`;
-    if (budgetCache.has(key)) {
-        return Promise.resolve(budgetCache.get(key));
-    }
-    return loadBudgetDataFromAPI(year, month).then(data => {
-        budgetCache.set(key, data);
-        return data;
-    });
+function openMonthlyDetailModal(monthIndex) {
+    const months = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
+    const year = document.getElementById('yearSelector').value;
+    const month = months[monthIndex - 1];
+    
+    document.getElementById('monthlyDetailTitle').textContent = `${year}年${month} 收入及預算`;
+    document.getElementById('incomeTableContainer').innerHTML = generateIncomeTable();
+    document.getElementById('expenseTableContainer').innerHTML = generateExpenseTable();
+    document.getElementById('monthlyDetailContainer').style.display = 'block';
 }
 
 document.getElementById('prevMonth').addEventListener('click', function() {
