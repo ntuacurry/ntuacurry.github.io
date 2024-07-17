@@ -1,5 +1,3 @@
-
-
 // 替換為您的 Google Sheets API 憑證
 const CLIENT_ID = '269340063869-hua6h3613jrk1oe4sgaicakod3pm3q20.apps.googleusercontent.com';
 const API_KEY = 'AIzaSyAdQ9w_Y97e8PUXbntYcZwT6i6cm3Qqbrw';
@@ -425,7 +423,9 @@ function updateExpenseTable() {
         const actionCell = row.insertCell();
         const editButton = document.createElement('button');
         editButton.textContent = '修改';
-	editButton.onclick = () => editExpense(expense);
+        editButton.addEventListener('click', function() {
+            editExpense(expense);
+        });
         actionCell.appendChild(editButton);
 
         const deleteButton = document.createElement('button');
