@@ -425,9 +425,7 @@ function updateExpenseTable() {
         const actionCell = row.insertCell();
         const editButton = document.createElement('button');
         editButton.textContent = '修改';
-        editButton.addEventListener('click', function() {
-            editExpense(expense);
-        });
+	editButton.onclick = () => editExpense(expense);
         actionCell.appendChild(editButton);
 
         const deleteButton = document.createElement('button');
