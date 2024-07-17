@@ -136,6 +136,15 @@ function addExpense(date, amount, type, note) {
     });
 }
 
+function editExpense(expense) {
+    document.getElementById('expenseId').value = expense.id;
+    document.getElementById('date').value = expense.date;
+    document.getElementById('amount').value = expense.amount;
+    document.getElementById('type').value = expense.type;
+    document.getElementById('note').value = expense.note;
+    modal.style.display = "block";
+}
+
 function updateExpense(id, date, amount, type, note) {
     const sheetName = getCurrentSheetName();
     gapi.client.sheets.spreadsheets.values.update({
