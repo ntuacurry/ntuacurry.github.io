@@ -1,5 +1,3 @@
-
-
 // 替換為您的 Google Sheets API 憑證
 const CLIENT_ID = '269340063869-hua6h3613jrk1oe4sgaicakod3pm3q20.apps.googleusercontent.com';
 const API_KEY = 'AIzaSyAdQ9w_Y97e8PUXbntYcZwT6i6cm3Qqbrw';
@@ -782,15 +780,27 @@ function exportToExcel() {
     let wsData = [['日期', '早餐', '午餐', '晚餐', '飲料']];
 
     for (let day = 1; day <= daysInMonth; day++) {
-        let row = [new Date(currentYear, currentMonth, day).toISOString().split('T')[0]];
+        // 修正日期格式
+        let date = new Date(currentYear, currentMonth, day);
+        let formattedDate = date.toISOString().split('T')[0]; // 格式為 YYYY-MM-DD
+        let row = [formattedDate];
+
         ['早餐', '午餐', '晚餐', '飲料'].forEach(mealType => {
-            const expense = expenses.find(e => 
+            // 找出所有符合當前日期和類型的支出
+            const matchingExpenses = expenses.filter(e => 
                 new Date(e.date).getDate() === day && 
                 new Date(e.date).getMonth() === currentMonth && 
                 new Date(e.date).getFullYear() === currentYear && 
                 e.type === mealType
             );
-            row.push(expense ? expense.amount : '');
+
+            // 如果有匹配的支出，計算總和
+            if (matchingExpenses.length > 0) {
+                const totalAmount = matchingExpenses.reduce((sum, expense) => sum + expense.amount, 0);
+                row.push(totalAmount);
+            } else {
+                row.push(''); // 如果沒有匹配的支出，添加空字符串
+            }
         });
         wsData.push(row);
     }
