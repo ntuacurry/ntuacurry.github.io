@@ -6,7 +6,8 @@
     <title>預算管理系統</title>
     <link rel="stylesheet" href="./styles.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.9/xlsx.full.min.js"></script>
+	<script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="https://apis.google.com/js/api.js"></script>
 </head>
 <body>
@@ -114,6 +115,7 @@
 
 			<div id="expenses" class="tab-content">
 				<h2>消費紀錄</h2>
+				<button id="exportButton" class="export-button">匯出Excel</button>
 				<div id="expenseDailyExpenses" class="daily-expenses">
 					<p id="expenseDailyFoodExpense"></p>
 					<p id="expenseDailyTotalExpense"></p>
