@@ -1,3 +1,5 @@
+
+
 // 替換為您的 Google Sheets API 憑證
 const CLIENT_ID = '269340063869-hua6h3613jrk1oe4sgaicakod3pm3q20.apps.googleusercontent.com';
 const API_KEY = 'AIzaSyAdQ9w_Y97e8PUXbntYcZwT6i6cm3Qqbrw';
@@ -132,15 +134,6 @@ function addExpense(date, amount, type, note) {
             getToken();
         });
     });
-}
-
-function editExpense(expense) {
-    document.getElementById('expenseId').value = expense.id;
-    document.getElementById('date').value = expense.date;
-    document.getElementById('amount').value = expense.amount;
-    document.getElementById('type').value = expense.type;
-    document.getElementById('note').value = expense.note;
-    modal.style.display = "block";
 }
 
 function updateExpense(id, date, amount, type, note) {
@@ -776,3 +769,39 @@ document.getElementById('nextMonth').addEventListener('click', function() {
     updateMonthDisplay();
     updateContent();
 });
+
+//匯出飲食EXCEL
+document.getElementById('exportButton').addEventListener('click', exportToExcel);
+
+function exportToExcel() {
+    const currentMonth = currentDisplayMonth.getMonth();
+    const currentYear = currentDisplayMonth.getFullYear();
+    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+    // 創建工作表數據
+    let wsData = [['日期', '早餐', '午餐', '晚餐', '飲料']];
+
+    for (let day = 1; day <= daysInMonth; day++) {
+        let row = [new Date(currentYear, currentMonth, day).toISOString().split('T')[0]];
+        ['早餐', '午餐', '晚餐', '飲料'].forEach(mealType => {
+            const expense = expenses.find(e => 
+                new Date(e.date).getDate() === day && 
+                new Date(e.date).getMonth() === currentMonth && 
+                new Date(e.date).getFullYear() === currentYear && 
+                e.type === mealType
+            );
+            row.push(expense ? expense.amount : '');
+        });
+        wsData.push(row);
+    }
+
+    // 創建工作表
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+    // 創建工作簿
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "消費紀錄");
+
+    // 生成Excel文件並下載
+    XLSX.writeFile(wb, `消費紀錄_${currentYear}_${currentMonth + 1}.xlsx`);
+}
