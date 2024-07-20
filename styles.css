@@ -270,3 +270,19 @@ body, html {
         padding-bottom: 75%; /* 调整为3:4的宽高比 */
     }
 }
+
+.export-button {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  padding: 10px 15px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.export-button:hover {
+  background-color: #45a049;
+}
