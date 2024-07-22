@@ -350,15 +350,31 @@ function updateDailyExpenses() {
     
     const daysPassed = Math.min(currentDate.getDate(), daysInMonth);
 
-    const totalFoodExpense = filteredExpenses.filter(expense => 
-        ['早餐', '午餐', '晚餐', '飲料', '食物'].includes(expense.type)
+    // 計算早餐、午餐、晚餐的總和
+    const mealExpense = filteredExpenses.filter(expense => 
+        ['早餐', '午餐', '晚餐'].includes(expense.type)
     ).reduce((sum, expense) => sum + expense.amount, 0);
 
+    // 計算食物支出
+    const foodExpense = filteredExpenses.filter(expense => 
+        expense.type === '食物'
+    ).reduce((sum, expense) => sum + expense.amount, 0);
+
+    // 計算總支出
     const totalExpense = filteredExpenses.reduce((sum, expense) => sum + expense.amount, 0);
 
-    const dailyFoodExpense = (totalFoodExpense / daysPassed).toFixed(1);
-    const dailyTotalExpense = (totalExpense / daysInMonth).toFixed(1);
+    // 計算儲蓄和投資
+    const savingsAndInvestments = filteredExpenses.filter(expense => 
+        ['儲蓄', '投資'].includes(expense.type)
+    ).reduce((sum, expense) => sum + expense.amount, 0);
 
+    // 計算新的日均飲食支出
+    const dailyFoodExpense = ((mealExpense / daysPassed) + (foodExpense / daysInMonth)).toFixed(1);
+
+    // 計算新的月均總支出
+    const dailyTotalExpense = ((totalExpense - savingsAndInvestments) / daysInMonth).toFixed(1);
+
+    // 更新顯示
     updatePageDailyExpenses('dashboard', dailyFoodExpense, dailyTotalExpense);
     updatePageDailyExpenses('expense', dailyFoodExpense, dailyTotalExpense);
 }
@@ -368,7 +384,7 @@ function updatePageDailyExpenses(page, dailyFoodExpense, dailyTotalExpense) {
     const dailyTotalExpenseElement = document.getElementById(`${page}DailyTotalExpense`);
 
     if (dailyFoodExpenseElement) {
-        dailyFoodExpenseElement.textContent = `日均飲食花費為${dailyFoodExpense}元`;
+        dailyFoodExpenseElement.textContent = `日均飲食支出為${dailyFoodExpense}元`;
     }
     if (dailyTotalExpenseElement) {
         dailyTotalExpenseElement.textContent = `本月日均開銷為${dailyTotalExpense}元`;
