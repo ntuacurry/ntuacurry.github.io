@@ -350,9 +350,9 @@ function updateDailyExpenses() {
     
     const daysPassed = Math.min(currentDate.getDate(), daysInMonth);
 
-    // 計算早餐、午餐、晚餐的總和
+    // 計算早餐、午餐、晚餐、飲料的總和
     const mealExpense = filteredExpenses.filter(expense => 
-        ['早餐', '午餐', '晚餐'].includes(expense.type)
+        ['早餐', '午餐', '晚餐', '飲料'].includes(expense.type)
     ).reduce((sum, expense) => sum + expense.amount, 0);
 
     // 計算食物支出
