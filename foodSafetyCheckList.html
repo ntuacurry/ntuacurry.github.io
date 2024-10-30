@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>食品安全衛生管理查核表</title>
+    <link rel="stylesheet" href="styles_FSCL.css">
+</head>
+<body>
+	<div class="process">
+		<div>
+			<button id="checkNA">列印</button>
+		</div>
+		<div>
+			分數：<span id="score">0<span>分
+		</div>
+	</div>
+    <div class="container">
+        <div class="header">
+            <h1>漢來美食股份有限公司</h1>
+            <h2>食品安全衛生管理查核表</h2>
+        </div>
+        <table>
+            <tbody>
+				<tr>
+					<th colspan="3" id="location" class="location"><input type="text" class="company">分公司<input type="text" class="restaurant">餐廳</th>
+					<th colspan="3">查核日期：<input type="date"></th>
+				</tr>
+				<tr>
+					<th colspan="3" rowspan="2">查核項目</th>
+					<th colspan="3">查核結果</th>
+				</tr>
+				<tr>
+					<th>合格</th>
+					<th>B</th>
+					<th>★</th>
+				</tr>
+                <!-- 人員管理 -->
+                <tr id="m1">
+                    <td class="category" rowspan="6">人員管理</td>
+                    <td class="type">B</td>
+                    <td class="content">1. 進入廚房與餐期製備前應完成洗手消毒，已清潔之手部如接觸潛在汙染物品(例：垃圾桶)時應有再次進行洗手程序？</td>
+                    <td class="checkbox-column"><input type="checkbox" class="correct"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="B"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="star"></td>
+                </tr>
+                <tr id="m2">
+                    <td class="type">★</td>
+                    <td >2. 人員服裝儀容是否整齊且清潔(如頭髮無外露、口罩遮口鼻、圍裙無破損、無發黴)？</td>
+                    <td class="checkbox-column"><input type="checkbox" class="correct"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="B"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="star"></td>
+                </tr>
+                <tr id="m3">
+                    <td class="type">B</td>
+                    <td>3. 人員是否無蓄留指甲、塗抹指甲油及配戴飾物？</td>
+                    <td class="checkbox-column"><input type="checkbox" class="correct"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="B"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="star"></td>
+                </tr>
+                <tr>
+                    <td class="type">★</td>
+                    <td>4. 分切、重組、包裝成品之人員是否配戴潔淨手套？生病或手部有傷口之人員是否妥善包紮或處置，不得直接接觸食品、食具？</td>
+                    <td class="checkbox-column"><input type="checkbox" class="correct"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="B"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="star"></td>
+                </tr>
+                <tr>
+                    <td class="type">★</td>
+                    <td>5. 廚房內是否無發生飲食、吸煙、嚼檳榔、喝飲料等行為？</td>
+                    <td class="checkbox-column"><input type="checkbox" class="correct"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="B"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="star"></td>
+                </tr>
+                <tr>
+                    <td class="type">B</td>
+                    <td>6. 私人飲用水是否集中定位存放並且標示員工物品專區？</td>
+                    <td class="checkbox-column"><input type="checkbox" class="correct"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="B"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="star"></td>
+                </tr>
+
+                <!-- 用餐區 -->
+                <tr>
+                    <td class="category" rowspan="5">用餐區</td>
+                    <td class="type">B</td>
+                    <td>7. 環境是否清潔？(天花板及空調出迴風口是否無積塵、長黴、剝落或結露)</td>
+                    <td class="checkbox-column"><input type="checkbox" class="correct"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="B"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="star"></td>
+                </tr>
+                <tr>
+                    <td class="type">B</td>
+                    <td>8.環境是否發現病媒及異味？</td>
+                    <td class="checkbox-column"><input type="checkbox" class="correct"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="B"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="star"></td>
+                </tr>
+                <tr>
+                    <td class="type">B</td>
+                    <td>9.用餐區桌、椅是否清潔？</td>
+                    <td class="checkbox-column"><input type="checkbox" class="correct"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="B"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="star"></td>
+                </tr>
+                <tr>
+                    <td class="type">B</td>
+                    <td>10.食品陳列台及用餐器皿是否清潔？</td>
+                    <td class="checkbox-column"><input type="checkbox" class="correct"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="B"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="star"></td>
+                </tr>
+                <tr>
+                    <td class="type">B</td>
+                    <td>11.廁所是否清潔？洗手乳及擦手紙巾是否充足？</td>
+                    <td class="checkbox-column"><input type="checkbox" class="correct"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="B"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="star"></td>
+                </tr>
+                <!-- 作業區/吧檯工作區 -->
+                <tr>
+                    <td class="category" rowspan="14">作業區<br>/吧檯工作區</td>
+                    <td class="type">B</td>
+                    <td>12. 工作檯面、牆面、天花板、出迴風口、出入口、門窗等是否清潔無破損、積塵、長黴、剝落或結露？工作檯面、層架及地面是否無堆放與食品製作不相關之雜物？</td>
+                    <td class="checkbox-column"><input type="checkbox" class="correct"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="B"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="star"></td>
+                </tr>
+                <tr>
+                    <td class="type">B</td>
+                    <td>13. 作業區燈具是否功能正常？照度是否足夠？排煙罩是否功能正常、無油垢且清潔狀態良好？</td>
+                    <td class="checkbox-column"><input type="checkbox" class="correct"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="B"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="star"></td>
+                </tr>
+                <tr>
+                    <td class="type">B</td>
+                    <td>14. 地面(含水溝)、截油槽、攔渣槽是否每日清潔無破損、積水及異味狀況？</td>
+                    <td class="checkbox-column"><input type="checkbox" class="correct"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="B"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="star"></td>
+                </tr>
+                <tr>
+                    <td class="type">B</td>
+                    <td>15. 洗手區是否有標準的消毒設施(洗手流程圖、洗手乳、乾手設備、消毒液、指甲刷)？盛裝容器是否保持清潔？洗手台位置是否不會有交叉汙染的風險？</td>
+                    <td class="checkbox-column"><input type="checkbox" class="correct"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="B"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="star"></td>
+                </tr>
+                <tr>
+                    <td class="type">B</td>
+                    <td>16. 作業區是否無發現病媒(蒼蠅、蟑螂、老鼠等)及其它昆蟲的蹤跡及其屍體？且作業期間不得擺放蟑螂屋、捕鼠籠等。</td>
+                    <td class="checkbox-column"><input type="checkbox" class="correct"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="B"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="star"></td>
+                </tr>
+                <tr>
+                    <td class="type">B</td>
+                    <td>17. 捕蟲燈、黏鼠板等病媒設備是否能正常運作？是否有良好管理及維護？出入口、門窗及其他孔道與排水溝是否有設置防止病媒侵入設施？</td>
+                    <td class="checkbox-column"><input type="checkbox" class="correct"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="B"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="star"></td>
+                </tr>
+                <tr>
+                    <td class="type">B</td>
+                    <td>18. 乾貨儲存區環境是否乾淨？</td>
+                    <td class="checkbox-column"><input type="checkbox" class="correct"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="B"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="star"></td>
+                </tr>
+                <tr>
+                    <td class="type">B</td>
+                    <td>19. 清潔用具、清潔劑及其它化學品是否專人、專冊、專區(水槽底下)管理？且其盛裝容器有清楚標示名稱？</td>
+                    <td class="checkbox-column"><input type="checkbox" class="correct"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="B"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="star"></td>
+                </tr>
+                <tr>
+                    <td class="type">B</td>
+                    <td>20. 垃圾桶內外是否維持清潔？是否加蓋？每個垃圾桶是否都有蓋子？是否未滿溢？</td>
+                    <td class="checkbox-column"><input type="checkbox" class="correct"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="B"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="star"></td>
+                </tr>
+                <tr>
+                    <td class="type">B</td>
+                    <td>21. 待丟棄之廚餘(含廢油)及半成品是否與良好品隔離放置，且清楚標示？廚餘放置區是否清潔無異味？廚餘桶是否加蓋？</td>
+                    <td class="checkbox-column"><input type="checkbox" class="correct"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="B"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="star"></td>
+                </tr>
+                <tr>
+                    <td class="type">B</td>
+                    <td>22. 供應商供應之食品(除生鮮外)之外包裝標示需符合驗收標準及法規。散裝原料/拆封之食品應標示進貨日期/拆封日期，自製或分裝食品標示品名、製造日期、有效日期。</td>
+                    <td class="checkbox-column"><input type="checkbox" class="correct"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="B"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="star"></td>
+                </tr>
+                <tr>
+                    <td class="type">B</td>
+                    <td>23. 食品添加物應專人、專冊、專櫃管理，並確實紀錄。</td>
+                    <td class="checkbox-column"><input type="checkbox" class="correct"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="B"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="star"></td>
+                </tr>
+                <tr>
+                    <td class="type">B</td>
+                    <td>24. 食材、器具、包材應離牆離地五公分以上，並落實先進先出，且食品作業區內不得以紙箱儲存之。存放食材、器具、包材櫥櫃應乾淨整潔。</td>
+                    <td class="checkbox-column"><input type="checkbox" class="correct"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="B"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="star"></td>
+                </tr>
+                <tr>
+                    <td class="type">B</td>
+                    <td>25. 食材存放及製程應避免交叉汙染，且生食、熟食有效區隔，所使用之設備與器具(如刀具、砧板、籃框、抹布、手套等)應保持清潔且避免使用木製刀柄及砧板，並以顏色區分。</td>
+                    <td class="checkbox-column"><input type="checkbox" class="correct"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="B"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="star"></td>
+                </tr>
+                <!-- 設備與器具 -->
+                <tr>
+                    <td class="category" rowspan="13">設備與器具</td>
+                    <td class="type">B</td>
+                    <td>26. 冷飲機/製冰機內外壁、貯藏、出口是否清潔？</td>
+                    <td class="checkbox-column"><input type="checkbox" class="correct"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="B"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="star"></td>
+                </tr>
+                <tr>
+                    <td class="type">B</td>
+                    <td>27. 與食品直接接觸及清洗食品設備與器具之用水及冰塊，應符合飲用水水質標準。</td>
+                    <td class="checkbox-column"><input type="checkbox" class="correct"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="B"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="star"></td>
+                </tr>
+                <tr>
+                    <td class="type">★</td>
+                    <td>28. 冰鏟是否放置專用容器？並保持清潔？冰鏟是否未挖取冰塊以外的原物料或物品？</td>
+                    <td class="checkbox-column"><input type="checkbox" class="correct"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="B"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="star"></td>
+                </tr>
+                <tr>
+                    <td class="type">B</td>
+                    <td>29. 冷藏設備是否達到預定溫度(0℃~7℃)/ 冷凍設備是否達到預定溫度(≦-18℃)，溫度計正常且每日至少有兩次完整測溫記錄？</td>
+                    <td class="checkbox-column"><input type="checkbox" class="correct"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="B"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="star"></td>
+                </tr>
+                <tr>
+                    <td class="type">B</td>
+                    <td>30. 冷藏/冷凍設備是否清潔？塑膠門簾是否保持乾淨，沒有破損或缺片？</td>
+                    <td class="checkbox-column"><input type="checkbox" class="correct"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="B"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="star"></td>
+                </tr>
+                <tr>
+                    <td class="type">B</td>
+                    <td>31. 冷藏(凍)設備存放原物料時需堆放整齊、不得阻斷出風口、以保持冷房之效果？內部設備是否正常運作？</td>
+                    <td class="checkbox-column"><input type="checkbox" class="correct"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="B"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="star"></td>
+                </tr>
+                <tr>
+                    <td class="type">B</td>
+                    <td>32. 抹布、菜瓜布..清洗是否適依適當管理程序維持清潔且無破損？抹布是否有效消毒？</td>
+                    <td class="checkbox-column"><input type="checkbox" class="correct"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="B"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="star"></td>
+                </tr>
+                <tr>
+                    <td class="type">B</td>
+                    <td>33. 刀具、砧板、筷子、湯匙、菜夾、瀝水網..等廚具是否清潔？廚具是否有效消毒？</td>
+                    <td class="checkbox-column"><input type="checkbox" class="correct"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="B"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="star"></td>
+                </tr>
+                <tr>
+                    <td class="type">B</td>
+                    <td>34. 所有加工機械設備是否清潔？</td>
+                    <td class="checkbox-column"><input type="checkbox" class="correct"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="B"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="star"></td>
+                </tr>
+                <tr>
+                    <td class="type">B</td>
+                    <td>35. 物料、半成品、成品、包材及用餐器皿之容器是否保持清潔？食品容器是否有效消毒？</td>
+                    <td class="checkbox-column"><input type="checkbox" class="correct"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="B"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="star"></td>
+                </tr>
+                <tr>
+                    <td class="type">★</td>
+                    <td>36. 加工機械設備、器具或容器破損時是否立即修護或挑除？</td>
+                    <td class="checkbox-column"><input type="checkbox" class="correct"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="B"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="star"></td>
+                </tr>
+                <tr>
+                    <td class="type">★</td>
+                    <td>37. 作業區是否使用訂書機、斷片式美工刀、鋼絲刷或其他或異物混入風險的相關物品？</td>
+                    <td class="checkbox-column"><input type="checkbox" class="correct"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="B"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="star"></td>
+                </tr>
+                <tr>
+                    <td class="type">B</td>
+                    <td>38. 食品製備區、製冰機應備75%酒精，以利隨時消毒手部及器具。</td>
+                    <td class="checkbox-column"><input type="checkbox" class="correct"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="B"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="star"></td>
+                </tr>
+                <!-- 原物料 -->
+                <tr>
+                    <td class="category" rowspan="7">原物料</td>
+                    <td class="type">★</td>
+                    <td>39. 是否無過期之原料？</td>
+                    <td class="checkbox-column"><input type="checkbox" class="correct"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="B"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="star"></td>
+                </tr>
+                <tr>
+                    <td class="type">B</td>
+                    <td>40. 所有原料及半成品是否保留原包裝效期或標示第二效期且於效期內？</td>
+                    <td class="checkbox-column"><input type="checkbox" class="correct"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="B"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="star"></td>
+                </tr>
+                <tr>
+                    <td class="type">B</td>
+                    <td>41. 原物料及半成品是否遵守先進先出之原則？</td>
+                    <td class="checkbox-column"><input type="checkbox" class="correct"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="B"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="star"></td>
+                </tr>
+                <tr>
+                    <td class="type">B</td>
+                    <td>42. 保存之成品、半成品、已拆封原料與包材是否妥善加蓋或封袋？</td>
+                    <td class="checkbox-column"><input type="checkbox" class="correct"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="B"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="star"></td>
+                </tr>
+                <tr>
+                    <td class="type">B</td>
+                    <td>43. 原物料是否依據其標示之產品保存溫度進行保存？</td>
+                    <td class="checkbox-column"><input type="checkbox" class="correct"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="B"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="star"></td>
+                </tr>
+                <tr>
+                    <td class="type">B</td>
+                    <td>44. 食品是否依照標準進行解凍，且在能防止品質劣化之條件下進行，並避免污染其他食品？冷凍解凍食品是否有標示解凍日期/第二效期？</td>
+                    <td class="checkbox-column"><input type="checkbox" class="correct"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="B"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="star"></td>
+                </tr>
+                <tr>
+                    <td class="type">B</td>
+                    <td>45. 是否無發黴、變質之原料？保存過程是否無任何受污染情形？製程中是否無交叉污染之虞？生鮮水產品養殖處所與調理處所是否有效區隔？</td>
+                    <td class="checkbox-column"><input type="checkbox" class="correct"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="B"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="star"></td>
+                </tr>
+                <!-- 品質文件與標示 -->
+                <tr>
+                    <td class="category" rowspan="17">品質文件與標示</td>
+                    <td class="type">★</td>
+                    <td>46. 從業人員是否均能提供符合GHP規範之供膳人員健康檢查報告？新進人員需經衛生醫療機構檢查合格後始得聘僱？ 雇主每年應主動辦理健康檢查至少一次。</td>
+                    <td class="checkbox-column"><input type="checkbox" class="correct"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="B"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="star"></td>
+                </tr>
+                <tr>
+                    <td class="type">★</td>
+                    <td>47. 烹調從業人員須符合食品業者專門職業或技術證照人員設置及管理辦法之持證比例並換發廚師證書？</td>
+                    <td class="checkbox-column"><input type="checkbox" class="correct"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="B"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="star"></td>
+                </tr>
+                <tr>
+                    <td class="type">B</td>
+                    <td>48. 水塔是否定期清洗並有清洗紀錄？濾水系統是否備有濾心更換紀錄？</td>
+                    <td class="checkbox-column"><input type="checkbox" class="correct"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="B"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="star"></td>
+                </tr>
+                <tr>
+                    <td class="type">B</td>
+                    <td>49. 建立油炸油管理，落實每日檢查及填寫換油紀錄(如適用)？</td>
+                    <td class="checkbox-column"><input type="checkbox" class="correct"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="B"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="star"></td>
+                </tr>
+                <tr>
+                    <td class="type">B</td>
+                    <td>50. 廢棄食用油脂是否保留廢油清運紀錄(近三個月,如適用)？</td>
+                    <td class="checkbox-column"><input type="checkbox" class="correct"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="B"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="star"></td>
+                </tr>
+                <tr>
+                    <td class="type">★</td>
+                    <td>51. 是否依照法規辦理食品業者登錄，並能出示其登錄字號？是否依照法規投保產品責任險，並保存該保險文件？</td>
+                    <td class="checkbox-column"><input type="checkbox" class="correct"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="B"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="star"></td>
+                </tr>
+                <tr>
+                    <td class="type">B</td>
+                    <td>52. 食品標示是否符合食品衛生管理法之規定？例如產地, 重組肉(如適用)…</td>
+                    <td class="checkbox-column"><input type="checkbox" class="correct"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="B"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="star"></td>
+                </tr>
+                <tr>
+                    <td class="type">B</td>
+                    <td>53. 餐飲衛生自主管理檢查表(餐廳)/(廚房)</td>
+                    <td class="checkbox-column"><input type="checkbox" class="correct"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="B"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="star"></td>
+                </tr>
+                <tr>
+                    <td class="type">B</td>
+                    <td>54. 員工自主健康管理紀錄表</td>
+                    <td class="checkbox-column"><input type="checkbox" class="correct"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="B"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="star"></td>
+                </tr>
+                <tr>
+                    <td class="type">B</td>
+                    <td>55. 冷凍、冷藏庫溫度紀錄表</td>
+                    <td class="checkbox-column"><input type="checkbox" class="correct"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="B"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="star"></td>
+                </tr>
+                <tr>
+                    <td class="type">B</td>
+                    <td>56. 乾料庫溫、濕度檢查紀錄表</td>
+                    <td class="checkbox-column"><input type="checkbox" class="correct"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="B"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="star"></td>
+                </tr>
+                <tr>
+                    <td class="type">B</td>
+                    <td>57. 食品添加物庫存領用紀錄表</td>
+                    <td class="checkbox-column"><input type="checkbox" class="correct"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="B"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="star"></td>
+                </tr>
+                <tr>
+                    <td class="type">B</td>
+                    <td>58. 廚房截油槽檢查紀錄表</td>
+                    <td class="checkbox-column"><input type="checkbox" class="correct"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="B"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="star"></td>
+                </tr>
+                <tr>
+                    <td class="type">B</td>
+                    <td>59. 清潔劑及消毒用品領用紀錄表</td>
+                    <td class="checkbox-column"><input type="checkbox" class="correct"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="B"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="star"></td>
+                </tr>
+                <tr>
+                    <td class="type">B</td>
+                    <td>60. 水質、食材、成品等檢驗報告</td>
+                    <td class="checkbox-column"><input type="checkbox" class="correct"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="B"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="star"></td>
+                </tr>
+                <tr>
+                    <td class="type">B</td>
+                    <td>61. 濾芯維護紀錄表</td>
+                    <td class="checkbox-column"><input type="checkbox" class="correct"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="B"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="star"></td>
+                </tr>
+                <tr>
+                    <td class="type">B</td>
+                    <td>62. 原料、半成品、成品之品質及衛生檢查紀錄表</td>
+                    <td class="checkbox-column"><input type="checkbox" class="correct"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="B"></td>
+                    <td class="checkbox-column"><input type="checkbox" class="star"></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <script src="script_FSCL.js"></script>
+</body>
+</html>

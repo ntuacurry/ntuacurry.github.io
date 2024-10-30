@@ -1,0 +1,83 @@
+@media print {
+	.process {
+		display: none;
+	}
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.header h1 {
+    font-size: 32px;
+    margin: 5px 0;
+}
+
+.header h2 {
+    font-size: 28px;
+    margin: 5px 0;
+}
+
+.location {
+    font-size: 28px;
+}
+
+.company {
+    height: 28px;
+    width: 150px;
+    font-size: 28px;
+}
+
+.restaurant {
+    height: 28px;
+    width: 200px;
+    font-size: 28px;
+}
+
+
+table {
+    border-collapse: collapse;
+    margin-left:auto;
+    margin-right:auto;
+}
+/* 優化表格邊框樣式 */
+table, th, td {
+    border: 1px solid black;
+}
+.category {
+    width: 30px;
+    text-align: center;
+    font-weight: normal;
+    padding: 8px 4px;
+}
+.type {
+    width: 20px;
+    text-align: center;
+}
+.content {
+    width: 550px;
+}
+
+.checkbox-column {
+    width: 40px;
+    text-align: center;
+}
+
+.correct {
+	height: 24px;
+	width: 24px;
+}
+.B {
+	height: 24px;
+	width: 24px;
+}
+.star {
+	height: 24px;
+	width: 24px;
+}
+
+.reason {
+	width: 690px;
+	height: 28px;
+}
