@@ -1,8 +1,42 @@
+.print-logo {
+	display: none;
+}
+
+/* 列印時的樣式 */
 @media print {
 	.process {
 		display: none;
 	}
+	
+	/* 隱藏未被勾選的checkbox */
+	input[type="checkbox"]:not(:checked) {
+		display: none;
+	}
+	
+    /* 
+	只在第一頁顯示 logo *
+    .print-logo {
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        width: 100px;
+        height: auto;
+    }
+    
+	使用 :first-of-type 對應只有在第一頁上顯示 logo 
+    @page:first {
+        .print-logo {
+            display: block;
+        }
+    }
+
+    隱藏 logo 在其他頁面
+    .print-logo:not(:first-of-type) {
+        display: none;
+    }
+	*/
 }
+
 
 .header {
     text-align: center;
@@ -20,19 +54,19 @@
 }
 
 .location {
-    font-size: 28px;
+    font-size: 20px;
 }
 
-.company {
-    height: 28px;
+.branch {
+    height: 24px;
     width: 150px;
-    font-size: 28px;
+    font-size: 20px;
 }
 
 .restaurant {
-    height: 28px;
-    width: 200px;
-    font-size: 28px;
+    height: 24px;
+    width: 150px;
+    font-size: 20px;
 }
 
 
