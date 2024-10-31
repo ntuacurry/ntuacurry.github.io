@@ -6,9 +6,15 @@
     <link rel="stylesheet" href="styles_FSCL.css">
 </head>
 <body>
+	<!-- <div id="print-area">
+		<img src="Haili_logo.png" alt="logo" id="logo" class="print-logo">
+	</div> -->
 	<div class="process">
 		<div>
-			<button id="checkNA">列印</button>
+			<button id="checkNA">將不適用的條文改為NA</button>
+		</div>
+		<div>
+			<button id="print">列印</button>
 		</div>
 		<div>
 			分數：<span id="score">0<span>分
@@ -19,11 +25,21 @@
             <h1>漢來美食股份有限公司</h1>
             <h2>食品安全衛生管理查核表</h2>
         </div>
-        <table>
+        <table id="table">
             <tbody>
 				<tr>
-					<th colspan="3" id="location" class="location"><input type="text" class="company">分公司<input type="text" class="restaurant">餐廳</th>
-					<th colspan="3">查核日期：<input type="date"></th>
+					<th colspan="3" id="location" class="location">
+						<select id="branch" class="branch">
+							<option value="">請選擇分公司</option>
+							<option value="台北敦南">台北敦南</option>
+							<option value="台北天母">台北天母</option>
+							<option value="台北南港">台北南港</option>
+						</select>
+						分公司
+						<select id="restaurant" class="restaurant">
+							<option value="">請選擇餐廳</option>
+					</th>
+					<th colspan="3" id="date-cell">查核日期：<input type="date"></th>
 				</tr>
 				<tr>
 					<th colspan="3" rowspan="2">查核項目</th>
@@ -35,7 +51,7 @@
 					<th>★</th>
 				</tr>
                 <!-- 人員管理 -->
-                <tr id="m1">
+                <tr>
                     <td class="category" rowspan="6">人員管理</td>
                     <td class="type">B</td>
                     <td class="content">1. 進入廚房與餐期製備前應完成洗手消毒，已清潔之手部如接觸潛在汙染物品(例：垃圾桶)時應有再次進行洗手程序？</td>
@@ -43,14 +59,14 @@
                     <td class="checkbox-column"><input type="checkbox" class="B"></td>
                     <td class="checkbox-column"><input type="checkbox" class="star"></td>
                 </tr>
-                <tr id="m2">
+                <tr>
                     <td class="type">★</td>
                     <td >2. 人員服裝儀容是否整齊且清潔(如頭髮無外露、口罩遮口鼻、圍裙無破損、無發黴)？</td>
                     <td class="checkbox-column"><input type="checkbox" class="correct"></td>
                     <td class="checkbox-column"><input type="checkbox" class="B"></td>
                     <td class="checkbox-column"><input type="checkbox" class="star"></td>
                 </tr>
-                <tr id="m3">
+                <tr>
                     <td class="type">B</td>
                     <td>3. 人員是否無蓄留指甲、塗抹指甲油及配戴飾物？</td>
                     <td class="checkbox-column"><input type="checkbox" class="correct"></td>
