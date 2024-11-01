@@ -81,9 +81,21 @@ document.getElementById("checkNA").addEventListener("click", function() {
 
 // 定義分公司和對應的餐廳
 const branches = {
-    "台北敦南": ["漢來海港", "名人坊", "漢來蔬食"],
+    "高雄": ["糕餅小舖-本館", "大廳酒廊-本館", "宴會廳-本館", "福園台菜海鮮餐廳-本館", "翠園粵菜餐廳-本館", "日本料理弁慶-本館", "紅陶上海湯包-本館", 
+	   "港式海鮮火鍋-本館", "PAVO餐廳-本館", "名人坊-本館", "漢來海港-本館", "焰牛排館-本館", "焰鐵板燒-本館", "上海湯包-夢時代", "溜溜酸菜魚-夢時代", 
+	   "溜溜酸菜魚-SOGO"], 
+    "巨蛋": ["Hi Lai Café", "漢來海港", "漢來蔬食", "宴會廳", "翠園餐廳"], 
+    "佛陀": ["Hi Lai Café", "漢來蔬食"], 
+    "台南": ["漢來海港", "漢來蔬食"], 
+    "台南東寧": ["上海湯包", "名人坊"], 
+    "台中": ["漢來海港", "漢來蔬食, "漢來軒"], 
+    "台中三民": ["上海湯包", "名人坊"], 
+    "新竹": ["上海湯包", "上菜片皮鴨"], 
+    "桃園": ["漢來海港", "上海湯包", "上菜片皮鴨", "溜溜酸菜魚"], 
+    "台北敦南": ["漢來海港", "名人坊", "漢來蔬食"], 
+    "台北信義": ["名人坊"], 
     "台北天母": ["漢來海港"], 
-	"台北南港": ["大廳酒廊", "日日烘焙坊", "島語", "宴會廳", "東方樓", "員工餐廳"]
+    "台北南港": ["大廳酒廊", "日日烘焙坊", "島語", "宴會廳", "東方樓", "員工餐廳"]
 };
 
 // 取得分公司和餐廳下拉選單
@@ -129,7 +141,17 @@ document.getElementById("print").addEventListener("click", function() {
     locationCell.innerHTML = `
         <select id="branch" class="branch">
             <option value="">請選擇分公司</option>
+            <option value="高雄">高雄</option>
+            <option value="巨蛋">巨蛋</option>
+            <option value="佛陀">佛陀</option>
+            <option value="台南">台南</option>
+            <option value="台南東寧">台南東寧</option>
+            <option value="台中">台中</option>
+            <option value="台中三民">台中三民</option>
+            <option value="新竹">新竹</option>
+            <option value="桃園">桃園</option>
             <option value="台北敦南">台北敦南</option>
+            <option value="台北信義">台北信義</option>
             <option value="台北天母">台北天母</option>
             <option value="台北南港">台北南港</option>
         </select>
