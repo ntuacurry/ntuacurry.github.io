@@ -1,0 +1,107 @@
+.print {
+	display: flex;
+	justify-content: center;
+	background-color: #b8d38f;
+	line-height:2;
+	font-family: "Microsoft JhengHei";
+}
+
+@media print {
+	.print {
+		display: none;
+	}
+	
+	body::after {
+		content: "";
+		background: url("Haili_logo.png") no-repeat center center; 
+		position: fixed;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
+		width: 200%;
+		height: 200%;
+		opacity: 0.3;
+		z-index: -1; /* 確保浮水印在文字下層 */
+		pointer-events: none; /* 防止影響點擊 */
+	}
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.header h1 {
+    font-size: 32px;
+    margin: 5px 0;
+}
+
+.header h2 {
+    font-size: 28px;
+    margin: 5px 0;
+}
+
+.location {
+    font-size: 20px;
+}
+
+.branch {
+    height: 24px;
+    width: 150px;
+    font-size: 20px;
+}
+
+.restaurant {
+    height: 24px;
+    width: 150px;
+    font-size: 20px;
+}
+
+
+table {
+    border-collapse: collapse;
+    margin-left:auto;
+    margin-right:auto;
+	background-color: rgba(0,0,0,0);
+}
+/* 優化表格邊框樣式 */
+table, th, td {
+    border: 1px solid black;
+}
+
+.category {
+    width: 30px;
+    text-align: center;
+    font-weight: normal;
+    padding: 8px 4px;
+}
+.type {
+    width: 20px;
+    text-align: center;
+}
+.content {
+    width: 550px;
+}
+
+.checkbox-column {
+    width: 40px;
+    text-align: center;
+}
+
+.correct {
+	height: 24px;
+	width: 24px;
+}
+.B {
+	height: 24px;
+	width: 24px;
+}
+.star {
+	height: 24px;
+	width: 24px;
+}
+
+.reason {
+	width: 690px;
+	height: 28px;
+}
