@@ -40,7 +40,7 @@ document.querySelectorAll(".correct, .B, .star").forEach(checkbox => {
     checkbox.addEventListener("change", passRate);
 });
 
-// 檢查是否需要改為 NA 並列印
+// 檢查是否需要改為 NA
 document.getElementById("checkNA").addEventListener("click", function() {
 	const rows = document.querySelectorAll("tr");
 
@@ -81,9 +81,10 @@ document.getElementById("checkNA").addEventListener("click", function() {
 
 // 定義分公司和對應的餐廳
 const branches = {
-    "高雄": ["糕餅小舖-本館", "大廳酒廊-本館", "宴會廳-本館", "福園台菜海鮮餐廳-本館", "翠園粵菜餐廳-本館", "日本料理弁慶-本館", "紅陶上海湯包-本館", 
-	   "港式海鮮火鍋-本館", "PAVO餐廳-本館", "名人坊-本館", "漢來海港-本館", "焰牛排館-本館", "焰鐵板燒-本館", "上海湯包-夢時代", "溜溜酸菜魚-夢時代", 
-	   "溜溜酸菜魚-SOGO"], 
+    "高雄": ["糕餅小舖-本館", "大廳酒廊-本館", "宴會廳-本館", "福園台菜海鮮餐廳-本館", 
+			"翠園粵菜餐廳-本館", "日本料理弁慶-本館", "紅陶上海湯包-本館", "港式海鮮火鍋-本館", 
+			"PAVO餐廳-本館", "名人坊-本館", "漢來海港-本館", "焰牛排館-本館", 
+			"焰鐵板燒-本館", "上海湯包-夢時代", "溜溜酸菜魚-夢時代", "溜溜酸菜魚-SOGO"], 
     "巨蛋": ["Hi Lai Café", "漢來海港", "漢來蔬食", "宴會廳", "翠園餐廳"], 
     "佛陀": ["Hi Lai Café", "漢來蔬食"], 
     "台南": ["漢來海港", "漢來蔬食"], 
@@ -120,69 +121,48 @@ branchSelect.addEventListener("change", function() {
     }
 });
 
-// 列印
-document.getElementById("print").addEventListener("click", function() {
+// 儲存checkbox狀態
+const checkboxes = document.querySelectorAll("input[type='checkbox']");
+const purposes = new Set();
+const classes = new Set();
+
+// 將每個 checkbox 的狀態存入 sessionStorage 並收集 purposes 和 classes
+checkboxes.forEach(checkbox => {
+	const rowIdentifier = checkbox.getAttribute("data-row");
+	const className = checkbox.classList[0]; // 取得 checkbox 的類別作為識別
+
+	// 收集唯一的 purposes 和 classes
+	purposes.add(rowIdentifier);
+	classes.add(className);
+
+	// 當 checkbox 狀態改變時，儲存到 sessionStorage
+	checkbox.addEventListener("change", function () {
+	  sessionStorage.setItem(`${className}-${rowIdentifier}`, checkbox.checked);
+	});
+});
+
+// 將 purposes 和 classes 儲存到 sessionStorage
+sessionStorage.setItem('purposes', JSON.stringify(Array.from(purposes)));
+sessionStorage.setItem('classes', JSON.stringify(Array.from(classes)));
+
+// 產生食安查核表
+document.getElementById("printCheck").addEventListener("click", function() {
 	const selectedBranch = branchSelect.value;
     const selectedRestaurant = restaurantSelect.value;
+	const date = document.getElementById("dateSelector").value;
 
     // 獲取原來的位置
     const locationCell = document.getElementById("location");
 
     // 檢查是否選擇了分公司和餐廳
     if (selectedBranch && selectedRestaurant) {
-        locationCell.textContent = `${selectedBranch}分公司 ${selectedRestaurant}餐廳`;
-        // 列印頁面
-        window.print();
+        // 開啟列印頁面
+		sessionStorage.setItem("branch", selectedBranch);
+		sessionStorage.setItem("restaurant", selectedRestaurant);
+		let dateStr = date.substring(0,4) + "年" + date.substring(5,7) + "月" + date.substring(8) + "日";
+		sessionStorage.setItem("date", dateStr);
+		window.open("print_FSCL.html");
     } else {
         window.alert("請選擇分公司和餐廳");
     }
-
-    // 在列印後將單元格內容重置回原始狀態
-    locationCell.innerHTML = `
-        <select id="branch" class="branch">
-            <option value="">請選擇分公司</option>
-            <option value="高雄">高雄</option>
-            <option value="巨蛋">巨蛋</option>
-            <option value="佛陀">佛陀</option>
-            <option value="台南">台南</option>
-            <option value="台南東寧">台南東寧</option>
-            <option value="台中">台中</option>
-            <option value="台中三民">台中三民</option>
-            <option value="新竹">新竹</option>
-            <option value="桃園">桃園</option>
-            <option value="台北敦南">台北敦南</option>
-            <option value="台北信義">台北信義</option>
-            <option value="台北天母">台北天母</option>
-            <option value="台北南港">台北南港</option>
-        </select>
-        分公司
-        <select id="restaurant" class="restaurant">
-            <option value="">請選擇餐廳</option>
-        </select>
-    `;
-
-    // 重新獲取分公司和餐廳下拉選單的引用
-    const newBranchSelect = document.getElementById("branch");
-    const newRestaurantSelect = document.getElementById("restaurant");
-
-    // 重新填充餐廳選單
-    newBranchSelect.addEventListener("change", function() {
-        const selectedBranch = newBranchSelect.value;
-
-        // 清空餐廳選單
-        newRestaurantSelect.innerHTML = '<option value="">請選擇餐廳</option>';
-
-        // 根據選擇的分公司填充餐廳選單
-        if (selectedBranch && branches[selectedBranch]) {
-            branches[selectedBranch].forEach(restaurant => {
-                const option = document.createElement("option");
-                option.value = restaurant;
-                option.textContent = restaurant;
-                newRestaurantSelect.appendChild(option);
-            });
-        }
-    });
-
-    // 觸發分公司選擇改變事件以填充餐廳選單
-    newBranchSelect.dispatchEvent(new Event("change"));
 });
