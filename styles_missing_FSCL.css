@@ -1,0 +1,48 @@
+table {
+    border-collapse: collapse;
+    margin-left:auto;
+    margin-right:auto;
+	font-family: "Microsoft JhengHei";
+	font-size: 16px;
+}
+
+.header {
+	border-left-width: 0px;
+	border-right-width: 0px;
+	border-top-width: 0px;
+	font-size: 16px;
+}
+
+.category {
+    width: 30px;
+    text-align: center;
+    font-weight: normal;
+    padding: 8px 4px;
+	border: 1px solid black;
+}
+
+.reason {
+	width: 90px;
+	height: 28px;
+	border: 1px solid black;	
+	border-right-width: 0px;
+}
+
+.descript{
+	width: 600px;
+	height: 28px;
+	border: 1px solid black;	
+	border-left-width: 0px;
+}
+
+.description {
+	width: 600px;
+	font-size: 16px;
+	vertical-align:middle;
+}
+
+.footer {
+	border: 1px solid black;	
+	border-top-width: 0px;
+	line-height:1.5;
+}

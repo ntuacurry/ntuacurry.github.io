@@ -1,0 +1,68 @@
+.print {
+	display: flex;
+	justify-content: center;
+	background-color: #b8d38f;
+	line-height:2;
+	font-family: "Microsoft JhengHei";
+}
+
+@media print {
+	.print {
+		display: none;
+	}
+}
+
+table {
+    border-collapse: collapse;
+    margin-left:auto;
+    margin-right:auto;
+	font-family: "Microsoft JhengHei";
+	font-size: 16px;
+}
+
+.header {
+	border-left-width: 0px;
+	border-right-width: 0px;
+	border-top-width: 0px;
+	font-size: 16px;
+}
+
+.category {
+    width: 30px;
+    text-align: center;
+    font-weight: normal;
+    padding: 8px 4px;
+	border: 1px solid black;
+}
+
+.reason {
+	width: 690px;
+	height: 28px;
+	border: 1px solid black;	
+}
+
+.footer1 {
+	border: 1px solid black;	
+	border-bottom-width: 0px;
+
+}
+
+.footer2 {
+	width: 660px;
+	border: 1px solid black;	
+	border-top-width: 0px;
+}
+
+.score {
+	float: right;
+	font-size: 28px;
+}
+
+.checkPerson {
+	font-size: 24px;
+}
+
+.sign {
+	float: right;
+	font-size: 24px;
+}
