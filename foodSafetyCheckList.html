@@ -6,17 +6,25 @@
     <link rel="stylesheet" href="styles_FSCL.css">
 </head>
 <body>
-	<div class="process">
-		<div>
-			<button id="checkNA">將不適用的條文改為NA</button>
+	<aside>
+		<div class="process">
+			<div>
+				<button id="checkNA" class="checkNA">NA</button>
+			</div>
+			<div>
+				<button id="printCheck">產出食安查核表</button>
+			</div>
+			<div>
+				<button id="missingWrite">填寫缺失說明</button>
+			</div>
 		</div>
 		<div>
-			<button id="printCheck">產出食安查核表</button>
+			分數預覽：<span id="score">0<span>分
 		</div>
 		<div>
-			分數：<span id="score">0<span>分
+			<button id="reset">重設資料</button>
 		</div>
-	</div>
+	</aside>
     <div class="container">
         <div class="header">
             <h1>漢來美食股份有限公司</h1>
