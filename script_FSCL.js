@@ -33,6 +33,7 @@ function passRate() {
                   ? ((countCorrect / checkboxesCorrect.length) * 100 - (countB + countStar) * 2).toFixed(1)
                   : 0;
     checkedCountDisplay.textContent = score;
+	sessionStorage.setItem("score", score);
 }
 
 // 監聽每個核取方塊的變更事件
@@ -145,7 +146,7 @@ checkboxes.forEach(checkbox => {
 sessionStorage.setItem('purposes', JSON.stringify(Array.from(purposes)));
 sessionStorage.setItem('classes', JSON.stringify(Array.from(classes)));
 
-// 產生食安查核表
+// 產出食安查核表
 document.getElementById("printCheck").addEventListener("click", function() {
 	const selectedBranch = branchSelect.value;
     const selectedRestaurant = restaurantSelect.value;
@@ -165,4 +166,42 @@ document.getElementById("printCheck").addEventListener("click", function() {
     } else {
         window.alert("請選擇分公司和餐廳");
     }
+});
+
+// 產出食安查核表
+document.getElementById("missingWrite").addEventListener("click", function() {
+    // 每次調用時重新選取 checkbox，確保不包含已變為 "NA" 的欄位
+    const checkboxesCorrect = document.querySelectorAll(".correct");
+    const checkboxesB = document.querySelectorAll(".B");
+    const checkboxesStar = document.querySelectorAll(".star");
+
+    let countCorrect = 0;
+    checkboxesCorrect.forEach(checkbox => {
+        if (checkbox.checked) {
+            countCorrect++;
+        }
+    });
+
+    let countB = 0;
+    checkboxesB.forEach(checkbox => {
+        if (checkbox.checked) {
+            countB++;
+        }
+    });
+
+    let countStar = 0;
+    checkboxesStar.forEach(checkbox => {
+        if (checkbox.checked) {
+            countStar++;
+        }
+    });
+	const count = countCorrect + countB +countStar;
+    const endScore = ((countCorrect / count) * 100 - (countB + countStar) * 2).toFixed(1);
+	sessionStorage.setItem("endScore", endScore);
+	window.open("missing_FSCL.html");
+});
+
+// 重設seesionStorage
+document.getElementById("reset").addEventListener("click", function() {
+	sessionStorage.clear();
 });
