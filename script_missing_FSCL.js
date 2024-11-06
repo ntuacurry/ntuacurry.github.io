@@ -117,5 +117,7 @@ document.getElementById("printDescript").addEventListener("click", function() {
 	}
 	const endDateStr = endDate.substring(0,4) + "年" + endDate.substring(5,7) + "月" + endDate.substring(8) + "日";
 	sessionStorage.setItem("endDate", endDateStr);
+	const checkPerson = window.prompt("請輸入姓名");
+	sessionStorage.setItem("checkPerson", checkPerson);
 	window.open("print_missing_FSCL.html");
 });
