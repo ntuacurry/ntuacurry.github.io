@@ -1,0 +1,392 @@
+[
+    {
+        "name": "哲の勝力丸", 
+        "birth": "2024/10/25", 
+        "gender": "牡", 
+        "breeder": "台灣哲柴莊", 
+        "owner": "台灣哲柴莊", 
+        "father": "月丿勝力", 
+        "mother": "将乃黑福姫", 
+        "honor": ""
+    }, 
+    {
+        "name": "月丿勝力", 
+        "birth": "", 
+        "gender": "牡", 
+        "breeder": "山形月山荘", 
+        "owner": "", 
+        "father": "", 
+        "mother": "", 
+        "honor": ""
+    }, 
+    {
+        "name": "将乃黑福姫", 
+        "birth": "", 
+        "gender": "牝", 
+        "breeder": "紀州川原荘", 
+        "owner": "", 
+        "father": "", 
+        "mother": "", 
+        "honor": ""
+    }, 
+    {
+        "name": "哲の福天竜", 
+        "birth": "2024/12/14", 
+        "gender": "牡", 
+        "breeder": "紀州川原莊", 
+        "owner": "台灣哲柴莊", 
+        "father": "福竜", 
+        "mother": "哲の錦竜美", 
+        "honor": ""
+    }, 
+    {
+        "name": "福竜", 
+        "birth": "", 
+        "gender": "牡", 
+        "breeder": "彗翔", 
+        "owner": "", 
+        "father": "", 
+        "mother": "", 
+        "honor": ""
+    }, 
+    {
+        "name": "哲の錦竜美", 
+        "birth": "", 
+        "gender": "牝", 
+        "breeder": "台灣哲柴莊", 
+        "owner": "", 
+        "father": "", 
+        "mother": "", 
+        "honor": ""
+    }, 
+    {
+        "name": "", 
+        "birth": "", 
+        "gender": "", 
+        "breeder": "", 
+        "owner": "", 
+        "father": "", 
+        "mother": "", 
+        "honor": ""
+    }, 
+    {
+        "name": "哲の浜力玥", 
+        "birth": "2025/1/28", 
+        "gender": "牡", 
+        "breeder": "台灣哲柴荘", 
+        "owner": "台灣哲柴荘", 
+        "father": "浜幻", 
+        "mother": "哲の福竜桜", 
+        "honor": ""
+    }, 
+    {
+        "name": "哲の浜力竜", 
+        "birth": "2025/1/28", 
+        "gender": "牡", 
+        "breeder": "台灣哲柴荘", 
+        "owner": "台灣哲柴荘", 
+        "father": "浜幻", 
+        "mother": "哲の福竜桜", 
+        "honor": ""
+    }, 
+    {
+        "name": "哲の浜力福", 
+        "birth": "2025/1/28", 
+        "gender": "牡", 
+        "breeder": "台灣哲柴荘", 
+        "owner": "台灣哲柴荘", 
+        "father": "浜幻", 
+        "mother": "哲の福竜桜", 
+        "honor": ""
+    }, 
+    {
+        "name": "浜幻", 
+        "birth": "", 
+        "gender": "牡", 
+        "breeder": "彗翔", 
+        "owner": "", 
+        "father": "", 
+        "mother": "", 
+        "honor": ""
+    }, 
+    {
+        "name": "哲の福竜桜", 
+        "birth": "", 
+        "gender": "牝", 
+        "breeder": "台灣哲柴荘", 
+        "owner": "", 
+        "father": "", 
+        "mother": "", 
+        "honor": ""
+    }, 
+    {
+        "name": "哲の紅美希", 
+        "birth": "2024/6/30", 
+        "gender": "牝", 
+        "breeder": "台灣哲柴莊", 
+        "owner": "台灣哲柴莊", 
+        "father": "将乃紅王", 
+        "mother": "哲の徹天華", 
+        "honor": ""
+    }, 
+    {
+        "name": "将乃紅王", 
+        "birth": "2021/9/13", 
+        "gender": "牡", 
+        "breeder": "紀州川原莊", 
+        "owner": "台灣哲柴莊", 
+        "father": "黑王錦", 
+        "mother": "鈴の勝王姫", 
+        "honor": ["日本全国展若二雄組B班優良14席", "日本全国展成犬雄組B班優良8席"]
+    }, 
+    {
+        "name": "哲の徹天華", 
+        "birth": "", 
+        "gender": "牝", 
+        "breeder": "台灣哲柴莊", 
+        "owner": "", 
+        "father": "", 
+        "mother": "", 
+        "honor": ""
+    }, 
+    {
+        "name": "黑王錦", 
+        "birth": "", 
+        "gender": "", 
+        "breeder": "", 
+        "owner": "", 
+        "father": "", 
+        "mother": "", 
+        "honor": ""
+    }, 
+    {
+        "name": "鈴の勝王姫", 
+        "birth": "", 
+        "gender": "", 
+        "breeder": "", 
+        "owner": "", 
+        "father": "", 
+        "mother": "", 
+        "honor": ""
+    }, 
+    {
+        "name": "鈴の将美姫", 
+        "birth": "2020/5/25", 
+        "gender": "牝", 
+        "breeder": "紀州川原荘", 
+        "owner": "台灣哲柴荘", 
+        "father": "鈴の竜将", 
+        "mother": "", 
+        "honor": ""
+    }, 
+    {
+        "name": "鈴の竜将", 
+        "birth": "", 
+        "gender": "牡", 
+        "breeder": "紀州川原荘", 
+        "owner": "", 
+        "father": "", 
+        "mother": "", 
+        "honor": ""
+    }, 
+    {
+        "name": "神乃美杉姫", 
+        "birth": "牝", 
+        "gender": "", 
+        "breeder": "出羽神室荘", 
+        "owner": "", 
+        "father": "", 
+        "mother": "", 
+        "honor": ""
+    }, 
+    {
+        "name": "", 
+        "birth": "", 
+        "gender": "", 
+        "breeder": "", 
+        "owner": "", 
+        "father": "", 
+        "mother": "", 
+        "honor": ""
+    }, 
+    {
+        "name": "", 
+        "birth": "", 
+        "gender": "", 
+        "breeder": "", 
+        "owner": "", 
+        "father": "", 
+        "mother": "", 
+        "honor": ""
+    }, 
+    {
+        "name": "", 
+        "birth": "", 
+        "gender": "", 
+        "breeder": "", 
+        "owner": "", 
+        "father": "", 
+        "mother": "", 
+        "honor": ""
+    }, 
+    {
+        "name": "", 
+        "birth": "", 
+        "gender": "", 
+        "breeder": "", 
+        "owner": "", 
+        "father": "", 
+        "mother": "", 
+        "honor": ""
+    }, 
+    {
+        "name": "", 
+        "birth": "", 
+        "gender": "", 
+        "breeder": "", 
+        "owner": "", 
+        "father": "", 
+        "mother": "", 
+        "honor": ""
+    }, 
+    {
+        "name": "", 
+        "birth": "", 
+        "gender": "", 
+        "breeder": "", 
+        "owner": "", 
+        "father": "", 
+        "mother": "", 
+        "honor": ""
+    }, 
+    {
+        "name": "", 
+        "birth": "", 
+        "gender": "", 
+        "breeder": "", 
+        "owner": "", 
+        "father": "", 
+        "mother": "", 
+        "honor": ""
+    }, 
+    {
+        "name": "", 
+        "birth": "", 
+        "gender": "", 
+        "breeder": "", 
+        "owner": "", 
+        "father": "", 
+        "mother": "", 
+        "honor": ""
+    }, 
+    {
+        "name": "", 
+        "birth": "", 
+        "gender": "", 
+        "breeder": "", 
+        "owner": "", 
+        "father": "", 
+        "mother": "", 
+        "honor": ""
+    }, 
+    {
+        "name": "", 
+        "birth": "", 
+        "gender": "", 
+        "breeder": "", 
+        "owner": "", 
+        "father": "", 
+        "mother": "", 
+        "honor": ""
+    }, 
+    {
+        "name": "", 
+        "birth": "", 
+        "gender": "", 
+        "breeder": "", 
+        "owner": "", 
+        "father": "", 
+        "mother": "", 
+        "honor": ""
+    }, 
+    {
+        "name": "", 
+        "birth": "", 
+        "gender": "", 
+        "breeder": "", 
+        "owner": "", 
+        "father": "", 
+        "mother": "", 
+        "honor": ""
+    }, 
+    {
+        "name": "", 
+        "birth": "", 
+        "gender": "", 
+        "breeder": "", 
+        "owner": "", 
+        "father": "", 
+        "mother": "", 
+        "honor": ""
+    }, 
+    {
+        "name": "", 
+        "birth": "", 
+        "gender": "", 
+        "breeder": "", 
+        "owner": "", 
+        "father": "", 
+        "mother": "", 
+        "honor": ""
+    }, 
+    {
+        "name": "", 
+        "birth": "", 
+        "gender": "", 
+        "breeder": "", 
+        "owner": "", 
+        "father": "", 
+        "mother": "", 
+        "honor": ""
+    }, 
+    {
+        "name": "", 
+        "birth": "", 
+        "gender": "", 
+        "breeder": "", 
+        "owner": "", 
+        "father": "", 
+        "mother": "", 
+        "honor": ""
+    }, 
+    {
+        "name": "", 
+        "birth": "", 
+        "gender": "", 
+        "breeder": "", 
+        "owner": "", 
+        "father": "", 
+        "mother": "", 
+        "honor": ""
+    }, 
+    {
+        "name": "", 
+        "birth": "", 
+        "gender": "", 
+        "breeder": "", 
+        "owner": "", 
+        "father": "", 
+        "mother": "", 
+        "honor": ""
+    }, 
+    {
+        "name": "", 
+        "birth": "", 
+        "gender": "", 
+        "breeder": "", 
+        "owner": "", 
+        "father": "", 
+        "mother": "", 
+        "honor": ""
+    }
+]
