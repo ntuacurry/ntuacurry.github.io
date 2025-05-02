@@ -7,12 +7,29 @@ const modalTitle = document.getElementById('modalTitle');
 const modalTableBody = document.getElementById('modalTableBody');
 const closeBtn = document.querySelector('.close');
 
-// 初始化頁面時顯示所有食品品項
+// 初始化頁面時不顯示任何食品品項
 document.addEventListener('DOMContentLoaded', () => {
-  displayAllFoodItems();
+  // 不再調用 displayAllFoodItems()
+  // 顯示歡迎訊息
+  displayWelcomeMessage();
 });
 
-// 搜尋按鈕點擊事件
+// 顯示歡迎訊息
+function displayWelcomeMessage() {
+  resultContainer.innerHTML = '';
+  
+  const welcomeMessage = document.createElement('div');
+  welcomeMessage.className = 'welcome-message';
+  welcomeMessage.innerHTML = `
+    <h2>歡迎使用食品微生物衛生標準查詢系統</h2>
+    <p>請在上方輸入框中輸入食品品項關鍵字進行搜尋。</p>
+    <p>例如：鮮乳、嬰兒食品、水產品、飲料等。</p>
+  `;
+  
+  resultContainer.appendChild(welcomeMessage);
+}
+
+// 搜尋按鈕點擊事件 (保留作為備用)
 searchButton.addEventListener('click', () => {
   performSearch();
 });
@@ -22,6 +39,18 @@ searchInput.addEventListener('keypress', (e) => {
   if (e.key === 'Enter') {
     performSearch();
   }
+});
+
+// 添加即時搜尋功能 - 輸入文字時即開始搜尋
+searchInput.addEventListener('input', () => {
+  // 如果搜尋框為空，顯示歡迎訊息
+  if (searchInput.value.trim() === '') {
+    displayWelcomeMessage();
+    return;
+  }
+  
+  // 執行搜尋
+  performSearch();
 });
 
 // 關閉模態視窗的點擊事件
@@ -36,7 +65,7 @@ window.addEventListener('click', (e) => {
   }
 });
 
-// 顯示所有食品品項
+// 顯示所有食品品項 (保留作為備用功能)
 function displayAllFoodItems() {
   resultContainer.innerHTML = '';
   
@@ -77,9 +106,9 @@ function displayAllFoodItems() {
 function performSearch() {
   const keyword = searchInput.value.trim();
   
-  // 如果搜尋關鍵字為空，顯示所有項目
+  // 如果搜尋關鍵字為空，顯示歡迎訊息
   if (keyword === '') {
-    displayAllFoodItems();
+    displayWelcomeMessage();
     return;
   }
   
