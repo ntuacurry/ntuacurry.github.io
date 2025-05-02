@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>食品微生物衛生標準查詢系統</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <div class="container">
+      <h1>食品微生物衛生標準查詢系統</h1>
+    </div>
+  </header>
+  
+  <div class="container">
+    <div class="search-container">
+      <input type="text" id="searchInput" class="search-input" placeholder="請輸入食品品項關鍵字..." autocomplete="off">
+      <button id="searchButton" class="search-button">搜尋</button>
+    </div>
+    
+    <div id="resultContainer" class="result-container">
+      <!-- 搜尋結果將在這裡顯示 -->
+    </div>
+    
+    <div id="modal" class="modal">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <div class="modal-header">
+          <h3 id="modalTitle" class="modal-title"></h3>
+        </div>
+        <div id="modalContent">
+          <table class="standards-table">
+            <thead>
+              <tr>
+                <th>微生物及其毒素、代謝產物</th>
+                <th>採樣計畫</th>
+                <th>限量</th>
+              </tr>
+            </thead>
+            <tbody id="modalTableBody">
+              <!-- 標準內容將在這裡顯示 -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <footer>
+    <div class="container">
+      <p>食品微生物衛生標準資料來源：食品安全衛生管理法</p>
+    </div>
+  </footer>
+
+  <script src="food_safety_data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
