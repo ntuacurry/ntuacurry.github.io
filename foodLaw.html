@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <title>法規搜尋器</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        :root {
+        --primary-color: #b8d38f;
+        }
+
+        body {
+        background-color: #f8f9fa;
+        font-family: Arial, sans-serif;
+        }
+
+        h1 {
+        color: black;
+        text-align: center;
+        }
+
+        .law-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        cursor: pointer;
+        background-color: var(--primary-color);
+        color: white;
+        padding: 10px;
+        border-radius: 5px;
+        margin-bottom: 5px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        flex-wrap: wrap;
+        }
+
+        .law-header:hover {
+        background-color: #a1c479;
+        }
+
+        .result-container {
+        background-color: white;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        margin-bottom: 10px;
+        padding: 15px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        cursor: pointer;
+        }
+
+        .result-container:hover {
+        background-color: #f1f9f4;
+        }
+
+        .result-count {
+        margin-left: auto;
+        font-weight: bold;
+        }
+
+        .no-results {
+        color: red;
+        text-align: center;
+        }
+
+        .search-box {
+        margin-bottom: 20px;
+        }
+
+        .article-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        flex-wrap: nowrap;
+        }
+
+        .article-text {
+        flex: 1;
+        min-width: 0;
+        }
+
+        .article-collapsed {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        }
+
+        .article-expanded {
+        display: flex;
+        flex-direction: column;
+        }
+
+        .article-no {
+        font-weight: bold;
+        margin-bottom: 5px;
+        white-space: nowrap;
+        }
+
+        .law-content {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        }
+
+        .law-content-expanded {
+        white-space: normal;
+        word-wrap: break-word;
+        }
+
+        .expand-icon-article {
+        font-size: 18px;
+        cursor: pointer;
+        margin-left: 15px;
+        white-space: nowrap;
+        flex-shrink: 0;
+        align-self: center;
+        }
+
+        .expand-icon-article:hover {
+        text-decoration: underline;
+        }
+
+        mark {
+        background-color: yellow;
+        padding: 0 2px;
+        }
+
+        @media (max-width: 576px) {
+        .article-container {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .expand-icon-article {
+            align-self: flex-end;
+            margin-top: 10px;
+        }
+        }
+    </style>
+</head>
+<body>
+    <div id="app" class="container mt-5">
+        <h1 class="mb-4">法規搜尋器</h1>
+
+        <!-- 搜尋框 -->
+        <div class="mb-3 search-box">
+        <label for="searchInput" class="form-label">輸入關鍵字搜尋：</label>
+        <input type="text" id="searchInput" class="form-control" v-model="searchQuery" @input="searchLaws" placeholder="輸入關鍵字">
+        </div>
+
+        <!-- 搜尋結果筆數 -->
+        <div v-if="totalResults > 0 && totalResults <= 1000" class="mb-3">
+        <p>搜尋結果：共 {{ totalResults }} 筆</p>
+        </div>
+
+        <!-- 搜尋結果 -->
+        <div v-if="filteredResults.length > 0 && totalResults <= 1000">
+        <div v-for="(law, index) in filteredResults" :key="index" class="mb-4">
+            <div class="result-container" @click="toggleLawVisibility(index)">
+            <div class="law-header">
+                <h3 class="mb-0">{{ law.LawName }}</h3>
+                <span class="result-count">結果數：{{ law.MatchedArticles.length }}</span>
+                <span class="expand-icon">{{ law.isVisible ? '▲' : '▼' }}</span>
+            </div>
+
+            <div v-if="law.isVisible">
+                <div v-for="(article, idx) in law.MatchedArticles" :key="idx" class="border p-3 mb-2" @click.stop="toggleArticleExpansion(law.LawName, idx)">
+                <div class="article-container">
+                    <div class="article-text" :class="article.isExpanded ? 'article-expanded' : 'article-collapsed'">
+                        <div class="article-no">{{ article.ArticleNo }}</div>
+                        <div :class="{'law-content': !article.isExpanded, 'law-content-expanded': article.isExpanded}">
+                            <span v-if="!article.isExpanded">{{ formatContent(article.ArticleContent, false) }}</span>
+                            <span v-else v-html="formatContent(article.ArticleContent, true)"></span>
+                        </div>
+                    </div>                    
+                    <div>
+                    <span class="expand-icon-article">
+                        {{ article.isExpanded ? '▲' : '▼' }}
+                    </span>
+                    </div>
+                </div>
+                </div>
+            </div>
+            </div>
+        </div>
+        </div>
+
+        <!-- 沒有結果 -->
+        <div v-if="totalResults === 0 && searchQuery.length > 0" class="no-results">
+        <p>沒有符合的搜尋結果。</p>
+        </div>
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+    
+        createApp({
+            data() {
+                return {
+                    searchQuery: '',
+                    allLaws: [],
+                    filteredResults: [],
+                    windowWidth: window.innerWidth,  // 紀錄當前視窗寬度
+                };
+            },
+            computed: {
+                totalResults() {
+                    return this.filteredResults.reduce((sum, law) => sum + law.MatchedArticles.length, 0);
+                }
+            },
+            methods: {
+                searchLaws() {
+                    if (this.searchQuery.trim() === '') {
+                        this.filteredResults = [];
+                        return;
+                    }
+    
+                    const queries = this.searchQuery.trim().toLowerCase().split(/\s+/);  // 支援多關鍵字
+                    const results = [];
+    
+                    this.allLaws.forEach(law => {
+                        const matchedArticles = law.LawArticles
+                            .filter(article =>
+                                article.ArticleType === 'A' &&
+                                queries.every(query => article.ArticleContent.toLowerCase().includes(query))  // 所有關鍵字都必須符合
+                            )
+                            .map(article => ({
+                                ...article,
+                                isExpanded: false,
+                                containerWidth: 0 // 用來存放每個文章容器的寬度
+                            }));
+    
+                        if (matchedArticles.length > 0) {
+                            results.push({
+                                LawName: law.LawName,
+                                MatchedArticles: matchedArticles,
+                                isVisible: false
+                            });
+                        }
+                    });
+    
+                    this.filteredResults = results.length > 1000 ? [] : results;
+                },
+                toggleLawVisibility(index) {
+                    this.filteredResults[index].isVisible = !this.filteredResults[index].isVisible;
+                },
+                toggleArticleExpansion(lawName, articleIndex) {
+                    const law = this.filteredResults.find(law => law.LawName === lawName);
+                    if (law) {
+                        const article = law.MatchedArticles[articleIndex];
+                        if (article) article.isExpanded = !article.isExpanded;
+                    }
+                },
+                escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                },
+                formatContent(content, isExpanded = false) {
+                    const queries = this.searchQuery.trim().toLowerCase().split(/\s+/);  // 分割多關鍵字
+                    if (!queries || queries.length === 0) return content.replace(/\r\n|\n|\r/g, ' ');  // 縮略模式下不顯示 <br>
+
+                    let formattedContent = content;
+                    
+                    // 依照每個關鍵字進行高亮
+                    if (isExpanded) {
+                        queries.forEach(query => {
+                            const escapedQuery = this.escapeRegExp(query);
+                            const regex = new RegExp(escapedQuery, 'gi');
+                            formattedContent = formattedContent.replace(regex, match => `<mark>${match}</mark>`);
+                        });
+                        // 確保換行符號被正確轉換成 <br>，以便顯示格式化的內容
+                        formattedContent = formattedContent.replace(/\r\n|\n|\r/g, '<br>');
+                    } else {
+                        // 在未展開的情況下，不使用 <mark> 和 <br>
+                        queries.forEach(query => {
+                            const escapedQuery = this.escapeRegExp(query);
+                            const regex = new RegExp(escapedQuery, 'gi');
+                            formattedContent = formattedContent.replace(regex, match => `${match}`);  // 在縮略模式中不顯示高亮
+                        });
+                    }
+
+                    return formattedContent;
+                },
+                isExpandable(article, containerWidth) {
+                    // 根據容器的寬度判斷是否需要展開功能
+                    return containerWidth < 600 && article.ArticleContent.length > 500; // 設定顯示展開按鈕的條件
+                },
+                handleResize() {
+                    this.windowWidth = window.innerWidth;  // 更新視窗寬度
+                },
+                measureContentWidth(articleContent) {
+                    // 暫時創建一個隱藏的元素來測量文本的寬度
+                    const tempElement = document.createElement('div');
+                    tempElement.style.position = 'absolute';
+                    tempElement.style.visibility = 'hidden';
+                    tempElement.style.whiteSpace = 'nowrap'; // 不換行
+                    tempElement.innerHTML = this.formatContent(articleContent);
+                    document.body.appendChild(tempElement);
+                    const width = tempElement.clientWidth; // 獲取元素寬度
+                    document.body.removeChild(tempElement); // 移除臨時元素
+                    return width;
+                }
+            },
+            mounted() {
+                window.addEventListener('resize', this.handleResize);  // 監聽視窗大小變動
+    
+                Promise.all([
+                    fetch('https://ntuacurry.github.io/food_laws.json').then(res => res.json()),
+                    fetch('https://ntuacurry.github.io/food_orders.json').then(res => res.json())
+                ])
+                .then(([lawsData, ordersData]) => {
+                    this.allLaws = [...lawsData.Laws, ...ordersData.Laws];
+                    // 初始化文章的容器寬度
+                    this.filteredResults.forEach(law => {
+                        law.MatchedArticles.forEach(article => {
+                            article.containerWidth = this.measureContentWidth(article.ArticleContent);
+                        });
+                    });
+                })
+                .catch(err => {
+                    console.error('載入資料失敗：', err);
+                });
+            },
+            beforeUnmount() {
+                window.removeEventListener('resize', this.handleResize);  // 清理事件監聽器
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
