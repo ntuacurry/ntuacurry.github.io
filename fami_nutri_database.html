@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>全家商品營養素查詢</title>
+    <!-- Open Graph metadata for link previews -->
+    <meta property="og:title" content="全家商品營養素查詢" />
+    <meta property="og:description" content="全家就是你家" />
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500&display=swap" rel="stylesheet" />
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <!-- Vue.js 3 -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <style>
+        body {
+            background: linear-gradient(to bottom, #f6f7f8, #e9ecef);
+            font-family: 'Noto Serif TC', serif;
+            color: #2f2f2f;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px; /* 增加容器寬度 */
+            width: 90%;
+            margin: 80px auto 20px auto;
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 40px 20px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #343a40;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #dee2e6;
+            padding-bottom: 10px;
+            text-align: center;
+        }
+
+        .form-control {
+            font-size: 1.1rem;
+            border-radius: 8px;
+        }
+
+        .table th, .table td {
+            vertical-align: middle; /* 使表格內容垂直置中 */
+        }
+
+        .table th {
+            background-color: #f8f9fa;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        .table td, .table th {
+            text-align: center;
+        }
+
+        footer {
+            margin-top: auto;
+            text-align: center;
+            font-size: 0.9rem;
+            color: #6c757d;
+            padding: 20px 10px;
+        }
+
+        /* RWD 調整 */
+        @media (max-width: 576px) {
+            h1 {
+                font-size: 1.6rem;
+            }
+
+            .form-control {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app" class="container">
+        <h1>產品搜尋</h1>
+
+        <input v-model="searchQuery" type="text" class="form-control mb-3" placeholder="輸入品名搜尋..." />
+
+        <p v-if="searchQuery" class="mb-2 text-start">共 {{ filteredItems.length }} 筆搜尋結果</p>
+
+        <div style="max-height: 600px; overflow-y: auto;">
+            <table class="table table-bordered table-striped">
+                <thead class="text-center">
+                    <tr>
+                        <th>品項</th>
+                        <th>每份含量</th>
+                        <th>每包裝<br>含幾份</th>
+                        <th>熱量<br>(kcal)</th>
+                        <th>碳水化合物<br>(g)</th>
+                        <th>蛋白質<br>(g)</th>
+                        <th>脂肪<br>(g)</th>
+                        <th>飽和脂肪<br>(g)</th>
+                        <th>反式脂肪<br>(g)</th>
+                        <th>鈉<br>(mg)</th>
+                        <th>糖<br>(g)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-if="filteredItems.length === 0">
+                        <td colspan="11" class="text-center">找不到符合的項目</td>
+                    </tr>
+                    <tr v-for="item in filteredItems" :key="item.name">
+                        <td>{{ item.name }}</td>
+                        <td>{{ formatUnit(item.specification) }}</td>
+                        <td>{{ item.servings }}</td>
+                        <td>{{ item.calorie.value }}</td>
+                        <td>{{ item.carbohydrate.value }}</td>
+                        <td>{{ item.protein.value }}</td>
+                        <td>{{ item.fat.value }}</td>
+                        <td>{{ item.satFat.value }}</td>
+                        <td>{{ item.transFat.value }}</td>
+                        <td>{{ item.sodium.value }}</td>
+                        <td>{{ item.sugar.value }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <footer>
+        © 2025 NTUACURRY. All rights reserved.
+    </footer>
+
+    <script>
+        const app = Vue.createApp({
+            data() {
+                return {
+                    searchQuery: '',
+                    items: []
+                };
+            },
+            computed: {
+                filteredItems() {
+                    const query = this.searchQuery.toLowerCase().trim();
+                    return this.items.filter(item =>
+                        item.name.toLowerCase().includes(query)
+                    );
+                }
+            },
+            methods: {
+                formatUnit(spec) {
+                    return spec.replace(/公克/g, ' g').replace(/毫升/g, ' mL').replace(/毫克/g, ' mg').replace(/盎司/g, ' oz');
+                }
+            },
+            mounted() {
+                fetch('https://ntuacurry.github.io/fami_products.json')
+                    .then(response => response.json())
+                    .then(data => {
+                        this.items = data.info;
+                    })
+                    .catch(error => {
+                        console.error('無法載入資料：', error);
+                    });
+            }
+        });
+
+        app.mount('#app');
+    </script>
+</body>
+</html>
