@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <title>簽名拖曳與 PDF 範例</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+
+    #sign-wrapper {
+      width: 100%;
+      max-width: 800px;
+      margin: auto;
+      padding: 20px;
+      border: 1px solid #ccc;
+      position: relative;
+      background-color: #fff;
+    }
+
+    #signature-pad {
+      border: 1px solid #ccc;
+      display: none;
+      margin-top: 10px;
+    }
+
+    #draggable-signature {
+      position: absolute;
+      width: 150px;
+      cursor: move;
+      display: none;
+      z-index: 10;
+    }
+
+    button {
+      margin-right: 10px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>查檢表簽名範例</h1>
+
+<button onclick="startSign()">開始簽名</button>
+<button onclick="exportPDF()">產出 PDF</button>
+
+<canvas id="signature-pad" width="300" height="150"></canvas>
+
+<div id="sign-wrapper">
+  <h2>每日查檢表</h2>
+  <ul>
+    <li>☐ 電源檢查</li>
+    <li>☑ 系統啟動</li>
+    <li>☑ 資料備份</li>
+    <li>☐ 設備清潔</li>
+  </ul>
+  <p>請將簽名拖曳到適當位置：</p>
+
+  <!-- 簽名圖片（可拖曳） -->
+  <img id="draggable-signature" src="" />
+</div>
+
+<!-- 套件引入 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<script>
+  const canvas = document.getElementById('signature-pad');
+  const ctx = canvas.getContext('2d');
+  const signatureImg = document.getElementById('draggable-signature');
+  let drawing = false;
+
+  function startSign() {
+    canvas.style.display = 'block';
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawing = false;
+
+    canvas.onmousedown = () => drawing = true;
+    canvas.onmouseup = () => {
+      drawing = false;
+      ctx.beginPath();
+
+      // 儲存簽名圖片
+      const dataURL = canvas.toDataURL();
+      signatureImg.src = dataURL;
+      signatureImg.style.left = '100px';
+      signatureImg.style.top = '300px';
+      signatureImg.style.display = 'block';
+
+      canvas.style.display = 'none';
+    };
+
+    canvas.onmousemove = function (e) {
+      if (!drawing) return;
+      const rect = canvas.getBoundingClientRect();
+      ctx.lineWidth = 2;
+      ctx.lineCap = "round";
+      ctx.strokeStyle = "#000";
+      ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+    };
+  }
+
+  // 拖曳功能
+  let isDragging = false;
+  let offsetX, offsetY;
+
+  signatureImg.addEventListener("mousedown", function (e) {
+    isDragging = true;
+    offsetX = e.offsetX;
+    offsetY = e.offsetY;
+  });
+
+  document.addEventListener("mousemove", function (e) {
+    if (isDragging) {
+      const parent = document.getElementById("sign-wrapper");
+      const rect = parent.getBoundingClientRect();
+      signatureImg.style.left = `${e.clientX - rect.left - offsetX}px`;
+      signatureImg.style.top = `${e.clientY - rect.top - offsetY}px`;
+    }
+  });
+
+  document.addEventListener("mouseup", function () {
+    isDragging = false;
+  });
+
+  async function exportPDF() {
+    const { jsPDF } = window.jspdf;
+    const wrapper = document.getElementById('sign-wrapper');
+
+    const canvas = await html2canvas(wrapper, {
+      scale: 2,
+      useCORS: true
+    });
+
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF();
+
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = (canvas.height * pageWidth) / canvas.width;
+
+    pdf.addImage(imgData, 'PNG', 0, 0, pageWidth, pageHeight);
+    pdf.save('checklist_signed.pdf');
+  }
+</script>
+</body>
+</html>
