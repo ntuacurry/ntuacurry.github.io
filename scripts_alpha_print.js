@@ -24,7 +24,7 @@ fetch("https://ntuacurry.github.io/missing_alpha.json")
             const cell = row.insertCell(0);
             cell.className = "category";
             cell.setAttribute("rowspan", `${typeCount[key]}`);
-            cell.textContent = key;
+            cell.innerHTML = key.split("").join("<br>");
             
             let j = 0;
             data.forEach(item => {
