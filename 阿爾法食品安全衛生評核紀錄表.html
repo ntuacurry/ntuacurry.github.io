@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="styles_alpha.css">
+    <title>阿爾法食品安全衛生評核紀錄表</title>
+</head>
+<body>
+    <table class="checkList">
+        <tbody>
+            <tr class="head">
+                <td class="header-category">類別</td>
+                <td class="header-type">等級</td>
+                <td class="header-text">條文</td>
+                <td class="header-check">合格</td>
+                <td colspan="2" class="header-describe">缺失</td>
+            </tr>
+            <!-- 稽核條文生成區域 -->
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="6" class="advise-title">建議事項（不計入缺失，但仍需改善）</td>
+            </tr>
+            <tr>
+                <td colspan="6" class="advise-content"><textarea class="advise"></textarea></td>
+            </tr>
+        </tfoot>
+    </table>
+    <div class="button-wrapper">
+        <button onclick="saveCheckedData()" class="finish">完成查核表</button>
+    </div>
+</body>
+<script src="scripts_alpha.js"></script>
+</html>
