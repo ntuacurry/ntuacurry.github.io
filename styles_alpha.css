@@ -61,6 +61,10 @@
     text-align: center;
 }
 
+.content {
+	text-align: justify;
+}
+
 .describe-area {
     font-size: 12px;
 }
