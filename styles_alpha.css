@@ -1,6 +1,5 @@
 @media print {
-    .result {
-/*         break-before: page;           /* 現代語法 */ */
+    .type, .content, .check, .describe-area, .result {
         break-inside: avoid;          /* 避免內部分頁 */
     }
 }
