@@ -1,6 +1,6 @@
 @media print {
     .result {
-        break-before: page;           /* 現代語法 */
+/*         break-before: page;           /* 現代語法 */ */
         break-inside: avoid;          /* 避免內部分頁 */
     }
 }
