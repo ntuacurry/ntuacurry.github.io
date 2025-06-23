@@ -1,3 +1,11 @@
+@media print {
+    .result {
+        break-before: page;           /* 現代語法 */
+        break-inside: avoid;          /* 避免內部分頁 */
+    }
+}
+
+
 .basic-info {
     border-collapse: collapse;
     margin: auto;
@@ -98,6 +106,48 @@
     text-align: right;
     vertical-align: bottom;
     font-size: 12px;
+}
+
+.result {
+    border-collapse: collapse;
+    margin-left:auto;
+    margin-right:auto;
+	background-color: rgba(0,0,0,0);
+    /* 優化表格邊框樣式 */
+    th, td {
+        border: 1px solid black;
+        text-orientation: upright;
+    }
+    .advise-title {
+        text-align: center;
+        background-color: #D3D3D3;
+    }
+
+    .advise-content {
+        height: 100px;
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    .advise-area {
+        font-size: 14px;
+    }
+
+    .advise {
+        height: 100px;
+        width: 660px;
+    }
+
+    .audit-result {
+        text-align: center;
+        background-color: #D3D3D3;
+    }
+
+    .audit-score {
+       text-align: right;
+        vertical-align: bottom;
+        font-size: 12px;
+    }
 }
 
 .sign {
