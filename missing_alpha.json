@@ -205,22 +205,22 @@
         "missText": "食品添加物應專人、專冊、專區管理，並確實紀錄"
     }, 
     {
-        "missType": "品質文件及標示",
+        "missType": "文件管理",
         "missGrade": "",
         "missText": "是否有員工健康檢查表 (含新進人員)，檢查項目包含Ａ型肝炎以及傷寒等"
     }, 
     {
-        "missType": "品質文件及標示",
+        "missType": "文件管理",
         "missGrade": "",
         "missText": "濾水系統是否備有濾心更換紀錄"
     }, 
     {
-        "missType": "品質文件及標示",
+        "missType": "文件管理",
         "missGrade": "",
         "missText": "如委外執行病媒防治，是否確實留存病媒防治紀錄單據？(近三個月)"
     }, 
     {
-        "missType": "品質文件及標示",
+        "missType": "文件管理",
         "missGrade": "",
         "missText": "是否確實保存水費單 (近一個月)"
     }
