@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>櫃買指數近一月走勢圖</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: "Microsoft JhengHei", Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            width: 90%;
+            max-width: 1000px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .loading {
+            text-align: center;
+            font-size: 1.2em;
+            color: #666;
+            padding: 50px;
+        }
+        canvas {
+            max-width: 100%;
+        }
+        .error {
+            color: red;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>櫃買指數 (TPEx) 近一月走勢</h1>
+        <div id="chart-container">
+            <div id="loading" class="loading">資料載入中...</div>
+            <canvas id="tpexChart" style="display: none;"></canvas>
+        </div>
+        <div id="error-msg" class="error"></div>
+    </div>
+
+    <script>
+        const API_URL = 'https://www.tpex.org.tw/openapi/v1/tpex_index';
+
+        async function fetchDataAndDrawChart() {
+            const loading = document.getElementById('loading');
+            const canvas = document.getElementById('tpexChart');
+            const errorMsg = document.getElementById('error-msg');
+
+            try {
+                // 1. 呼叫 API
+                const response = await fetch(API_URL);
+                if (!response.ok) {
+                    throw new Error(`API 請求失敗: ${response.status}`);
+                }
+                const rawData = await response.json();
+
+                // 2. 資料處理
+                // 由於 API 可能回傳所有歷史資料，我們需要篩選出最近一個月的資料
+                // 先將資料依照日期排序 (假設 API 回傳格式 Date 為 YYYYMMDD)
+                const sortedData = rawData.sort((a, b) => {
+                    // 將 Date 字串 (例如 "20231201") 轉為數字比較
+                    return parseInt(a.Date) - parseInt(b.Date);
+                });
+
+                // 取得最後一筆資料的日期作為基準
+                if (sortedData.length === 0) throw new Error("API 回傳無資料");
+                
+                // 為了簡單起見，我們直接取最後 22 筆資料 (大約是一個月的交易日)
+                // 這樣可以避免處理複雜的日期計算 (如假日排除)
+                const recentData = sortedData.slice(-22);
+
+                // 準備圖表需要的 Labels (日期) 和 Data (收盤價)
+                const labels = recentData.map(item => {
+                    // 格式化日期字串：20231201 -> 2023/12/01
+                    const d = item.Date;
+                    return `${d.substring(0, 4)}/${d.substring(4, 6)}/${d.substring(6, 8)}`;
+                });
+
+                const dataPoints = recentData.map(item => parseFloat(item.Close));
+
+                // 3. 繪製圖表
+                loading.style.display = 'none';
+                canvas.style.display = 'block';
+
+                const ctx = canvas.getContext('2d');
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: '櫃買指數收盤價',
+                            data: dataPoints,
+                            borderColor: 'rgb(75, 192, 192)',
+                            backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                            borderWidth: 2,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                            fill: true,
+                            tension: 0.1 // 線條平滑度
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                            },
+                            tooltip: {
+                                mode: 'index',
+                                intersect: false,
+                            }
+                        },
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: '日期'
+                                }
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: '指數'
+                                },
+                                // 設定 Y 軸範圍，讓波動看起來更明顯
+                                suggestedMin: Math.min(...dataPoints) - 5, 
+                                suggestedMax: Math.max(...dataPoints) + 5
+                            }
+                        }
+                    }
+                });
+
+            } catch (error) {
+                console.error("發生錯誤:", error);
+                loading.style.display = 'none';
+                errorMsg.innerText = `無法載入資料，請稍後再試。\n錯誤訊息: ${error.message}`;
+            }
+        }
+
+        // 執行函式
+        fetchDataAndDrawChart();
+    </script>
+</body>
+</html>
