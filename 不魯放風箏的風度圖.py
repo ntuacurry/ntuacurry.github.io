@@ -70,7 +70,7 @@ ticker_symbol = st.sidebar.text_input("股票代碼 (Yahoo Finance)", "^TWOII")
 
 # **預設顯示近三個月的資料**
 current_date = date.today()
-three_months_ago = current_date - DateOffset(months=3) 
+three_months_ago = current_date - DateOffset(months=1) 
 
 default_end_date = current_date
 default_start_date = three_months_ago.date()
