@@ -18,7 +18,7 @@ WIND_COLORS = {
 }
 
 # ---------------------------------------------------------
-# 新增: 股票資料讀取與轉換 (Step 1: 初始讀取)
+# 股票資料讀取與轉換
 # ---------------------------------------------------------
 @st.cache_data
 def load_stock_map(file_path="股票資料.csv"):
@@ -26,27 +26,19 @@ def load_stock_map(file_path="股票資料.csv"):
     載入股票資料CSV，並建立代碼、名稱的對應關係。
     """
     try:
-        # 使用 engine='python' 避免 C engine 的警告，並確保編碼正確讀取中文
-        # 假設 '股票資料.csv' 檔案位於應用程式的根目錄
         df = pd.read_csv(file_path, encoding='utf-8', engine='python')
-        # 移除欄位名稱中的空格
         df.columns = df.columns.str.replace(r'\s+', '', regex=True)
         
-        # 建立主要對應字典
         stock_map = {} # key: 代碼 (str), value: (名稱, 市場別)
         stock_names = {} # key: 名稱 (str), value: 代碼 (str)
 
         for index, row in df.iterrows():
-            # --- 修改點 1: 移除 .zfill(4) ---
-            code = str(row['公司代號']) # 不再強制為四位數字
+            code = str(row['公司代號']) 
             name = row['公司名稱'].strip()
-            # 確保市場別是字串，並移除前後空白
             market = str(row['市場別']).strip() if not pd.isna(row['市場別']) else ""
             
-            # 代碼 -> (名稱, 市場別)
             stock_map[code] = (name, market)
             
-            # 名稱 -> 代碼
             if name not in stock_names:
                 stock_names[name] = code
                 
@@ -61,7 +53,6 @@ def load_stock_map(file_path="股票資料.csv"):
 
 # 載入股票代碼對應表
 STOCK_MAP, STOCK_NAMES = load_stock_map()
-# 使用代碼列表作為預設選項，確保指數代碼如 ^TWOII 也能被搜尋
 ALL_SEARCH_OPTIONS = list(STOCK_MAP.keys()) + list(STOCK_NAMES.keys())
 
 
@@ -71,25 +62,21 @@ def process_ticker_input(input_value, stock_map, stock_names):
     
     回傳: (yfinance_ticker_symbol, company_name)
     """
-    # 清理輸入值，並去除前後空白
     input_value = input_value.strip()
     
-    # 預設代碼和名稱都使用輸入值
     code = input_value
     name = input_value
     yfinance_ticker = input_value
     
-    # 1. 如果輸入的是公司名稱 (優先判斷名稱，因為代碼長度不再固定)
+    # 1. 輸入為公司名稱
     if input_value in stock_names:
-        code = stock_names[input_value] # 從名稱取得代碼
+        code = stock_names[input_value] 
         
         if code in stock_map:
             name, market = stock_map[code]
             
-            # 3. 檢查市場別是否有值
             if not market: 
                 yfinance_ticker = code
-            # 4. 根據市場別加上後綴
             elif market == '上市':
                 yfinance_ticker = f"{code}.TW"
             elif market == '上櫃':
@@ -99,15 +86,13 @@ def process_ticker_input(input_value, stock_map, stock_names):
             
             return yfinance_ticker, name
             
-    # 2. 如果輸入的是公司代碼 (無論長度，只要在 stock_map 中找到)
+    # 2. 輸入為公司代碼
     elif input_value in stock_map:
         code = input_value
         name, market = stock_map[code]
 
-        # 3. 檢查市場別是否有值
         if not market: 
             yfinance_ticker = code
-        # 4. 根據市場別加上後綴
         elif market == '上市':
             yfinance_ticker = f"{code}.TW"
         elif market == '上櫃':
@@ -117,11 +102,7 @@ def process_ticker_input(input_value, stock_map, stock_names):
             
         return yfinance_ticker, name
         
-    # 5. 如果輸入的是其他代碼或指數代碼 (如 ^TWOII)，則名稱和代碼都使用原始輸入
-    # --- 修改點 2: 指數代號的顯示方式 ---
-    # 這裡的邏輯確保如果輸入的值既不是 CSV 中的代碼也不是名稱，
-    # 則 yfinance_ticker = input_value, name = input_value (即代號本身)
-    # 例如: 輸入 ^TWOII，回傳 (^TWOII, ^TWOII)
+    # 3. 輸入為指數或其他代號
     return input_value, input_value 
 
 # ---------------------------------------------------------
@@ -131,17 +112,41 @@ st.set_page_config(page_title="不魯放風箏的風度圖", layout="wide")
 st.title("🪁 不魯放風箏的風度圖")
 
 @st.cache_data
-def load_data(symbol):
-    """下載股票資料並計算技術指標和風度狀態。"""
-    stock = yf.Ticker(symbol)
-    # 這裡的日期參數是 yfinance 固定的，不變
-    df = stock.history(interval="1d", start="2020-01-01", end=None, actions=False, auto_adjust=False, back_adjust=False)
-    
+def calculate_indicators(df):
+    """計算技術指標、風度狀態，並新增漲跌幅及其顏色。"""
     if df.empty:
         return df
 
     # 資料處理與指標計算
     df["Close"] = round(df["Close"], 2)
+    
+    # 計算漲跌幅：(最新收盤價 - 前一期收盤價) / 前一期收盤價
+    df['Pct_Change'] = (df['Close'] - df['Close'].shift(1)) / df['Close'].shift(1)
+    
+    # ====== 懸浮視窗顯示所需的欄位計算 (確保字串類型一致，避免 Plotly 錯誤) ======
+    
+    def get_pct_color(pct):
+        """返回顏色字串，NaN 返回 'black'。"""
+        if pd.isna(pct):
+            return 'black'
+        elif pct > 0:
+            return 'red'
+        elif pct < 0:
+            return 'green'
+        else:
+            return 'black'
+            
+    def format_pct_display(pct):
+        """返回格式化後的百分比字串，NaN 返回 '-'。"""
+        if pd.isna(pct):
+            return '-' # 使用 '-' 確保是字串，避免 Plotly 陣列轉換問題
+        # 使用 f-string 格式化，確保正數有 '+' 符號
+        return f'{pct:+.2%}'
+
+    df['Pct_Color'] = df['Pct_Change'].apply(get_pct_color)
+    df['Pct_Change_Display'] = df['Pct_Change'].apply(format_pct_display)
+    
+    # 技術指標計算
     df["Price"] = round((df["High"] + df["Low"] + 2 * df["Close"]) / 4, 2)
     df["EMA12"] = df["Price"].ewm(span=12).mean()
     df["EMA26"] = df["Price"].ewm(span=26).mean()
@@ -169,16 +174,52 @@ def load_data(symbol):
 
     return df.drop(columns=["Prev_MACD_H"]) 
 
+@st.cache_data
+def load_data(symbol):
+    """下載股票資料。"""
+    stock = yf.Ticker(symbol)
+    df = stock.history(interval="1d", start="2020-01-01", end=None, actions=False, auto_adjust=False, back_adjust=False)
+    return df
+
 # ---------------------------------------------------------
-# 3. 側邊欄：使用者輸入參數 (Step 2: 搜尋介面)
+# 週/月 K線重採樣函數
+# ---------------------------------------------------------
+def resample_weekly_data(df_daily):
+    """將日 K 資料轉換為週 K 資料。"""
+    if df_daily.empty:
+        return df_daily
+        
+    weekly_data = df_daily.resample('W').agg({
+        'Open': 'first',      
+        'High': 'max',        
+        'Low': 'min',         
+        'Close': 'last',      
+    }).dropna() 
+
+    return weekly_data
+
+def resample_monthly_data(df_daily):
+    """將日 K 資料轉換為月 K 資料。 (使用 'ME' 避免 FutureWarning)"""
+    if df_daily.empty:
+        return df_daily
+        
+    monthly_data = df_daily.resample('ME').agg({
+        'Open': 'first',      
+        'High': 'max',        
+        'Low': 'min',         
+        'Close': 'last',      
+    }).dropna() 
+
+    return monthly_data
+
+
+# ---------------------------------------------------------
+# 3. 側邊欄：使用者輸入參數
 # ---------------------------------------------------------
 st.sidebar.header("參數設定")
 
-# 預設顯示櫃買指數 (^TWOII)
 DEFAULT_TICKER = '^TWOII' 
 
-# 搜尋框使用 st.selectbox 實現預測/搜尋功能
-# 使用者的輸入或選擇都會儲存在 selected_option
 selected_option = st.sidebar.selectbox(
     "請輸入公司代碼或名稱:",
     options=ALL_SEARCH_OPTIONS,
@@ -186,36 +227,101 @@ selected_option = st.sidebar.selectbox(
     key='stock_input'
 )
 
-# 處理使用者輸入 (Step 3: 輸入處理)
+# 處理使用者輸入
 TICKER_SYMBOL, COMPANY_NAME = process_ticker_input(selected_option, STOCK_MAP, STOCK_NAMES)
 
-# **預設顯示近三個月的資料**
+# ---------------------------------------------------------
+# 4. 主頁面：K線週期選擇 (水平置中按鈕)
+# ---------------------------------------------------------
+
+# 確保狀態已初始化
+if 'K_PERIOD' not in st.session_state:
+    st.session_state['K_PERIOD'] = '日 K'
+    
+st.markdown("##### 選擇 K 線圖週期:", unsafe_allow_html=True) 
+
+# 設定欄位比例：[左空白, 日K, 週K, 月K, 右空白]
+# 這裡使用 [1, 0.15, 0.15, 0.15, 1] 確保左右兩側空白比例相同，達到置中效果
+col_left_spacer, col_day, col_week, col_month, col_right_spacer = st.columns([1, 0.15, 0.15, 0.15, 1])
+
+# Helper function to set state
+def set_period(period):
+    st.session_state['K_PERIOD'] = period
+
+with col_day:
+    st.button(
+        "日 K", 
+        on_click=set_period, 
+        args=('日 K',), 
+        disabled=(st.session_state.K_PERIOD == '日 K'), 
+        key='btn_day',
+        use_container_width=True
+    )
+with col_week:
+    st.button(
+        "週 K", 
+        on_click=set_period, 
+        args=('週 K',), 
+        disabled=(st.session_state.K_PERIOD == '週 K'),
+        key='btn_week',
+        use_container_width=True
+    )
+with col_month:
+    st.button(
+        "月 K", 
+        on_click=set_period, 
+        args=('月 K',), 
+        disabled=(st.session_state.K_PERIOD == '月 K'),
+        key='btn_month',
+        use_container_width=True
+    )
+
+# 從 Session State 讀取當前選擇的週期
+K_PERIOD = st.session_state.K_PERIOD 
+
+# 預設顯示日期區間調整 (必須在 K_PERIOD 定義之後)
 current_date = date.today()
-three_months_ago = current_date - DateOffset(months=1) 
+if K_PERIOD == '日 K':
+    default_start_offset = DateOffset(months=1)
+elif K_PERIOD == '週 K':
+    default_start_offset = DateOffset(years=1)
+else: # 月 K
+    default_start_offset = DateOffset(years=3)
 
 default_end_date = current_date
-default_start_date = three_months_ago.date()
+default_start_date = (current_date - default_start_offset).date()
 
+# 日期輸入框仍保留在側邊欄
 start_input = st.sidebar.date_input("開始日期", default_start_date)
 end_input = st.sidebar.date_input("結束日期", default_end_date)
 
 start_date_str = start_input.strftime("%Y-%m-%d")
 end_date_str = end_input.strftime("%Y-%m-%d")
 
-# **控制風度圖層開關**
+# 控制風度圖層開關
 show_wind_layer = st.sidebar.checkbox("顯示 K 線風度圖層", value=True)
 
 # 載入資料
 data_load_state = st.text(f'資料下載運算中... ({COMPANY_NAME} / {TICKER_SYMBOL})')
-# 將處理好的 yfinance 格式代碼傳入 load_data
-data = load_data(TICKER_SYMBOL)
+daily_data = load_data(TICKER_SYMBOL)
+
+# 根據選擇的週期進行重採樣
+if K_PERIOD == '日 K':
+    data = daily_data.copy()
+elif K_PERIOD == '週 K':
+    data = resample_weekly_data(daily_data)
+else: # 月 K
+    data = resample_monthly_data(daily_data)
+    
+# 計算指標（包含漲跌幅及顏色）
+data = calculate_indicators(data)
+
 data_load_state.text('') 
 
 # ---------------------------------------------------------
-# 4. 繪製 Plotly 圖表 (日期格式化與風度開關)
+# 5. 繪製 Plotly 圖表
 # ---------------------------------------------------------
 if data.empty:
-    # 找不到資料時，使用公司名稱/代碼組合顯示錯誤訊息
     st.error(f"找不到代碼 **{TICKER_SYMBOL}** ({COMPANY_NAME}) 的資料，請確認輸入正確。")
 else:
     # 篩選特定時間區間
@@ -224,7 +330,7 @@ else:
     if filtered_data.empty:
         st.warning("選取的日期區間沒有資料，請調整日期。")
     else:
-        # **將日期索引格式化為 yyyy.mm.dd 字串 (用於 X 軸顯示)**
+        # 將日期索引格式化為 yyyy.mm.dd 字串 (用於 X 軸顯示)
         formatted_index = filtered_data.index.strftime('%Y.%m.%d')
         
         # --- 建立雙軸子圖 ---
@@ -235,33 +341,48 @@ else:
             vertical_spacing=0.08, 
             row_heights=[0.7, 0.3]
         )
+        
+        # K 線圖懸浮視窗模板 (Hoover Template)
+        candlestick_hovertemplate = (
+            '<b>日期:</b> %{x}<br>' +
+            '<b>開:</b> %{open:.2f}<br>' +
+            '<b>高:</b> %{high:.2f}<br>' +
+            '<b>低:</b> %{low:.2f}<br>' +
+            '<b>收:</b> %{close:.2f}<br>' +
+            # 使用 customdata[0] (顏色字串) 和 customdata[1] (漲跌幅顯示字串)
+            '<b>漲跌幅:</b> <span style="color:%{customdata[0]}; font-weight:bold;">%{customdata[1]}</span><br>' +
+            '<extra></extra>' 
+        )
 
         # ------------------ 風度矩形 (Layer Shapes) ------------------
         wind_shapes = []
         if show_wind_layer:
             for idx, date_str in enumerate(formatted_index):
                 row = filtered_data.iloc[idx]
-                if row["Wind_Color"] and row["Wind"] != "未知":
+                if pd.notna(row["Wind_Color"]) and row["Wind"] != "未知": 
                     fill_color = row["Wind_Color"]
                     wind_shapes.append(
                         dict(
                             type="rect",
-                            # X 座標使用類別軸索引 (0, 1, 2, ...) 
                             xref="x", x0=idx - 0.5, x1=idx + 0.5, 
                             yref="y", y0=filtered_data['Low'].min() * 0.99, y1=filtered_data['High'].max() * 1.01,
                             fillcolor=fill_color,
                             line_width=0,
-                            layer="below" # 讓矩形位於 K 線圖層下方
+                            layer="below" 
                         )
                     )
 
         # 1. 主圖：K線圖與 20MA
         fig.add_trace(go.Candlestick(
-            # X 軸使用格式化的日期字串
             x=formatted_index,
             open=filtered_data['Open'], high=filtered_data['High'], 
             low=filtered_data['Low'], close=filtered_data['Close'], 
-            name='K線', increasing_line_color='red', decreasing_line_color='green'
+            name='K線', increasing_line_color='red', decreasing_line_color='green',
+            
+            # 傳遞 customdata：[漲跌幅顏色字串, 漲跌幅顯示字串]
+            customdata=filtered_data[['Pct_Color', 'Pct_Change_Display']].values,
+            hovertemplate=candlestick_hovertemplate
+            
         ), row=1, col=1)
 
         fig.add_trace(go.Scatter(
@@ -289,24 +410,20 @@ else:
         ), row=2, col=1)
 
         # --- 版面設定 (Layout Configuration) ---
-        # 標題顯示邏輯：
-        # 如果 COMPANY_NAME 與 TICKER_SYMBOL 相同 (例如輸入 ^TWOII)，則只顯示 TICKER_SYMBOL (即 ^TWOII)
-        # 如果 COMPANY_NAME 不相同 (例如輸入 2330, 則顯示 台積電 (2330))
-        # 移除 .TW/.TWO 確保代碼顯示乾淨
         clean_ticker = TICKER_SYMBOL.replace('.TW', '').replace('.TWO', '')
         
         if COMPANY_NAME == TICKER_SYMBOL:
-            title_text = f"{clean_ticker} 的風度圖"
+            title_text = f"{K_PERIOD} - {clean_ticker} 的風度圖"
         else:
-            title_text = f"{COMPANY_NAME} ({clean_ticker}) 的風度圖"
+            title_text = f"{K_PERIOD} - {COMPANY_NAME} ({clean_ticker}) 的風度圖"
             
         fig.update_layout(
             title=title_text,
             xaxis_rangeslider_visible=False,
             height=800,
-            hovermode="x unified",
+            hovermode="x", 
             template="plotly_white",
-            shapes=wind_shapes # 根據開關決定是否顯示
+            shapes=wind_shapes 
         )
         
         # **X 軸格式化為 yyyy.mm.dd** (使用 category 類型)
@@ -347,30 +464,40 @@ else:
             st.markdown("---")
 
         # ------------------ 詳細數據表格 ------------------
-        with st.expander("查看詳細數據與風度狀態"):
+        with st.expander(f"查看 {K_PERIOD} 詳細數據與風度狀態"):
             
             # 1. 複製、日期格式化及欄位名稱調整
             display_df = filtered_data.sort_index(ascending=False).copy()
             
             display_df.reset_index(inplace=True)
             
-            # 將日期格式化為 yyyy.mm.dd
-            display_df['Date'] = display_df['Date'].dt.strftime('%Y.%m.%d')
+            # 根據週期格式化日期
+            if K_PERIOD == '月 K':
+                display_df['Date'] = display_df['Date'].dt.strftime('%Y-%m')
+                display_df.rename(columns={'Date': '月份'}, inplace=True)
+            elif K_PERIOD == '週 K':
+                display_df['Date'] = display_df['Date'].dt.strftime('%Y.%m.%d')
+                display_df.rename(columns={'Date': '週結日'}, inplace=True)
+            else:
+                display_df['Date'] = display_df['Date'].dt.strftime('%Y.%m.%d')
+                display_df.rename(columns={'Date': '日期'}, inplace=True)
             
+            # 欄位名稱映射
             new_names = {
-                'Date': '日期', 'Wind': '風度', 'Open': '開', 'High': '高', 
-                'Low': '低', 'Close': '收', 'MACD Histogram': 'MACD柱'
+                'Wind': '風度', 'Open': '開', 'High': '高', 
+                'Low': '低', 'Close': '收', 'MACD Histogram': 'MACD柱',
+                'Pct_Change': '漲跌幅' 
             }
             display_df.rename(columns=new_names, inplace=True)
             
-            # 2. 調整欄位順序
-            cols = ['日期', '風度', '開', '高', '低', '收', '20ma', 'DIF', 'MACD', 'MACD柱']
+            # 2. 調整欄位順序 (將漲跌幅放在收盤價後面)
+            date_col_name = display_df.columns[0]
+            cols = [date_col_name, '風度', '開', '高', '低', '收', '漲跌幅', '20ma', 'DIF', 'MACD', 'MACD柱']
             display_df = display_df[cols]
 
-            # 3. 定義風度樣式函數
+            # 3. 定義風度/漲跌幅樣式函數
             def color_wind_table(val):
                 """根據風度值返回背景顏色 CSS 樣式"""
-                # 使用不透明顏色進行表格上色，避免過度干擾閱讀
                 table_colors = {
                     "強風": "rgba(255, 0, 0, 0.2)",      
                     "亂流": "rgba(0, 128, 0, 0.2)",    
@@ -379,21 +506,36 @@ else:
                 }
                 color = table_colors.get(val, 'transparent')
                 return f'background-color: {color}; color: black;'
-
+            
             # 4. 應用格式化和樣式
             styled_df = display_df.style.format({
                 '開': "{:.2f}",
                 '高': "{:.2f}",
                 '低': "{:.2f}",
                 '收': "{:.2f}",
+                '漲跌幅': "{:.2%}", # 以百分比顯示到小數點下第二位
                 '20ma': "{:.2f}",
                 'DIF': "{:.2f}",
                 'MACD': "{:.2f}",
                 'MACD柱': "{:.2f}",
             })
             
-            # 應用風度欄位的背景顏色樣式
+            # 應用風度欄位的背景顏色樣式 
             styled_df = styled_df.map(color_wind_table, subset=['風度'])
+            
+            # 應用漲跌幅的顏色樣式 (正紅/負綠)
+            def color_percent(val):
+                """根據漲跌幅數值返回文字顏色 CSS 樣式"""
+                if pd.isna(val):
+                    return ''
+                elif val > 0:
+                    return 'color: red'
+                elif val < 0:
+                    return 'color: green'
+                else:
+                    return 'color: black'
+
+            styled_df = styled_df.map(color_percent, subset=['漲跌幅'])
             
             # 5. 垂直置中和水平置中 CSS 樣式
             cell_center_style = [
@@ -402,5 +544,4 @@ else:
             ]
             styled_df = styled_df.set_table_styles(cell_center_style, overwrite=False)
 
-            # 在 Streamlit 中顯示格式化後的表格
             st.dataframe(styled_df, hide_index=True, width='stretch')
