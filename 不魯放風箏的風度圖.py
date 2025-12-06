@@ -18,6 +18,113 @@ WIND_COLORS = {
 }
 
 # ---------------------------------------------------------
+# 新增: 股票資料讀取與轉換 (Step 1: 初始讀取)
+# ---------------------------------------------------------
+@st.cache_data
+def load_stock_map(file_path="股票資料.csv"):
+    """
+    載入股票資料CSV，並建立代碼、名稱的對應關係。
+    """
+    try:
+        # 使用 engine='python' 避免 C engine 的警告，並確保編碼正確讀取中文
+        # 假設 '股票資料.csv' 檔案位於應用程式的根目錄
+        df = pd.read_csv(file_path, encoding='utf-8', engine='python')
+        # 移除欄位名稱中的空格
+        df.columns = df.columns.str.replace(r'\s+', '', regex=True)
+        
+        # 建立主要對應字典
+        stock_map = {} # key: 代碼 (str), value: (名稱, 市場別)
+        stock_names = {} # key: 名稱 (str), value: 代碼 (str)
+
+        for index, row in df.iterrows():
+            # --- 修改點 1: 移除 .zfill(4) ---
+            code = str(row['公司代號']) # 不再強制為四位數字
+            name = row['公司名稱'].strip()
+            # 確保市場別是字串，並移除前後空白
+            market = str(row['市場別']).strip() if not pd.isna(row['市場別']) else ""
+            
+            # 代碼 -> (名稱, 市場別)
+            stock_map[code] = (name, market)
+            
+            # 名稱 -> 代碼
+            if name not in stock_names:
+                stock_names[name] = code
+                
+        return stock_map, stock_names
+        
+    except FileNotFoundError:
+        st.error(f"錯誤：找不到檔案 {file_path}。請確保檔案已上傳。")
+        return {}, {}
+    except Exception as e:
+        st.error(f"讀取或處理股票資料時發生錯誤: {e}")
+        return {}, {}
+
+# 載入股票代碼對應表
+STOCK_MAP, STOCK_NAMES = load_stock_map()
+# 使用代碼列表作為預設選項，確保指數代碼如 ^TWOII 也能被搜尋
+ALL_SEARCH_OPTIONS = list(STOCK_MAP.keys()) + list(STOCK_NAMES.keys())
+
+
+def process_ticker_input(input_value, stock_map, stock_names):
+    """
+    處理使用者輸入，將公司代碼/名稱轉換為 yfinance 格式的代碼和公司名稱。
+    
+    回傳: (yfinance_ticker_symbol, company_name)
+    """
+    # 清理輸入值，並去除前後空白
+    input_value = input_value.strip()
+    
+    # 預設代碼和名稱都使用輸入值
+    code = input_value
+    name = input_value
+    yfinance_ticker = input_value
+    
+    # 1. 如果輸入的是公司名稱 (優先判斷名稱，因為代碼長度不再固定)
+    if input_value in stock_names:
+        code = stock_names[input_value] # 從名稱取得代碼
+        
+        if code in stock_map:
+            name, market = stock_map[code]
+            
+            # 3. 檢查市場別是否有值
+            if not market: 
+                yfinance_ticker = code
+            # 4. 根據市場別加上後綴
+            elif market == '上市':
+                yfinance_ticker = f"{code}.TW"
+            elif market == '上櫃':
+                yfinance_ticker = f"{code}.TWO"
+            else:
+                yfinance_ticker = code
+            
+            return yfinance_ticker, name
+            
+    # 2. 如果輸入的是公司代碼 (無論長度，只要在 stock_map 中找到)
+    elif input_value in stock_map:
+        code = input_value
+        name, market = stock_map[code]
+
+        # 3. 檢查市場別是否有值
+        if not market: 
+            yfinance_ticker = code
+        # 4. 根據市場別加上後綴
+        elif market == '上市':
+            yfinance_ticker = f"{code}.TW"
+        elif market == '上櫃':
+            yfinance_ticker = f"{code}.TWO"
+        else:
+            yfinance_ticker = code
+            
+        return yfinance_ticker, name
+        
+    # 5. 如果輸入的是其他代碼或指數代碼 (如 ^TWOII)，則名稱和代碼都使用原始輸入
+    # --- 修改點 2: 指數代號的顯示方式 ---
+    # 這裡的邏輯確保如果輸入的值既不是 CSV 中的代碼也不是名稱，
+    # 則 yfinance_ticker = input_value, name = input_value (即代號本身)
+    # 例如: 輸入 ^TWOII，回傳 (^TWOII, ^TWOII)
+    return input_value, input_value 
+
+# ---------------------------------------------------------
 # 2. 數據獲取與處理
 # ---------------------------------------------------------
 st.set_page_config(page_title="不魯放風箏的風度圖", layout="wide")
@@ -27,6 +134,7 @@ st.title("🪁 不魯放風箏的風度圖")
 def load_data(symbol):
     """下載股票資料並計算技術指標和風度狀態。"""
     stock = yf.Ticker(symbol)
+    # 這裡的日期參數是 yfinance 固定的，不變
     df = stock.history(interval="1d", start="2020-01-01", end=None, actions=False, auto_adjust=False, back_adjust=False)
     
     if df.empty:
@@ -62,11 +170,24 @@ def load_data(symbol):
     return df.drop(columns=["Prev_MACD_H"]) 
 
 # ---------------------------------------------------------
-# 3. 側邊欄：使用者輸入參數
+# 3. 側邊欄：使用者輸入參數 (Step 2: 搜尋介面)
 # ---------------------------------------------------------
 st.sidebar.header("參數設定")
 
-ticker_symbol = st.sidebar.text_input("股票代碼 (Yahoo Finance)", "^TWOII")
+# 預設顯示櫃買指數 (^TWOII)
+DEFAULT_TICKER = '^TWOII' 
+
+# 搜尋框使用 st.selectbox 實現預測/搜尋功能
+# 使用者的輸入或選擇都會儲存在 selected_option
+selected_option = st.sidebar.selectbox(
+    "請輸入公司代碼或名稱:",
+    options=ALL_SEARCH_OPTIONS,
+    index=ALL_SEARCH_OPTIONS.index(DEFAULT_TICKER) if DEFAULT_TICKER in ALL_SEARCH_OPTIONS else 0,
+    key='stock_input'
+)
+
+# 處理使用者輸入 (Step 3: 輸入處理)
+TICKER_SYMBOL, COMPANY_NAME = process_ticker_input(selected_option, STOCK_MAP, STOCK_NAMES)
 
 # **預設顯示近三個月的資料**
 current_date = date.today()
@@ -85,15 +206,17 @@ end_date_str = end_input.strftime("%Y-%m-%d")
 show_wind_layer = st.sidebar.checkbox("顯示 K 線風度圖層", value=True)
 
 # 載入資料
-data_load_state = st.text('資料下載運算中...')
-data = load_data(ticker_symbol)
+data_load_state = st.text(f'資料下載運算中... ({COMPANY_NAME} / {TICKER_SYMBOL})')
+# 將處理好的 yfinance 格式代碼傳入 load_data
+data = load_data(TICKER_SYMBOL)
 data_load_state.text('') 
 
 # ---------------------------------------------------------
 # 4. 繪製 Plotly 圖表 (日期格式化與風度開關)
 # ---------------------------------------------------------
 if data.empty:
-    st.error(f"找不到代碼 **{ticker_symbol}** 的資料，請確認輸入正確。")
+    # 找不到資料時，使用公司名稱/代碼組合顯示錯誤訊息
+    st.error(f"找不到代碼 **{TICKER_SYMBOL}** ({COMPANY_NAME}) 的資料，請確認輸入正確。")
 else:
     # 篩選特定時間區間
     filtered_data = data.loc[start_date_str:end_date_str].copy()
@@ -166,8 +289,19 @@ else:
         ), row=2, col=1)
 
         # --- 版面設定 (Layout Configuration) ---
+        # 標題顯示邏輯：
+        # 如果 COMPANY_NAME 與 TICKER_SYMBOL 相同 (例如輸入 ^TWOII)，則只顯示 TICKER_SYMBOL (即 ^TWOII)
+        # 如果 COMPANY_NAME 不相同 (例如輸入 2330, 則顯示 台積電 (2330))
+        # 移除 .TW/.TWO 確保代碼顯示乾淨
+        clean_ticker = TICKER_SYMBOL.replace('.TW', '').replace('.TWO', '')
+        
+        if COMPANY_NAME == TICKER_SYMBOL:
+            title_text = f"{clean_ticker} 的風度圖"
+        else:
+            title_text = f"{COMPANY_NAME} ({clean_ticker}) 的風度圖"
+            
         fig.update_layout(
-            title=f"{ticker_symbol}的風度圖",
+            title=title_text,
             xaxis_rangeslider_visible=False,
             height=800,
             hovermode="x unified",
@@ -182,16 +316,14 @@ else:
         fig.update_yaxes(title='MACD 指標', row=2, col=1)
         fig.update_traces(showlegend=True)
 
-        # --- 在 Streamlit 顯示圖表 (修正: use_container_width -> width='stretch') ---
+        # --- 在 Streamlit 顯示圖表 ---
         st.plotly_chart(fig, width='stretch')
         
-        # ------------------ 風度圖例顯示 (與開關同步) ------------------
-        # **最終修正：使用 st.columns 避免 HTML 解析錯誤**
+        # ------------------ 風度圖例顯示 ------------------
         if show_wind_layer:
             st.markdown("---")
             st.subheader("風度與顏色對應")
             
-            # 使用列表確保順序，並定義用於圖例的不透明顏色
             WIND_LEGEND_HEX = {
                 "強風": "#FF0000",      
                 "亂流": "#008000",    
@@ -199,16 +331,13 @@ else:
                 "無風": "#696969"   
             }
             
-            # 使用 Streamlit columns 來並排顯示圖例
             cols = st.columns(len(WIND_LEGEND_HEX))
             
             i = 0
             for wind, color_hex in WIND_LEGEND_HEX.items():
                 
-                # 每個色塊的 HTML 標籤
                 color_block = f"<span style='background-color: {color_hex}; width: 20px; height: 20px; border: 1px solid #333; display: inline-block;'></span>"
                 
-                # 在每個欄位中，使用 Markdown 語法和 HTML 標籤渲染色塊和名稱
                 cols[i].markdown(
                     f"{color_block} **{wind}**", 
                     unsafe_allow_html=True
@@ -217,16 +346,15 @@ else:
             
             st.markdown("---")
 
-        # ------------------ 詳細數據表格 (格式化、上色、置中、倒序) ------------------
+        # ------------------ 詳細數據表格 ------------------
         with st.expander("查看詳細數據與風度狀態"):
             
             # 1. 複製、日期格式化及欄位名稱調整
-            # **預設由新至舊排列 (Descending by Date)**
             display_df = filtered_data.sort_index(ascending=False).copy()
             
             display_df.reset_index(inplace=True)
             
-            # **將日期格式化為 yyyy.mm.dd**
+            # 將日期格式化為 yyyy.mm.dd
             display_df['Date'] = display_df['Date'].dt.strftime('%Y.%m.%d')
             
             new_names = {
@@ -242,12 +370,18 @@ else:
             # 3. 定義風度樣式函數
             def color_wind_table(val):
                 """根據風度值返回背景顏色 CSS 樣式"""
-                color = WIND_COLORS.get(val, 'transparent')
+                # 使用不透明顏色進行表格上色，避免過度干擾閱讀
+                table_colors = {
+                    "強風": "rgba(255, 0, 0, 0.2)",      
+                    "亂流": "rgba(0, 128, 0, 0.2)",    
+                    "陣風": "rgba(255, 192, 203, 0.2)", 
+                    "無風": "rgba(105, 105, 105, 0.2)"
+                }
+                color = table_colors.get(val, 'transparent')
                 return f'background-color: {color}; color: black;'
 
             # 4. 應用格式化和樣式
             styled_df = display_df.style.format({
-                # 數值格式化到小數點下第二位
                 '開': "{:.2f}",
                 '高': "{:.2f}",
                 '低': "{:.2f}",
@@ -258,16 +392,15 @@ else:
                 'MACD柱': "{:.2f}",
             })
             
-            # 應用風度欄位的背景顏色樣式 (修正: applymap -> map)
+            # 應用風度欄位的背景顏色樣式
             styled_df = styled_df.map(color_wind_table, subset=['風度'])
             
             # 5. 垂直置中和水平置中 CSS 樣式
             cell_center_style = [
-                # 設置表頭 (th) 和單元格 (td) 內容置中
                 {'selector': 'th', 'props': [('text-align', 'center'), ('vertical-align', 'middle')]},
                 {'selector': 'td', 'props': [('text-align', 'center'), ('vertical-align', 'middle')]},
             ]
             styled_df = styled_df.set_table_styles(cell_center_style, overwrite=False)
 
-            # 在 Streamlit 中顯示格式化後的表格 (修正: use_container_width -> width='stretch')
+            # 在 Streamlit 中顯示格式化後的表格
             st.dataframe(styled_df, hide_index=True, width='stretch')
