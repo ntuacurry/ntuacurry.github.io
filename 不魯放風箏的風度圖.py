@@ -178,14 +178,14 @@ def calculate_indicators(df):
 def load_data(symbol):
     """下載股票資料。"""
     stock = yf.Ticker(symbol)
-    df = stock.history(interval="1d", start="2020-01-01", end=None, actions=False, auto_adjust=False, back_adjust=False)
+    df = stock.history(interval="1d", start="2007-01-01", end=None, actions=False, auto_adjust=False, back_adjust=False)
     return df
 
 # ---------------------------------------------------------
-# 週/月 K線重採樣函數
+# 週/月 K線重採樣函數 (保留當前不完整週期)
 # ---------------------------------------------------------
 def resample_weekly_data(df_daily):
-    """將日 K 資料轉換為週 K 資料。"""
+    """將日 K 資料轉換為週 K 資料，保留不完整的當前週期。"""
     if df_daily.empty:
         return df_daily
         
@@ -194,12 +194,12 @@ def resample_weekly_data(df_daily):
         'High': 'max',        
         'Low': 'min',         
         'Close': 'last',      
-    }).dropna() 
-
-    return weekly_data
+    })
+    
+    return weekly_data[weekly_data['Open'].notna()] 
 
 def resample_monthly_data(df_daily):
-    """將日 K 資料轉換為月 K 資料。 (使用 'ME' 避免 FutureWarning)"""
+    """將日 K 資料轉換為月 K 資料，保留不完整的當前週期。"""
     if df_daily.empty:
         return df_daily
         
@@ -208,9 +208,9 @@ def resample_monthly_data(df_daily):
         'High': 'max',        
         'Low': 'min',         
         'Close': 'last',      
-    }).dropna() 
+    })
 
-    return monthly_data
+    return monthly_data[monthly_data['Open'].notna()] 
 
 
 # ---------------------------------------------------------
@@ -241,7 +241,6 @@ if 'K_PERIOD' not in st.session_state:
 st.markdown("##### 選擇 K 線圖週期:", unsafe_allow_html=True) 
 
 # 設定欄位比例：[左空白, 日K, 週K, 月K, 右空白]
-# 這裡使用 [1, 0.15, 0.15, 0.15, 1] 確保左右兩側空白比例相同，達到置中效果
 col_left_spacer, col_day, col_week, col_month, col_right_spacer = st.columns([1, 0.15, 0.15, 0.15, 1])
 
 # Helper function to set state
@@ -289,10 +288,7 @@ else: # 月 K
     default_start_offset = DateOffset(years=3)
 
 default_end_date = current_date
-default_start_date = (current_date - default_start_offset).date()
-
-# 日期輸入框仍保留在側邊欄
-start_input = st.sidebar.date_input("開始日期", default_start_date)
+start_input = st.sidebar.date_input("開始日期", (current_date - default_start_offset).date())
 end_input = st.sidebar.date_input("結束日期", default_end_date)
 
 start_date_str = start_input.strftime("%Y-%m-%d")
@@ -325,7 +321,27 @@ if data.empty:
     st.error(f"找不到代碼 **{TICKER_SYMBOL}** ({COMPANY_NAME}) 的資料，請確認輸入正確。")
 else:
     # 篩選特定時間區間
-    filtered_data = data.loc[start_date_str:end_date_str].copy()
+    
+    # 🎯 修正月K和週K篩選問題：由於 resample 的索引 (Index) 晚於實際資料日 (例如月 K 索引是 12/31)，
+    # 如果使用者篩選截止於 12/5，最後一個週期會被遺漏。
+    
+    end_date_dt = pd.to_datetime(end_input)
+
+    # 預設使用使用者輸入的結束日期字串
+    final_end_date_str = end_date_str 
+    
+    if K_PERIOD == '月 K':
+        # 將篩選結束日期推到下個月初，確保包含當前月K的索引 (ME: 月底)
+        # 例如 12/5 -> 設為 1/1 (下一月的第一天)
+        next_month = end_date_dt + DateOffset(months=1)
+        final_end_date_str = next_month.strftime("%Y-%m-%d")
+        
+    elif K_PERIOD == '週 K':
+        # 將篩選結束日期推到下一週，確保包含當前週K的索引 (W: 週末)
+        next_week = end_date_dt + DateOffset(weeks=1)
+        final_end_date_str = next_week.strftime("%Y-%m-%d")
+
+    filtered_data = data.loc[start_date_str:final_end_date_str].copy()
 
     if filtered_data.empty:
         st.warning("選取的日期區間沒有資料，請調整日期。")
@@ -473,9 +489,11 @@ else:
             
             # 根據週期格式化日期
             if K_PERIOD == '月 K':
+                # 月 K 的索引是月末，因此顯示為月份
                 display_df['Date'] = display_df['Date'].dt.strftime('%Y-%m')
                 display_df.rename(columns={'Date': '月份'}, inplace=True)
             elif K_PERIOD == '週 K':
+                # 週 K 的索引是週末 (通常是週日)，顯示為該週的日期
                 display_df['Date'] = display_df['Date'].dt.strftime('%Y.%m.%d')
                 display_df.rename(columns={'Date': '週結日'}, inplace=True)
             else:
