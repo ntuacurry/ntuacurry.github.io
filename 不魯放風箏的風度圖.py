@@ -90,7 +90,7 @@ st.title("🪁 不魯放風箏的風度圖")
 
 @st.cache_data
 def calculate_indicators(df):
-    """計算技術指標、風度狀態、多空循環及交界。嚴格執行 20MA 分界邏輯。"""
+    """計算技術指標、風度狀態、多空循環、連續天數及交界。嚴格執行 20MA 分界邏輯。"""
     if df.empty:
         return df
 
@@ -128,7 +128,6 @@ def calculate_indicators(df):
     MACD_UP = (df["MACD Histogram"] > df["Prev_MACD_H"]) 
     MACD_DOWN = (df["MACD Histogram"] < df["Prev_MACD_H"]) 
     
-    # 這裡的邏輯嚴格定義了每個交易日的狀態
     CLOSE_ABOVE_20MA = (df["Close"] >= df["20ma"])
     CLOSE_BELOW_20MA = (df["Close"] < df["20ma"])
 
@@ -139,24 +138,25 @@ def calculate_indicators(df):
     
     df["Wind_Color"] = df["Wind"].map(WIND_COLORS)
 
+    # --- 計算連續天數 (Wind Count) ---
+    wind_groups = (df['Wind'] != df['Wind'].shift()).cumsum()
+    counts = df.groupby(wind_groups).cumcount() + 1
+    df['Wind_Count_Label'] = df['Wind'] + counts.astype(str)
+
+
     # ==========================================
     # 邏輯一：強風-亂流循環 (多頭回檔轉強) - 紅色
-    # 重要觀念：區間僅限於 Close > 20MA，一旦跌破必須重新判斷
     # ==========================================
     df['Cycle_Active'] = False
     
     df['is_above_20ma'] = CLOSE_ABOVE_20MA
-    # 使用 cumsum 建立群組 ID，這確保了每次股價跌破 20MA 後，群組 ID 會改變，
-    # 使得下一次站上 20MA 時會被視為一個全新的區間 (重新判斷)。
     df['block_id'] = (df['is_above_20ma'] != df['is_above_20ma'].shift()).cumsum()
 
-    # 只針對「股價 > 20MA」的群組進行運算
     above_blocks = df[df['is_above_20ma']].groupby('block_id')
 
     for block_id, group in above_blocks:
         if len(group) < 2: continue 
 
-        # 1. 在此區間內尋找「亂流」(MACD < Prev)
         macd_down_mask = group['MACD Histogram'] < group['Prev_MACD_H']
         
         if macd_down_mask.any():
@@ -164,34 +164,27 @@ def calculate_indicators(df):
             subsequent_data = group.loc[first_turb_idx:]
             
             if len(subsequent_data) > 1:
-                # 2. 在亂流之後尋找「轉強」(MACD > Prev)
                 search_data = subsequent_data.iloc[1:]
                 macd_up_mask = search_data['MACD Histogram'] > search_data['Prev_MACD_H']
                 
                 if macd_up_mask.any():
                     cycle_start_idx = macd_up_mask.idxmax()
-                    # 循環終點強制設為該區間的最後一天
-                    # 只要隔天跌破 20MA，這個 group 就結束了，紅條也會自然停止
                     cycle_end_idx = group.index[-1]
                     df.loc[cycle_start_idx:cycle_end_idx, 'Cycle_Active'] = True
 
     # ==========================================
     # 邏輯二：無風-陣風循環 (空頭反彈轉弱) - 綠色
-    # 重要觀念：區間僅限於 Close < 20MA，一旦突破必須重新判斷
     # ==========================================
     df['Bear_Cycle_Active'] = False
     
     df['is_below_20ma'] = CLOSE_BELOW_20MA
-    # 同樣使用 cumsum 確保連續性被截斷
     df['bear_block_id'] = (df['is_below_20ma'] != df['is_below_20ma'].shift()).cumsum()
 
-    # 只針對「股價 < 20MA」的群組進行運算
     below_blocks = df[df['is_below_20ma']].groupby('bear_block_id')
 
     for block_id, group in below_blocks:
         if len(group) < 2: continue
 
-        # 1. 在此區間內尋找「陣風」(MACD > Prev)
         macd_up_mask = group['MACD Histogram'] > group['Prev_MACD_H']
 
         if macd_up_mask.any():
@@ -199,13 +192,11 @@ def calculate_indicators(df):
             subsequent_data = group.loc[first_gust_idx:]
 
             if len(subsequent_data) > 1:
-                # 2. 在陣風之後尋找「轉弱」(MACD < Prev)
                 search_data = subsequent_data.iloc[1:]
                 macd_down_mask = search_data['MACD Histogram'] < search_data['Prev_MACD_H']
                 
                 if macd_down_mask.any():
                     cycle_start_idx = macd_down_mask.idxmax()
-                    # 循環終點強制設為該區間的最後一天
                     cycle_end_idx = group.index[-1]
                     df.loc[cycle_start_idx:cycle_end_idx, 'Bear_Cycle_Active'] = True
 
@@ -214,7 +205,6 @@ def calculate_indicators(df):
     # ==========================================
     df['Boundary_Active'] = ~(df['Cycle_Active'] | df['Bear_Cycle_Active'])
 
-    # 移除運算用的暫存欄位
     df = df.drop(columns=["Prev_MACD_H", "is_above_20ma", "block_id", "is_below_20ma", "bear_block_id"])
 
     return df 
@@ -374,7 +364,7 @@ else:
         shapes_list = []
         
         # =======================================================
-        # 繪製圖層邏輯與圖例整合 (將圖例加入 Plotly 原生系統)
+        # 繪製圖層邏輯與圖例整合
         # =======================================================
         
         # 模式 1: 基本風度圖層
@@ -394,7 +384,7 @@ else:
                         )
                     )
             
-            # 2. 右側圖例 (Dummy Traces)
+            # 2. 右側圖例
             legend_items = [
                 ("強風", "rgba(255, 0, 0, 0.5)"),
                 ("亂流", "rgba(0, 128, 0, 0.5)"),
@@ -438,7 +428,7 @@ else:
                         )
                     )
             
-            # 2. 右側圖例 (Dummy Traces)
+            # 2. 右側圖例
             legend_items = [
                 ("強風-亂流循環", "rgba(255, 0, 0, 0.5)"),
                 ("無風-陣風循環", "rgba(0, 128, 0, 0.5)"),
@@ -537,13 +527,15 @@ else:
             display_df['目前行情方向（延續性）'] = display_df.apply(get_cycle_status, axis=1)
 
             new_names = {
-                'Wind': '風度', 'Open': '開', 'High': '高', 'Low': '低', 'Close': '收', 
+                'Wind': '風度', 
+                'Wind_Count_Label': '連續天數', 
+                'Open': '開', 'High': '高', 'Low': '低', 'Close': '收', 
                 'MACD Histogram': 'MACD柱', 'Pct_Change': '漲跌幅'
             }
             display_df.rename(columns=new_names, inplace=True)
             
             date_col = display_df.columns[0]
-            target_cols = [date_col, '目前行情方向（延續性）', '風度', '開', '高', '低', '收', '漲跌幅', '20ma', 'MACD柱']
+            target_cols = [date_col, '目前行情方向（延續性）', '風度', '連續天數', '開', '高', '低', '收', '漲跌幅', '20ma', 'MACD柱']
             target_cols = [c for c in target_cols if c in display_df.columns]
             display_df = display_df[target_cols]
 
@@ -552,6 +544,17 @@ else:
                           "陣風": "rgba(255,192,203,0.2)", "無風": "rgba(105,105,105,0.2)"}
                 return f'background-color: {colors.get(val, "transparent")}; color: black;'
             
+            # 新增：連續天數的顏色樣式 (解析字串中的風度，並給予對應背景色)
+            def color_wind_count(val):
+                colors = {"強風": "rgba(255,0,0,0.2)", "亂流": "rgba(0,128,0,0.2)", 
+                          "陣風": "rgba(255,192,203,0.2)", "無風": "rgba(105,105,105,0.2)"}
+                
+                # 簡單的檢查：若字串包含鍵值，則回傳對應顏色
+                for wind_type in colors.keys():
+                    if wind_type in str(val):
+                        return f'background-color: {colors[wind_type]}; color: black;'
+                return ''
+
             def color_percent(val):
                 if pd.isna(val): return ''
                 return 'color: red' if val > 0 else ('color: green' if val < 0 else 'color: black')
@@ -568,6 +571,7 @@ else:
             })
             
             styled_df = styled_df.map(color_wind_table, subset=['風度'])
+            styled_df = styled_df.map(color_wind_count, subset=['連續天數']) # 應用新樣式
             styled_df = styled_df.map(color_percent, subset=['漲跌幅'])
             styled_df = styled_df.map(highlight_cycle_status, subset=['目前行情方向（延續性）'])
             
