@@ -236,7 +236,7 @@ def resample_monthly_data(df_daily):
 # ---------------------------------------------------------
 # 3. 側邊欄：使用者輸入參數
 # ---------------------------------------------------------
-st.sidebar.success("請選擇上方頁面進行導覽")
+# st.sidebar.success("請選擇上方頁面進行導覽")
 st.sidebar.header("參數設定")
 
 DEFAULT_TICKER = '^TWOII' 
