@@ -213,11 +213,51 @@ def calculate_indicators(df):
 def load_data(symbol):
     try:
         stock = yf.Ticker(symbol)
-        df = stock.history(interval="1d", start="2007-01-01", end=None, actions=False, auto_adjust=False, back_adjust=False)
+        # auto_adjust=False: 抓取未調整的原始價格
+        # actions=True: 抓取除權息與分割資訊
+        df = stock.history(interval="1d", start="2007-01-01", end=None, actions=True, auto_adjust=False, back_adjust=False)
+        
+        # 修改：這裡不再先過濾 Volume > 0
+        # 原因是必須先保留所有日期來進行「還原分割」運算，確保分割係數的連續性
+        # 過濾停牌日的動作移至主程式後段執行
+        
         return df
     except Exception as e:
         st.error(f"下載股票資料失敗: {e}")
         return pd.DataFrame()
+
+def adjust_for_total_return(df):
+    """計算「還原權值」股價 (Adjusted for Splits AND Dividends)"""
+    if df.empty: return df
+    df_adj = df.copy()
+    
+    if 'Adj Close' in df_adj.columns:
+        df_adj['Adj_Factor'] = df_adj['Adj Close'] / df_adj['Close']
+        df_adj['Adj_Factor'] = df_adj['Adj_Factor'].fillna(1.0)
+        
+        df_adj['Open'] = df_adj['Open'] * df_adj['Adj_Factor']
+        df_adj['High'] = df_adj['High'] * df_adj['Adj_Factor']
+        df_adj['Low'] = df_adj['Low'] * df_adj['Adj_Factor']
+        df_adj['Close'] = df_adj['Adj Close']
+        
+        df_adj = df_adj.drop(columns=['Adj_Factor', 'Adj Close'])
+    return df_adj
+
+def restore_nominal_prices(df):
+    """計算「原始」股價 (Nominal Price)，還原分割影響。"""
+    if df.empty or 'Stock Splits' not in df.columns: 
+        return df
+    
+    df_nominal = df.copy()
+    splits = df_nominal['Stock Splits'].replace(0, 1)
+    cum_split_factor = splits.iloc[::-1].cumprod().iloc[::-1]
+    
+    df_nominal['Open'] = df_nominal['Open'] * cum_split_factor
+    df_nominal['High'] = df_nominal['High'] * cum_split_factor
+    df_nominal['Low'] = df_nominal['Low'] * cum_split_factor
+    df_nominal['Close'] = df_nominal['Close'] * cum_split_factor
+    
+    return df_nominal
 
 # ---------------------------------------------------------
 # 週/月 K線重採樣函數
@@ -236,7 +276,6 @@ def resample_monthly_data(df_daily):
 # ---------------------------------------------------------
 # 3. 側邊欄：使用者輸入參數
 # ---------------------------------------------------------
-# st.sidebar.success("請選擇上方頁面進行導覽")
 st.sidebar.header("參數設定")
 
 DEFAULT_TICKER = '^TWOII' 
@@ -255,27 +294,57 @@ selected_option = st.sidebar.selectbox(
 TICKER_SYMBOL, COMPANY_NAME = process_ticker_input(selected_option, STOCK_MAP, STOCK_NAMES)
 
 # ---------------------------------------------------------
-# 4. 主頁面：K線週期選擇
+# 4. 主頁面：觀念與連結區塊
 # ---------------------------------------------------------
 
-if 'K_PERIOD' not in st.session_state:
-    st.session_state['K_PERIOD'] = '日 K'
-    
-st.markdown("##### 選擇 K 線圖週期:", unsafe_allow_html=True) 
+IG_ICON_SVG = """
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path fill-rule="evenodd" clip-rule="evenodd" d="M12 7C9.23858 7 7 9.23858 7 12C7 14.7614 9.23858 17 12 17C14.7614 17 17 14.7614 17 12C17 9.23858 14.7614 7 12 7ZM9 12C9 10.3431 10.3431 9 12 9C13.6569 9 15 10.3431 15 12C15 13.6569 13.6569 15 12 15C10.3431 15 9 13.6569 9 12Z" fill="currentColor"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M18 5C17.4477 5 17 5.44772 17 6C17 6.55228 17.4477 7 18 7C18.5523 7 19 6.55228 19 6C19 5.44772 18.5523 5 18 5Z" fill="currentColor"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M5 1C2.79086 1 1 2.79086 1 5V19C1 21.2091 2.79086 23 5 23H19C21.2091 23 23 21.2091 23 19V5C23 2.79086 21.2091 1 19 1H5ZM19 3H5C3.89543 3 3 3.89543 3 5V19C3 20.1046 3.89543 21 5 21H19C20.1046 21 21 20.1046 21 19V5C21 3.89543 20.1046 3 19 3Z" fill="currentColor"/>
+</svg>
+"""
 
-col_left_spacer, col_day, col_week, col_month, col_right_spacer = st.columns([1, 0.15, 0.15, 0.15, 1])
+credit_html = f"""
+<style>
+    .credit-card {{
+        background-color: #f8f9fa; /* 淺灰背景 */
+        border: 1px solid #e0e0e0;
+        border-radius: 12px;
+        padding: 20px;
+        margin: 20px 0;
+        text-align: center;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    }}
+</style>
 
-def set_period(period):
-    st.session_state['K_PERIOD'] = period
+<div class="credit-card">
+    💡 本網頁內容依照 <b>不魯放風箏選股APP</b> 的觀念製作
+</div>
+"""
+st.markdown(credit_html, unsafe_allow_html=True)
 
-with col_day:
-    st.button("日 K", on_click=set_period, args=('日 K',), disabled=(st.session_state.K_PERIOD == '日 K'), key='btn_day', use_container_width=True)
-with col_week:
-    st.button("週 K", on_click=set_period, args=('週 K',), disabled=(st.session_state.K_PERIOD == '週 K'), key='btn_week', use_container_width=True)
-with col_month:
-    st.button("月 K", on_click=set_period, args=('月 K',), disabled=(st.session_state.K_PERIOD == '月 K'), key='btn_month', use_container_width=True)
+# ---------------------------------------------------------
+# 5. 主頁面：K線週期與還原權值設定
+# ---------------------------------------------------------
+st.markdown("##### 圖表設定:", unsafe_allow_html=True) 
 
-K_PERIOD = st.session_state.K_PERIOD 
+col_settings_1, col_settings_2 = st.columns([1, 1])
+
+with col_settings_1:
+    K_PERIOD = st.radio(
+        "選擇 K 線週期",
+        ('日 K', '週 K', '月 K'),
+        index=0,
+        horizontal=True
+    )
+
+with col_settings_2:
+    use_adjusted_price = st.checkbox(
+        "還原權值",
+        value=False,
+        help="勾選後將顯示包含除權息與分割調整的股價；未勾選則顯示當時的原始股價ㄋ"
+    )
 
 current_date = date.today()
 if K_PERIOD == '日 K':
@@ -300,20 +369,37 @@ layer_mode = st.sidebar.radio(
     help="一次僅能顯示一種圖層模式"
 )
 
-# 載入資料
+# 載入資料 (Raw Data, 未過濾停牌日)
 data_load_state = st.text(f'資料下載運算中... ({COMPANY_NAME} / {TICKER_SYMBOL})')
-daily_data = load_data(TICKER_SYMBOL)
+daily_data_raw = load_data(TICKER_SYMBOL) 
+
+# --- 關鍵分支：決定使用哪種股價 ---
+if use_adjusted_price:
+    # 模式 A: 還原權值 (含股利、分割)
+    daily_data = adjust_for_total_return(daily_data_raw)
+    chart_mode_label = "還原權值"
+else:
+    # 模式 B: 原始股價 (把分割乘回去)
+    daily_data = restore_nominal_prices(daily_data_raw)
+    chart_mode_label = "原始股價"
+
+# --- 關鍵修改：價格處理完畢後，才過濾停牌 (成交量為0) 的日子 ---
+if not daily_data.empty and 'Volume' in daily_data.columns:
+    daily_data = daily_data[daily_data['Volume'] > 0]
+    # 再次確保沒有 NaN 值干擾 (以防計算過程中產生)
+    daily_data = daily_data.dropna(subset=['Open', 'High', 'Low', 'Close'])
+
 
 # =========================================================
-# 新增功能：櫃買指數 (^TWOII) 資料延遲警示
+# 櫃買指數 (^TWOII) 資料延遲警示
 # =========================================================
 if TICKER_SYMBOL == '^TWOII' and not daily_data.empty:
     last_data_date = daily_data.index[-1].date()
     today_date = date.today()
-    
     if last_data_date < today_date:
         st.warning(f"⚠️ 注意：櫃買指數 ({TICKER_SYMBOL}) 尚無最新交易日之資料。\n\n目前資料更新至：**{last_data_date}**，請留意報價可能會有延遲。")
 
+# 重採樣 (基於已經調整好 並 過濾掉停牌日的 daily_data)
 if K_PERIOD == '日 K':
     data = daily_data.copy()
 elif K_PERIOD == '週 K':
@@ -325,7 +411,7 @@ data = calculate_indicators(data)
 data_load_state.text('') 
 
 # ---------------------------------------------------------
-# 5. 繪製 Plotly 圖表
+# 6. 繪製 Plotly 圖表
 # ---------------------------------------------------------
 if data.empty:
     st.error(f"找不到代碼 **{TICKER_SYMBOL}** 的資料，請確認輸入正確。")
@@ -477,7 +563,7 @@ else:
         ), row=2, col=1)
 
         clean_ticker = str(TICKER_SYMBOL).replace('.TW', '').replace('.TWO', '')
-        title_text = f"{K_PERIOD} - {COMPANY_NAME} ({clean_ticker}) 的風度圖 - {layer_mode}"
+        title_text = f"{K_PERIOD} ({chart_mode_label}) - {COMPANY_NAME} ({clean_ticker}) 的風度圖 - {layer_mode}"
             
         fig.update_layout(
             title=title_text,
@@ -486,7 +572,6 @@ else:
             hovermode="x", 
             template="plotly_white",
             shapes=shapes_list,
-            # 強制顯示圖例於右側
             showlegend=True,
             legend=dict(
                 orientation="v", 
@@ -505,7 +590,7 @@ else:
         st.plotly_chart(fig, width='stretch')
         
         # ------------------ 詳細數據表格 ------------------
-        with st.expander(f"查看 {K_PERIOD} 詳細數據"):
+        with st.expander(f"查看 {K_PERIOD} 詳細數據 ({chart_mode_label})"):
             display_df = filtered_data.sort_index(ascending=False).copy()
             display_df.reset_index(inplace=True)
             
@@ -544,12 +629,9 @@ else:
                           "陣風": "rgba(255,192,203,0.2)", "無風": "rgba(105,105,105,0.2)"}
                 return f'background-color: {colors.get(val, "transparent")}; color: black;'
             
-            # 新增：連續天數的顏色樣式 (解析字串中的風度，並給予對應背景色)
             def color_wind_count(val):
                 colors = {"強風": "rgba(255,0,0,0.2)", "亂流": "rgba(0,128,0,0.2)", 
                           "陣風": "rgba(255,192,203,0.2)", "無風": "rgba(105,105,105,0.2)"}
-                
-                # 簡單的檢查：若字串包含鍵值，則回傳對應顏色
                 for wind_type in colors.keys():
                     if wind_type in str(val):
                         return f'background-color: {colors[wind_type]}; color: black;'
@@ -571,7 +653,7 @@ else:
             })
             
             styled_df = styled_df.map(color_wind_table, subset=['風度'])
-            styled_df = styled_df.map(color_wind_count, subset=['連續天數']) # 應用新樣式
+            styled_df = styled_df.map(color_wind_count, subset=['連續天數']) 
             styled_df = styled_df.map(color_percent, subset=['漲跌幅'])
             styled_df = styled_df.map(highlight_cycle_status, subset=['目前行情方向（延續性）'])
             
