@@ -213,7 +213,7 @@ def calculate_indicators(df):
 def load_data(symbol):
     try:
         stock = yf.Ticker(symbol)
-        df = stock.history(interval="1d", start="1990-01-01", end=None, actions=False, auto_adjust=False, back_adjust=False)
+        df = stock.history(interval="1d", start="2007-01-01", end=None, actions=False, auto_adjust=False, back_adjust=False)
         return df
     except Exception as e:
         st.error(f"下載股票資料失敗: {e}")
