@@ -8,6 +8,12 @@ from pandas.tseries.offsets import DateOffset
 import re
 
 # ---------------------------------------------------------
+# 櫃買指數備援設定 (現為主要資料源)
+# ---------------------------------------------------------
+OTC_INDEX_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRxAhYyyPNAgvSGDDfFUM36dqwIC4KCysWibJRyn7zvqiz-d351uaNNV7DekJiO58q4YrueFU_Sg4v/pub?output=csv"
+OTC_TICKER = "^TWOII"
+
+# ---------------------------------------------------------
 # 1. 顏色與風度定義
 # ---------------------------------------------------------
 WIND_COLORS = {
@@ -47,9 +53,9 @@ def load_stock_map(file_path="股票資料.csv"):
 
 STOCK_MAP, STOCK_NAMES = load_stock_map()
 if not STOCK_MAP:
-    ALL_SEARCH_OPTIONS = ["^TWOII", "2330", "0050"]
+    ALL_SEARCH_OPTIONS = ["^TWII", "2330", "0050", OTC_TICKER] # 將櫃買指數加入預設清單
 else:
-    ALL_SEARCH_OPTIONS = list(STOCK_MAP.keys()) + list(STOCK_NAMES.keys())
+    ALL_SEARCH_OPTIONS = list(STOCK_MAP.keys()) + list(STOCK_NAMES.keys()) + [OTC_TICKER]
 
 
 def process_ticker_input(input_value, stock_map, stock_names):
@@ -58,6 +64,9 @@ def process_ticker_input(input_value, stock_map, stock_names):
     name = input_value
     yfinance_ticker = input_value
     
+    if input_value == OTC_TICKER:
+        return OTC_TICKER, "櫃買指數"
+
     if input_value in stock_names:
         code = stock_names[input_value] 
         if code in stock_map:
@@ -210,20 +219,69 @@ def calculate_indicators(df):
     return df 
 
 @st.cache_data
+def load_otc_from_google_sheet(symbol):
+    """專門從 Google Sheet 載入櫃買指數資料"""
+    st.info(f"偵測到 **{symbol}**，直接從 Google Sheet 載入資料...")
+    try:
+        # 1. 讀取 CSV
+        # 設置 skiprows=1 以應對 Google Sheet CSV 在表頭前可能存在的空行
+        df_otc_raw = pd.read_csv(OTC_INDEX_URL, skiprows=1) 
+        
+        # 2. 清理列名並進行映射
+        df_otc = df_otc_raw.rename(columns={
+            '日期': 'Date',
+            '開盤指數': 'Open',
+            '最高指數': 'High',
+            '最低指數': 'Low',
+            '收盤指數': 'Close'
+        })
+        
+        # 3. 處理日期與索引 (日期格式 YYYYMMDD)
+        df_otc['Date'] = pd.to_datetime(df_otc['Date'], format='%Y%m%d', errors='coerce')
+        df_otc = df_otc.dropna(subset=['Date']) 
+        df_otc.set_index('Date', inplace=True)
+        
+        # 4. 處理數值欄位並建立 yfinance 必需的欄位
+        df_otc = df_otc[['Open', 'High', 'Low', 'Close']].apply(pd.to_numeric, errors='coerce')
+        df_otc = df_otc.dropna(subset=['Open', 'High', 'Low', 'Close'])
+        
+        # 補上其他 yfinance 期望的欄位 (指數資料通常沒有這些)
+        df_otc['Volume'] = 0.0
+        df_otc['Dividends'] = 0.0
+        df_otc['Stock Splits'] = 0.0
+        df_otc['Adj Close'] = df_otc['Close'] 
+        
+        df = df_otc.sort_index()
+        st.success(f"成功從 Google Sheet 載入 **{symbol}** 資料。")
+        return df
+        
+    except Exception as google_sheet_e:
+        st.error(f"從 Google Sheet 載入備援資料失敗: {google_sheet_e}")
+        return pd.DataFrame() 
+
+
+@st.cache_data
 def load_data(symbol):
+    
+    # --- 1. 如果是櫃買指數，直接使用 Google Sheet 資料源 (新邏輯) ---
+    if symbol == OTC_TICKER:
+        return load_otc_from_google_sheet(symbol)
+        
+    # --- 2. 其他代碼，使用 yfinance ---
     try:
         stock = yf.Ticker(symbol)
         # auto_adjust=False: 抓取未調整的原始價格
         # actions=True: 抓取除權息與分割資訊
         df = stock.history(interval="1d", start="2007-01-01", end=None, actions=True, auto_adjust=False, back_adjust=False)
         
-        # 修改：這裡不再先過濾 Volume > 0
-        # 原因是必須先保留所有日期來進行「還原分割」運算，確保分割係數的連續性
-        # 過濾停牌日的動作移至主程式後段執行
-        
+        if df.empty:
+            st.error(f"yfinance 找不到 **{symbol}** 的資料。")
+            return pd.DataFrame()
+            
         return df
+            
     except Exception as e:
-        st.error(f"下載股票資料失敗: {e}")
+        st.error(f"下載股票資料失敗 ({symbol} / yfinance): {e}")
         return pd.DataFrame()
 
 def adjust_for_total_return(df):
@@ -340,11 +398,21 @@ with col_settings_1:
     )
 
 with col_settings_2:
-    use_adjusted_price = st.checkbox(
-        "還原權值",
-        value=False,
-        help="勾選後將顯示包含除權息與分割調整的股價；未勾選則顯示當時的原始股價ㄋ"
-    )
+    # 櫃買指數 (OTC) 資料本身沒有 Dividends/Splits，還原權值選項在此處不會改變指數價格
+    if TICKER_SYMBOL == OTC_TICKER:
+        use_adjusted_price = st.checkbox(
+            "還原權值",
+            value=False,
+            disabled=True,
+            help="櫃買指數無須還原權值，此選項已禁用。"
+        )
+    else:
+        use_adjusted_price = st.checkbox(
+            "還原權值",
+            value=False,
+            help="勾選後將顯示包含除權息與分割調整的股價；未勾選則顯示當時的原始股價"
+        )
+
 
 current_date = date.today()
 if K_PERIOD == '日 K':
@@ -374,30 +442,37 @@ data_load_state = st.text(f'資料下載運算中... ({COMPANY_NAME} / {TICKER_S
 daily_data_raw = load_data(TICKER_SYMBOL) 
 
 # --- 關鍵分支：決定使用哪種股價 ---
-if use_adjusted_price:
+if use_adjusted_price and TICKER_SYMBOL != OTC_TICKER:
     # 模式 A: 還原權值 (含股利、分割)
     daily_data = adjust_for_total_return(daily_data_raw)
     chart_mode_label = "還原權值"
 else:
-    # 模式 B: 原始股價 (把分割乘回去)
+    # 模式 B: 原始股價 (指數資料或不還原權值的股票)
     daily_data = restore_nominal_prices(daily_data_raw)
     chart_mode_label = "原始股價"
 
+
 # --- 關鍵修改：價格處理完畢後，才過濾停牌 (成交量為0) 的日子 ---
 if not daily_data.empty and 'Volume' in daily_data.columns:
-    daily_data = daily_data[daily_data['Volume'] > 0]
-    # 再次確保沒有 NaN 值干擾 (以防計算過程中產生)
+    # 判斷是否為 OTC 資料 (Volume 皆為 0)
+    is_otc_data = (TICKER_SYMBOL == OTC_TICKER)
+    
+    if not is_otc_data:
+        # 僅對股票資料過濾停牌日
+        daily_data = daily_data[daily_data['Volume'] > 0]
+    
+    # 確保沒有 NaN 值干擾 (以防計算過程中產生)
     daily_data = daily_data.dropna(subset=['Open', 'High', 'Low', 'Close'])
 
 
 # =========================================================
-# 櫃買指數 (^TWOII) 資料延遲警示
+# 櫃買指數 (^TWOII) 資料延遲警示 (僅顯示來源為 Google Sheet)
 # =========================================================
-if TICKER_SYMBOL == '^TWOII' and not daily_data.empty:
+if TICKER_SYMBOL == OTC_TICKER and not daily_data.empty:
     last_data_date = daily_data.index[-1].date()
     today_date = date.today()
     if last_data_date < today_date:
-        st.warning(f"⚠️ 注意：櫃買指數 ({TICKER_SYMBOL}) 尚無最新交易日之資料。\n\n目前資料更新至：**{last_data_date}**，請留意報價可能會有延遲。")
+        st.warning(f"⚠️ 注意：櫃買指數 ({TICKER_SYMBOL}) 尚無最新交易日之資料。\n\n目前資料更新至：**{last_data_date}**，請留意資料延遲狀況。")
 
 # 重採樣 (基於已經調整好 並 過濾掉停牌日的 daily_data)
 if K_PERIOD == '日 K':
