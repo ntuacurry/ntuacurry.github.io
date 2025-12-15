@@ -10,7 +10,7 @@ import re
 # ---------------------------------------------------------
 # 櫃買指數備援設定 (現為主要資料源)
 # ---------------------------------------------------------
-OTC_INDEX_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRxAhYyyPNAgvSGDDfFUM36dqwIC4KCxysWibJRyn7zvqiz-d351uaNNV7DekJiO58q4YrueFU_Sg4v/pub?output=csv"
+OTC_INDEX_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRxAhYyyPNAgvSGDDfFUM36dqwIC4KCxysWibJRyn7zvqiz-d351uaNNV7DekJiO58q4YrueFU_Sg4v/pub?gid=0&single=true&output=csv"
 OTC_TICKER = "^TWOII"
 
 # ---------------------------------------------------------
