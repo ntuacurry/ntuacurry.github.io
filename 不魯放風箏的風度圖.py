@@ -278,7 +278,7 @@ def resample_monthly_data(df_daily):
 # ---------------------------------------------------------
 st.sidebar.header("參數設定")
 
-DEFAULT_TICKER = '^TWOII' 
+DEFAULT_TICKER = '^TWII' 
 
 default_index = 0
 if DEFAULT_TICKER in ALL_SEARCH_OPTIONS:
