@@ -35,7 +35,7 @@ def load_all_data():
         try:
             df_map_raw = pd.read_csv(STOCK_MAP_FILE, dtype=str, header=None)
         except UnicodeDecodeError:
-            df_map_raw = pd.read_csv(STOCK_MAP_FILE, dtype=str, header=None, encoding='big5')
+            df_map_raw = pd.read_csv(STOCK_MAP_FILE, dtype=str, header=None, encoding='utf-8')
         
         if df_map_raw.shape[1] >= 3:
             df_map = pd.DataFrame()
