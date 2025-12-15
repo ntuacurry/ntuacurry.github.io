@@ -7,20 +7,22 @@ import requests
 from io import BytesIO
 
 # 設定網頁標題與排版
-st.set_page_config(page_title="台股月營收查詢", layout="wide")
+st.set_page_config(page_title="台股月營收戰情室", layout="wide")
 
 # ==========================================
 # 1. 參數與設定
 # ==========================================
 REVENUE_DATA_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRxAhYyyPNAgvSGDDfFUM36dqwIC4KCxysWibJRyn7zvqiz-d351uaNNV7DekJiO58q4YrueFU_Sg4v/pub?gid=1569515531&single=true&output=csv"
-STOCK_MAP_FILE = "https://ntuacurry.github.io/股票資料.csv"
+
+# 修改：將中文網址進行 URL Encode，避免 ASCII 編碼錯誤
+STOCK_MAP_FILE = "https://ntuacurry.github.io/%E8%82%A1%E7%A5%A8%E8%B3%87%E6%96%99.csv"
 
 # ==========================================
 # 2. 資料讀取與處理函式
 # ==========================================
 
-# 修改：移除 show_spinner=False，讓 Streamlit 自己管理 loading 狀態
-# 修改：移除函式內的 st.progress 等 UI 操作，避免 replay 錯誤
+# 移除 show_spinner=False，讓 Streamlit 自己管理 loading 狀態
+# 移除函式內的 st.progress 等 UI 操作，避免 replay 錯誤
 @st.cache_data(ttl=3600) 
 def load_all_data():
     """
@@ -29,17 +31,28 @@ def load_all_data():
     """
     try:
         # --- 步驟 1: 讀取股票代號對照表 ---
+        # 使用 requests 下載以確保編碼處理正確
         try:
-            df_map_raw = pd.read_csv(STOCK_MAP_FILE, dtype=str, header=None, encoding='utf-8')
-        except UnicodeDecodeError:
-            df_map_raw = pd.read_csv(STOCK_MAP_FILE, dtype=str, header=None, encoding='big5')
+            map_response = requests.get(STOCK_MAP_FILE)
+            map_response.raise_for_status()
+            
+            # 嘗試用 utf-8 讀取，若失敗則用 big5
+            try:
+                map_buffer = BytesIO(map_response.content)
+                df_map_raw = pd.read_csv(map_buffer, dtype=str, header=None, encoding='utf-8')
+            except UnicodeDecodeError:
+                map_buffer = BytesIO(map_response.content)
+                df_map_raw = pd.read_csv(map_buffer, dtype=str, header=None, encoding='big5')
         
-        if df_map_raw.shape[1] >= 3:
-            df_map = pd.DataFrame()
-            df_map['code'] = df_map_raw.iloc[:, 1]
-            df_map['name'] = df_map_raw.iloc[:, 2]
-            df_map['search_label'] = df_map['code'].astype(str) + " " + df_map['name'].astype(str)
-        else:
+            if df_map_raw.shape[1] >= 3:
+                df_map = pd.DataFrame()
+                df_map['code'] = df_map_raw.iloc[:, 1]
+                df_map['name'] = df_map_raw.iloc[:, 2]
+                df_map['search_label'] = df_map['code'].astype(str) + " " + df_map['name'].astype(str)
+            else:
+                df_map = pd.DataFrame(columns=['code', 'name', 'search_label'])
+        except Exception as e:
+            st.error(f"股票代號表讀取失敗: {e}")
             df_map = pd.DataFrame(columns=['code', 'name', 'search_label'])
 
         # --- 步驟 2: 下載月營收資料 ---
@@ -144,7 +157,7 @@ def calculate_rankings(df_revenue, df_map):
 # 3. 網頁主程式介面
 # ==========================================
 
-st.title("📈 台股月營收查詢")
+st.title("📈 台股月營收戰情室")
 
 # 使用 st.spinner 顯示載入狀態，避免快取衝突
 with st.spinner('正在載入最新營收資料庫，請稍候...'):
