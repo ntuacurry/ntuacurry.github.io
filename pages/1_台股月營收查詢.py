@@ -158,7 +158,7 @@ def calculate_rankings(df_revenue, df_map):
 # ==========================================
 
 st.title("📈 台股月營收查詢")
-st.caption("資料來源：公開資訊觀測站 | 更新頻率：每月")
+st.caption("資料來源：公開資訊觀測站(https://mops.twse.com.tw/mops/#/web/home) | 更新頻率：每月")
 
 # 使用 st.spinner 顯示載入狀態，避免快取衝突
 with st.spinner('正在載入最新營收資料庫，請稍候...'):
