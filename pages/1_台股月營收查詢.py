@@ -13,7 +13,7 @@ st.set_page_config(page_title="台股月營收查詢", layout="wide")
 # 1. 參數與設定
 # ==========================================
 REVENUE_DATA_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRxAhYyyPNAgvSGDDfFUM36dqwIC4KCxysWibJRyn7zvqiz-d351uaNNV7DekJiO58q4YrueFU_Sg4v/pub?gid=1569515531&single=true&output=csv"
-STOCK_MAP_FILE = "../股票資料.csv"
+STOCK_MAP_FILE = "股票資料.csv"
 
 # ==========================================
 # 2. 資料讀取與處理函式
