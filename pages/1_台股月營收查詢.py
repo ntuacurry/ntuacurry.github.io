@@ -33,7 +33,7 @@ def load_all_data():
         status_text.text("正在讀取股票代號對照表...")
         
         try:
-            df_map_raw = pd.read_csv(STOCK_MAP_FILE, dtype=str, header=None)
+            df_map_raw = pd.read_csv(STOCK_MAP_FILE, dtype=str, header=None, encoding='utf-8')
         except UnicodeDecodeError:
             df_map_raw = pd.read_csv(STOCK_MAP_FILE, dtype=str, header=None, encoding='utf-8')
         
