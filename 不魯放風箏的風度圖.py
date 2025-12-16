@@ -451,7 +451,7 @@ if TICKER_SYMBOL == '^TWOII' and not daily_data.empty:
     last_data_date = daily_data.index[-1].date()
     today_date = date.today()
     if last_data_date < today_date:
-        st.warning(f"⚠️ 注意：櫃買指數 ({TICKER_SYMBOL}) 尚無最新交易日之資料。\n\n目前資料更新至：**{last_data_date}**，請留意報價可能會有延遲。")
+        st.warning(f"⚠️ 注意：櫃買指數 ({TICKER_SYMBOL}) 之資料為盤後更新。\n\n目前資料更新至：**{last_data_date}**。")
 
 # 重採樣 (基於已經調整好 並 過濾掉停牌日的 daily_data)
 if K_PERIOD == '日 K':
