@@ -1,0 +1,31 @@
+name: 賭博機器人
+
+on:
+  schedule:
+    # 這裡設定 UTC 時間 07:15 (台北時間 15:15)
+    - cron: '15 7 * * 1-5'
+  workflow_dispatch: # 讓你可以隨時點擊按鈕手動測試
+
+jobs:
+  run_script:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 檢出程式碼
+        uses: actions/checkout@v3
+
+      - name: 設定 Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: 安裝套件
+        run: |
+          pip install pandas yfinance requests beautifulsoup4 python-dateutil pytz lxml
+
+      - name: 執行推播腳本
+        env:
+          # 這裡會將 GitHub 內存的 Secrets 注入到程式的環境變數中
+          TG_TOKEN: ${{ secrets.TG_TOKEN }}
+          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+        run: python auto_push.py
