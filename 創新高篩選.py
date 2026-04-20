@@ -6,6 +6,8 @@ import urllib3
 import yfinance as yf
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+from datetime import datetime, time
+import pytz
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -43,10 +45,125 @@ html, body, [class*="css"] { font-family: 'Noto Sans TC', sans-serif; }
     border-radius: 8px; padding: 11px 16px;
     font-size: 0.82rem; color: #6b7d8e; margin-bottom: 20px;
 }
-.stDataFrame { border-radius: 10px; overflow: hidden; }
 .section-title {
     font-size: 0.95rem; font-weight: 600; color: #8fa8bf;
     margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid #1e2d3d;
+}
+
+/* ── 股票卡片 ── */
+.stock-card {
+    background: #0f1923;
+    border: 1px solid #1e2d3d;
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-bottom: 14px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+.stock-card:hover {
+    border-color: #ff5050;
+    box-shadow: 0 0 18px rgba(255,80,80,0.12);
+}
+.stock-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px; height: 100%;
+    background: #ff5050;
+    border-radius: 3px 0 0 3px;
+}
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+.card-code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.0rem;
+    font-weight: 600;
+    color: #dde3ea;
+    letter-spacing: 0.5px;
+}
+.card-name {
+    font-size: 0.78rem;
+    color: #6b7d8e;
+    margin-top: 2px;
+}
+.card-market-badge {
+    font-size: 0.68rem;
+    padding: 3px 8px;
+    border-radius: 20px;
+    background: rgba(30,45,61,0.8);
+    border: 1px solid #1e2d3d;
+    color: #6b7d8e;
+    letter-spacing: 0.5px;
+}
+.card-price {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.55rem;
+    font-weight: 700;
+    color: #ff5050;
+    margin-bottom: 4px;
+    line-height: 1;
+}
+.card-price-label {
+    font-size: 0.68rem;
+    color: #3d5166;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+}
+.card-divider {
+    border: none;
+    border-top: 1px solid #1a2535;
+    margin: 10px 0;
+}
+.card-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+}
+.card-tag {
+    font-size: 0.70rem;
+    padding: 3px 9px;
+    border-radius: 20px;
+    letter-spacing: 0.3px;
+}
+.tag-high {
+    background: rgba(255,80,80,0.10);
+    border: 1px solid rgba(255,80,80,0.3);
+    color: #ff8080;
+}
+.tag-trigger {
+    background: rgba(96,170,255,0.10);
+    border: 1px solid rgba(96,170,255,0.3);
+    color: #80c0ff;
+}
+.card-stats {
+    display: flex;
+    gap: 16px;
+    margin-top: 10px;
+}
+.card-stat {
+    display: flex;
+    flex-direction: column;
+}
+.card-stat .stat-lbl {
+    font-size: 0.65rem;
+    color: #3d5166;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 2px;
+}
+.card-stat .stat-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    color: #8fa8bf;
+    font-weight: 600;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -57,6 +174,28 @@ st.markdown("""
     <p>上市 + 上櫃 &nbsp;|&nbsp; 漲幅 &gt;7% &nbsp;|&nbsp; 創高 / 量能門檻 / 漲停續強</p>
 </div>
 """, unsafe_allow_html=True)
+
+
+# ── 下午4點後首次開啟自動清除 cache ──────────────────────────────────────────
+def auto_clear_cache_after_4pm():
+    """
+    每天下午 16:00（台灣時間）之後，若尚未清除過 cache，則清除一次。
+    使用 st.session_state 記錄「本次 session 內的清除日期」。
+    """
+    tz = pytz.timezone("Asia/Taipei")
+    now = datetime.now(tz)
+    cutoff = now.replace(hour=16, minute=0, second=0, microsecond=0)
+
+    cleared_key = "cache_cleared_date"
+    today_str   = now.strftime("%Y-%m-%d")
+
+    # 只有在 16:00 後、且今天尚未清除過，才清除
+    if now >= cutoff:
+        if st.session_state.get(cleared_key) != today_str:
+            st.cache_data.clear()
+            st.session_state[cleared_key] = today_str
+
+auto_clear_cache_after_4pm()
 
 
 # ── 工具函數 ──────────────────────────────────────────────────────────────────
@@ -95,10 +234,6 @@ def to_float(val, default=0.0) -> float:
 # ── Step 1：從 API 抓取並篩選漲幅 > 7% ──────────────────────────────────────
 @st.cache_data(show_spinner=False)
 def get_candidates():
-    """
-    用 TWSE / TPEx API 計算漲幅，回傳漲幅 > 7% 且代碼合法的候選清單。
-    每筆包含：code, name, market, suffix, close, change_pct, prev_ref
-    """
     candidates = []
 
     # ── 上市 TWSE ────────────────────────────────────────────────────────────
@@ -121,7 +256,7 @@ def get_candidates():
                 "suffix":    ".TW",
                 "close":     close,
                 "change_pct": round(chg_pct, 2),
-                "prev_ref":  ref,   # 昨日開盤競價基準，用於判斷昨日是否漲停
+                "prev_ref":  ref,
             })
     except Exception as e:
         st.warning(f"上市 API 異常：{e}")
@@ -138,10 +273,10 @@ def get_candidates():
             change = to_float(row.get("Change"))
             if close <= 0:
                 continue
-            ref     = close - change          # 還原開盤競價基準
+            ref     = close - change
             if ref <= 0:
                 continue
-            chg_pct = change / ref * 100      # 漲跌幅 = 漲跌額 / 基準價
+            chg_pct = change / ref * 100
             if chg_pct <= 7:
                 continue
             candidates.append({
@@ -178,14 +313,13 @@ def screen_stock(row: dict) -> dict | None:
     if hist.empty or len(hist) < 5:
         return None
 
-    hist         = hist.copy()
-    hist["Vol_K"]  = hist["Volume"] / 1000           # 張
-    hist["Amount"] = hist["Close"] * hist["Volume"]  # 成交值（元）
+    hist           = hist.copy()
+    hist["Vol_K"]  = hist["Volume"] / 1000
+    hist["Amount"] = hist["Close"] * hist["Volume"]
 
     today = hist.iloc[-1]
     prev  = hist.iloc[-2]
 
-    # ── 條件1：創高類（歷史新高 / 240日新高 / 距240日高 ≤ 20%）─────────────
     window240 = hist["Close"].iloc[-241:-1] if len(hist) >= 241 else hist["Close"].iloc[:-1]
     high240   = float(window240.max()) if len(window240) > 0 else float(today["Close"])
     all_high  = float(hist["Close"].iloc[:-1].max())
@@ -198,13 +332,11 @@ def screen_stock(row: dict) -> dict | None:
     if not (is_alltime_high or is_240_high or is_near_240_high):
         return None
 
-    # ── 條件2-1：今日量能 ────────────────────────────────────────────────────
     vol_k_today = float(today["Vol_K"])
     amt_today   = float(today["Amount"])
     cond_21     = vol_k_today >= 10000 or amt_today >= 2_000_000_000
 
-    # ── 條件2-2：前日漲停（量能達標）且今日價漲量增 ──────────────────────────
-    prev_ref      = row["prev_ref"]   # 來自 API，即前日開盤競價基準
+    prev_ref      = row["prev_ref"]
     prev_limit_up = calc_limit_up(prev_ref)
     prev_close_f  = float(prev["Close"])
     prev_was_zt   = abs(prev_close_f - prev_limit_up) < 1e-4
@@ -218,7 +350,6 @@ def screen_stock(row: dict) -> dict | None:
     if not (cond_21 or cond_22):
         return None
 
-    # ── 標記 ─────────────────────────────────────────────────────────────────
     if is_alltime_high:
         high_tag = "歷史新高"
     elif is_240_high:
@@ -236,7 +367,6 @@ def screen_stock(row: dict) -> dict | None:
         "代碼":       row["code"],
         "名稱":       row["name"],
         "今日收盤":   round(close_f, 2),
-        "漲幅%":      row["change_pct"],
         "高點狀態":   high_tag,
         "成交量(張)": int(vol_k_today),
         "成交值(億)": round(amt_today / 1e8, 1),
@@ -295,6 +425,42 @@ def draw_chart(name: str, hist: pd.DataFrame):
     return fig
 
 
+# ── 卡片 HTML 產生器 ───────────────────────────────────────────────────────────
+def render_stock_card(r: dict) -> str:
+    triggers_html = "".join(
+        f'<span class="card-tag tag-trigger">{t}</span>'
+        for t in r["觸發條件"].split(" / ") if t
+    )
+    return f"""
+    <div class="stock-card">
+        <div class="card-header">
+            <div>
+                <div class="card-code">{r['代碼']}</div>
+                <div class="card-name">{r['名稱']}</div>
+            </div>
+            <span class="card-market-badge">{r['市場']}</span>
+        </div>
+        <div class="card-price">{r['今日收盤']:.2f}</div>
+        <div class="card-price-label">今日收盤價（TWD）</div>
+        <hr class="card-divider">
+        <div class="card-stats">
+            <div class="card-stat">
+                <span class="stat-lbl">成交量</span>
+                <span class="stat-val">{r['成交量(張)']:,} 張</span>
+            </div>
+            <div class="card-stat">
+                <span class="stat-lbl">成交值</span>
+                <span class="stat-val">{r['成交值(億)']:.1f} 億</span>
+            </div>
+        </div>
+        <div class="card-tags" style="margin-top:10px;">
+            <span class="card-tag tag-high">{r['高點狀態']}</span>
+            {triggers_html}
+        </div>
+    </div>
+    """
+
+
 # ════════════════════════════════════════════════════════════════════════════
 # 主流程
 # ════════════════════════════════════════════════════════════════════════════
@@ -326,7 +492,7 @@ if st.button("🔍 開始進階篩選", type="primary", use_container_width=True
     prog.empty()
     st.session_state["results"] = results
 
-# ── 顯示結果 ─────────────────────────────────────────────────────────────────
+# ── 顯示結果（卡片式）────────────────────────────────────────────────────────
 if "results" in st.session_state:
     results   = st.session_state["results"]
     total_hit = len(results)
@@ -358,32 +524,21 @@ if "results" in st.session_state:
     else:
         st.markdown('<div class="section-title">🔥 符合條件個股列表</div>', unsafe_allow_html=True)
 
-        disp_cols = ["市場","代碼","名稱","今日收盤","漲幅%","高點狀態","成交量(張)","成交值(億)","觸發條件"]
-        disp_df   = pd.DataFrame([{k: r[k] for k in disp_cols} for r in results])
+        # ── 每列3張卡片 ──
+        cols_per_row = 3
+        for row_start in range(0, total_hit, cols_per_row):
+            cols = st.columns(cols_per_row)
+            for col_idx, r_idx in enumerate(range(row_start, min(row_start + cols_per_row, total_hit))):
+                r = results[r_idx]
+                with cols[col_idx]:
+                    st.markdown(render_stock_card(r), unsafe_allow_html=True)
+                    # 展開 K 線圖按鈕
+                    if st.button(f"📊 查看K線", key=f"btn_{r['代碼']}"):
+                        st.session_state["chart_target"] = r_idx
 
-        selected = st.dataframe(
-            disp_df,
-            use_container_width=True,
-            hide_index=True,
-            on_select="rerun",
-            selection_mode="single-row",
-            column_config={
-                "市場":       st.column_config.TextColumn(width="small"),
-                "代碼":       st.column_config.TextColumn(width="small"),
-                "名稱":       st.column_config.TextColumn(width="medium"),
-                "今日收盤":   st.column_config.NumberColumn(width="small", format="%.2f"),
-                "漲幅%":      st.column_config.NumberColumn(width="small", format="%.2f%%"),
-                "高點狀態":   st.column_config.TextColumn(width="medium"),
-                "成交量(張)": st.column_config.NumberColumn(width="small", format="%d"),
-                "成交值(億)": st.column_config.NumberColumn(width="small", format="%.1f"),
-                "觸發條件":   st.column_config.TextColumn(width="medium"),
-            },
-        )
-
-        # 點列彈出 K 線圖
-        sel_rows = selected.selection.rows if selected.selection else []
-        if sel_rows:
-            idx = sel_rows[0]
+        # ── K線圖 Dialog ──
+        if "chart_target" in st.session_state:
+            idx = st.session_state["chart_target"]
             r   = results[idx]
 
             @st.dialog(f"📊 {r['代碼']} {r['名稱']}")
@@ -393,6 +548,9 @@ if "results" in st.session_state:
 
             show_chart()
 
+        # ── CSV 下載 ──
+        disp_cols = ["市場","代碼","名稱","今日收盤","高點狀態","成交量(張)","成交值(億)","觸發條件"]
+        disp_df   = pd.DataFrame([{k: r[k] for k in disp_cols} for r in results])
         csv = disp_df.to_csv(index=False, encoding="utf-8-sig")
         st.download_button("⬇️ 下載篩選結果 CSV", data=csv,
                            file_name="strong_stocks.csv", mime="text/csv")
