@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>熱門族群新聞</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;700&display=swap');
+
+    :root {
+      --bg:        #08090f;
+      --surface:   #0e1018;
+      --surface2:  #141721;
+      --surface3:  #1a1e2e;
+      --border:    #1f2338;
+      --border2:   #252a40;
+      --gold:      #f0b429;
+      --gold-dim:  #7a5c14;
+      --gold-glow: rgba(240,180,41,.12);
+      --text:      #dde0f0;
+      --dim:       #5a6080;
+      --dim2:      #3a3f58;
+      --tag-bg:    #1c2040;
+      --tag-text:  #6b9fff;
+      --mono:      'JetBrains Mono', 'Courier New', monospace;
+      --sans:      'Noto Sans TC', 'Microsoft JhengHei', system-ui, sans-serif;
+      --r:         8px;
+      --r-s:       5px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      background-image:
+        linear-gradient(rgba(240,180,41,.022) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(240,180,41,.022) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+
+    /* ── HEADER ── */
+    header {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(8,9,15,.93);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 24px 12px;
+    }
+
+    .header-top {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .logo-mark {
+      width: 32px; height: 32px; flex-shrink: 0;
+      background: var(--gold);
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px;
+    }
+
+    h1 {
+      font-size: 16px; font-weight: 700; letter-spacing: .02em;
+      color: var(--gold);
+    }
+
+    .subtitle {
+      font-size: 10px; color: var(--dim); font-family: var(--mono);
+      margin-top: 2px; letter-spacing: .05em;
+    }
+
+    /* ── FILTER ── */
+    .filter-wrap {
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    }
+
+    .date-pill {
+      display: flex; align-items: center; gap: 6px;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: var(--r);
+      padding: 6px 12px;
+    }
+
+    .date-pill label {
+      font-size: 10px; font-family: var(--mono);
+      color: var(--dim); white-space: nowrap; letter-spacing: .06em;
+    }
+
+    input[type="date"] {
+      background: transparent; border: none; outline: none;
+      color: var(--text); font-size: 12px; font-family: var(--mono);
+      cursor: pointer; min-width: 108px;
+    }
+    input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(.5) sepia(1) hue-rotate(5deg); cursor: pointer;
+    }
+
+    .sep { color: var(--dim2); font-family: var(--mono); font-size: 12px; }
+
+    .quick-group { display: flex; gap: 5px; }
+
+    .q-btn {
+      padding: 6px 12px;
+      background: var(--surface2); border: 1px solid var(--border2);
+      border-radius: var(--r-s); color: var(--dim);
+      font-size: 11px; font-family: var(--mono); cursor: pointer;
+      transition: all .15s; letter-spacing: .03em;
+    }
+    .q-btn:hover { border-color: var(--gold-dim); color: var(--gold); }
+    .q-btn.on {
+      background: rgba(240,180,41,.1); border-color: var(--gold-dim);
+      color: var(--gold);
+    }
+
+    .go-btn {
+      padding: 7px 16px;
+      background: var(--gold); border: none; border-radius: var(--r-s);
+      color: #08090f; font-size: 12px; font-weight: 700;
+      font-family: var(--mono); cursor: pointer; letter-spacing: .05em;
+      transition: all .15s;
+    }
+    .go-btn:hover { background: #f5c842; }
+    .go-btn:active { transform: scale(.97); }
+
+    /* ── MAIN ── */
+    main { max-width: 960px; margin: 0 auto; padding: 20px 24px 56px; }
+
+    /* ── STATUS ── */
+    .status-bar {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 18px; flex-wrap: wrap;
+    }
+
+    .live-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: #22c55e; flex-shrink: 0;
+      animation: pulse 2.2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity: 1; box-shadow: 0 0 0 0 rgba(34,197,94,.4); }
+      50%      { opacity: .6; box-shadow: 0 0 0 5px rgba(34,197,94,0); }
+    }
+
+    .chip {
+      padding: 3px 12px; border-radius: 20px;
+      border: 1px solid var(--border2); background: var(--surface2);
+      font-size: 11px; font-family: var(--mono); color: var(--dim);
+    }
+    .chip strong { color: var(--gold); }
+
+    /* ── DAY GROUP ── */
+    .day-block { margin-bottom: 24px; }
+
+    .day-header {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .day-label {
+      font-family: var(--mono); font-size: 12px; font-weight: 500;
+      color: var(--gold); letter-spacing: .06em; white-space: nowrap;
+    }
+
+    .day-dow {
+      font-family: var(--mono); font-size: 10px;
+      color: var(--tag-text); background: var(--tag-bg);
+      border: 1px solid rgba(107,159,255,.18);
+      border-radius: 3px; padding: 1px 7px; white-space: nowrap;
+    }
+
+    .day-rule {
+      flex: 1; height: 1px;
+      background: linear-gradient(90deg, var(--border2) 0%, transparent 100%);
+    }
+
+    .day-count {
+      font-family: var(--mono); font-size: 10px; color: var(--dim2);
+      white-space: nowrap;
+    }
+
+    /* ── NEWS ROW ── */
+    .news-row {
+      position: relative;
+      display: grid;
+      grid-template-columns: 48px 1fr;
+      gap: 0 14px;
+      align-items: start;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-s);
+      padding: 10px 14px;
+      margin-bottom: 4px;
+      overflow: hidden;
+      transition: background .14s, border-color .14s, transform .14s;
+    }
+
+    .news-row::before {
+      content: '';
+      position: absolute; left: 0; top: 0; bottom: 0; width: 2px;
+      background: linear-gradient(180deg, var(--gold) 0%, #f59e0b 100%);
+      opacity: 0; transition: opacity .14s;
+    }
+
+    .news-row:hover {
+      background: var(--surface2);
+      border-color: var(--gold-dim);
+      transform: translateX(3px);
+    }
+    .news-row:hover::before { opacity: 1; }
+
+    .news-time {
+      font-family: var(--mono); font-size: 11px;
+      color: var(--dim2); letter-spacing: .02em;
+      padding-top: 2px;
+    }
+
+    .news-title { font-size: 13.5px; line-height: 1.6; }
+
+    .news-title a {
+      color: var(--text); text-decoration: none;
+      transition: color .14s;
+    }
+    .news-title a:hover { color: var(--gold); }
+
+    .news-title a::after {
+      content: ' ↗'; font-size: 10px;
+      opacity: 0; transition: opacity .14s;
+      color: var(--gold-dim);
+    }
+    .news-title a:hover::after { opacity: 1; }
+
+    .no-link { color: var(--dim); }
+
+    /* ── STATES ── */
+    .state {
+      text-align: center; padding: 64px 20px; color: var(--dim);
+    }
+    .state-icon { font-size: 40px; margin-bottom: 14px; opacity: .35; }
+    .state h3 { font-size: 16px; color: var(--text); margin-bottom: 6px; font-weight: 500; }
+    .state p  { font-size: 11px; font-family: var(--mono); }
+
+    .spinner {
+      width: 32px; height: 32px; margin: 0 auto 14px;
+      border: 2px solid var(--border2); border-top-color: var(--gold);
+      border-radius: 50%; animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .err-box {
+      background: rgba(239,68,68,.07);
+      border: 1px solid rgba(239,68,68,.25);
+      border-radius: var(--r); padding: 12px 16px;
+      color: #fca5a5; font-size: 12px; font-family: var(--mono);
+      margin-bottom: 16px;
+    }
+
+    @media (max-width: 600px) {
+      header { padding: 12px 14px 10px; }
+      main   { padding: 14px 14px 40px; }
+      .news-row { grid-template-columns: 1fr; gap: 2px; }
+      .date-pill { flex-wrap: wrap; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <div class="logo-mark">📈</div>
+    <div>
+      <h1>熱門族群新聞</h1>
+      <div class="subtitle">HIST · SECTOR · NEWS · AUTO-FETCH ON LOAD</div>
+    </div>
+  </div>
+
+  <div class="filter-wrap">
+    <div class="date-pill">
+      <label>FROM</label>
+      <input type="date" id="sd">
+      <span class="sep">–</span>
+      <label>TO</label>
+      <input type="date" id="ed">
+    </div>
+
+    <div class="quick-group">
+      <button class="q-btn" data-days="7"  onclick="setQ(this)">7D</button>
+      <button class="q-btn on" data-days="30" onclick="setQ(this)">30D</button>
+      <button class="q-btn" data-days="90" onclick="setQ(this)">90D</button>
+      <button class="q-btn" data-days="0"  onclick="setQ(this)">ALL</button>
+    </div>
+
+    <button class="go-btn" onclick="render()">FILTER</button>
+  </div>
+</header>
+
+<main>
+  <div id="err"></div>
+  <div id="status" style="display:none" class="status-bar">
+    <div class="live-dot"></div>
+    <div class="chip"><strong id="cnt">0</strong> 筆新聞</div>
+    <div class="chip" id="range-chip"></div>
+  </div>
+  <div id="feed">
+    <div class="state"><div class="spinner"></div><h3>載入資料中…</h3><p>從 Google Sheets 取得 CSV</p></div>
+  </div>
+</main>
+
+<script>
+const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRxAhYyyPNAgvSGDDfFUM36dqwIC4KCxysWibJRyn7zvqiz-d351uaNNV7DekJiO58q4YrueFU_Sg4v/pub?gid=565666579&single=true&output=csv';
+
+let allRows = [];
+let minDate = '';
+let maxDate = '';
+
+// ── Boot ──
+window.addEventListener('DOMContentLoaded', fetchCSV);
+
+// ── Fetch & parse CSV ──
+async function fetchCSV() {
+  setFeed('<div class="state"><div class="spinner"></div><h3>載入資料中…</h3><p>正在取得 Google Sheets CSV</p></div>');
+  try {
+    const res = await fetch(CSV_URL);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const text = await res.text();
+    allRows = parseCSV(text);
+    if (!allRows.length) throw new Error('CSV 無資料，請確認試算表已發布');
+
+    // date bounds
+    const dates = allRows.map(r => r.date).filter(Boolean).sort();
+    minDate = dates[0];
+    maxDate = dates[dates.length - 1];
+
+    // set input bounds
+    const sdEl = document.getElementById('sd');
+    const edEl = document.getElementById('ed');
+    sdEl.min = edEl.min = minDate;
+    sdEl.max = edEl.max = maxDate;
+
+    // default: 30D
+    applyRange(30);
+    render();
+  } catch (e) {
+    showErr('無法載入資料：' + e.message + '（試算表請確認已發布為 CSV）');
+    setFeed('');
+  }
+}
+
+// ── CSV parser ──
+function parseCSV(text) {
+  const lines = text.replace(/\r\n?/g, '\n').trim().split('\n');
+  if (lines.length < 2) return [];
+  const rows = [];
+  for (let i = 1; i < lines.length; i++) {
+    const cols = splitLine(lines[i]);
+    if (cols.length < 4) continue;
+    const date  = cols[0].trim();
+    const dow   = cols[1].trim();
+    const time  = cols[2].trim().slice(0, 5);
+    const title = cols[3].trim();
+    const url   = (cols[4] || '').trim();
+    if (!date && !title) continue;
+    rows.push({ date, dow, time, title, url });
+  }
+  return rows;
+}
+
+function splitLine(line) {
+  const out = []; let cur = '', inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (c === '"') { if (inQ && line[i+1] === '"') { cur += '"'; i++; } else inQ = !inQ; }
+    else if (c === ',' && !inQ) { out.push(cur); cur = ''; }
+    else cur += c;
+  }
+  out.push(cur);
+  return out;
+}
+
+// ── Quick range buttons ──
+function setQ(btn) {
+  document.querySelectorAll('.q-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  applyRange(Number(btn.dataset.days));
+}
+
+function applyRange(days) {
+  if (!maxDate) return;
+  if (days === 0) {
+    document.getElementById('sd').value = minDate;
+    document.getElementById('ed').value = maxDate;
+    return;
+  }
+  const end   = new Date(maxDate + 'T12:00:00');
+  const start = new Date(end);
+  start.setDate(start.getDate() - (days - 1));
+  const minD = new Date(minDate + 'T12:00:00');
+  document.getElementById('sd').value = fmt(start < minD ? minD : start);
+  document.getElementById('ed').value = fmt(end);
+}
+
+// ── Render ──
+function render() {
+  const sd = document.getElementById('sd').value;
+  const ed = document.getElementById('ed').value;
+  if (sd && ed && sd > ed) { showErr('開始日期不能晚於結束日期'); return; }
+  clearErr();
+
+  const s = sd ? new Date(sd + 'T00:00:00') : null;
+  const e = ed ? new Date(ed + 'T23:59:59') : null;
+
+  const filtered = allRows.filter(r => {
+    if (!r.date) return true;
+    const d = new Date(r.date + 'T12:00:00');
+    if (s && d < s) return false;
+    if (e && d > e) return false;
+    return true;
+  }).sort((a, b) => {
+    const ka = (a.date || '') + (a.time || '');
+    const kb = (b.date || '') + (b.time || '');
+    return kb.localeCompare(ka);   // 最新在前
+  });
+
+  // status
+  document.getElementById('cnt').textContent = filtered.length.toLocaleString();
+  document.getElementById('range-chip').textContent = (sd && ed) ? sd + ' ～ ' + ed : '全部資料';
+  document.getElementById('status').style.display = filtered.length ? 'flex' : 'none';
+
+  if (!filtered.length) {
+    setFeed('<div class="state"><div class="state-icon">🔍</div><h3>沒有符合條件的新聞</h3><p>請調整日期區間後按 FILTER</p></div>');
+    return;
+  }
+
+  // group by date
+  const groups = {};
+  for (const r of filtered) {
+    const key = r.date || '(未知日期)';
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(r);
+  }
+
+  const html = Object.keys(groups)
+    .sort((a, b) => b.localeCompare(a))
+    .map(date => {
+      const rows = groups[date];
+      const dow  = rows[0].dow || '';
+      return `
+        <div class="day-block">
+          <div class="day-header">
+            <span class="day-label">${esc(date)}</span>
+            ${dow ? `<span class="day-dow">${esc(dow)}</span>` : ''}
+            <div class="day-rule"></div>
+            <span class="day-count">${rows.length} 則</span>
+          </div>
+          ${rows.map(r => `
+            <div class="news-row">
+              <div class="news-time">${esc(r.time || '—')}</div>
+              <div class="news-title">${
+                r.url
+                  ? `<a href="${esc(r.url)}" target="_blank" rel="noopener noreferrer">${esc(r.title)}</a>`
+                  : `<span class="no-link">${esc(r.title)}</span>`
+              }</div>
+            </div>`).join('')}
+        </div>`;
+    }).join('');
+
+  setFeed(html);
+}
+
+// ── Utils ──
+function setFeed(h)  { document.getElementById('feed').innerHTML = h; }
+function showErr(m)  { document.getElementById('err').innerHTML = `<div class="err-box">⚠ ${esc(m)}</div>`; }
+function clearErr()  { document.getElementById('err').innerHTML = ''; }
+function fmt(d)      { return d.toISOString().slice(0, 10); }
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
