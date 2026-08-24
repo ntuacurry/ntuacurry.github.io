@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Feed 音軌下載器</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#E7E9E2;--surface:#FBFBF8;--surface-2:#F1F2EC;--ink:#171B18;--muted:#6A7069;
+    --line:#D3D6CC;--rec:#E23B3B;--rec-soft:#FBE7E6;--cue:#1E8A7B;--cue-soft:#DCEFEB;
+    --radius:14px;--shadow:0 1px 0 rgba(23,27,24,.04), 0 6px 20px -12px rgba(23,27,24,.25);}
+  @media (prefers-color-scheme: dark){:root{--bg:#15181A;--surface:#1E2225;--surface-2:#23282B;
+    --ink:#EDEFEA;--muted:#9AA199;--line:#333A3C;--rec:#FF6058;--rec-soft:#3a2422;--cue:#4FC7B4;
+    --cue-soft:#1d3330;--shadow:0 6px 24px -12px rgba(0,0,0,.6);}}
+  *{box-sizing:border-box} html,body{margin:0;padding:0}
+  body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--ink);
+    line-height:1.5;-webkit-font-smoothing:antialiased;padding-bottom:120px;}
+  .wrap{max-width:920px;margin:0 auto;padding:32px 20px}
+  .brand{display:flex;align-items:baseline;gap:12px;margin-bottom:6px}
+  .brand h1{font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:clamp(28px,5vw,44px);
+    letter-spacing:-.02em;margin:0;}
+  .brand .dot{width:12px;height:12px;border-radius:50%;background:var(--rec);
+    box-shadow:0 0 0 4px var(--rec-soft);flex:none;align-self:center}
+  .tag{font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--muted);
+    text-transform:uppercase;letter-spacing:.14em;margin:0 0 28px}
+  .console{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);padding:18px;margin-bottom:22px;}
+  .row{display:flex;gap:10px;flex-wrap:wrap}
+  .field{flex:1 1 320px;display:flex;flex-direction:column;gap:6px}
+  label.k{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--muted)}
+  input[type=url]{font:inherit;font-size:15px;padding:11px 13px;border:1px solid var(--line);
+    border-radius:10px;background:var(--surface-2);color:var(--ink);width:100%;}
+  input:focus{outline:2px solid var(--cue);outline-offset:1px;border-color:transparent}
+  .btn{font-family:"Space Grotesk",sans-serif;font-weight:500;font-size:15px;padding:11px 20px;
+    border-radius:10px;border:1px solid transparent;cursor:pointer;background:var(--ink);
+    color:var(--surface);transition:transform .06s ease, opacity .15s;}
+  .btn:hover{opacity:.9} .btn:active{transform:translateY(1px)}
+  .btn[disabled]{opacity:.4;cursor:not-allowed}
+  .btn.rec{background:var(--rec);color:#fff}
+  .hint{font-size:12.5px;color:var(--muted);margin:10px 2px 0}
+  .status{font-family:"JetBrains Mono",monospace;font-size:13px;padding:14px 16px;border-radius:10px;
+    margin-bottom:18px;display:none;white-space:pre-wrap;line-height:1.6}
+  .status.show{display:block}
+  .status.err{background:var(--rec-soft);color:var(--rec);border:1px solid var(--rec)}
+  .status.info{background:var(--surface-2);color:var(--muted);border:1px solid var(--line)}
+  .empty{text-align:center;color:var(--muted);padding:60px 20px;border:1px dashed var(--line);
+    border-radius:var(--radius);font-size:15px}
+  .empty b{color:var(--ink);font-family:"Space Grotesk",sans-serif}
+  .feedhead{display:none;align-items:center;gap:16px;margin-bottom:14px}
+  .feedhead.show{display:flex}
+  .feedhead img{width:64px;height:64px;border-radius:10px;object-fit:cover;border:1px solid var(--line);
+    flex:none;background:var(--surface-2)}
+  .feedhead .ft{font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:20px;letter-spacing:-.01em}
+  .feedhead .fc{font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--muted)}
+  .toolbar{display:none;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+  .toolbar.show{display:flex}
+  .toolbar .sel{display:flex;gap:8px}
+  .linkbtn{background:none;border:none;font:inherit;font-size:13px;color:var(--muted);cursor:pointer;
+    padding:6px 8px;border-radius:8px;font-family:"JetBrains Mono",monospace;text-transform:uppercase;letter-spacing:.06em}
+  .linkbtn:hover{background:var(--surface-2);color:var(--ink)}
+  .search{font:inherit;font-size:14px;padding:8px 12px;border:1px solid var(--line);border-radius:9px;
+    background:var(--surface);color:var(--ink);width:220px;max-width:45vw}
+  .track{display:grid;grid-template-columns:auto 44px 1fr auto;gap:14px;align-items:center;
+    background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--line);
+    border-radius:12px;padding:12px 14px;margin-bottom:9px;transition:border-color .12s,background .12s;}
+  .track.on{border-left-color:var(--cue);background:linear-gradient(90deg,var(--cue-soft),var(--surface) 55%)}
+  .track .thumb{width:44px;height:44px;border-radius:8px;object-fit:cover;background:var(--surface-2);
+    border:1px solid var(--line);flex:none}
+  .track .mid{min-width:0}
+  .track .ttl{font-family:"Space Grotesk",sans-serif;font-weight:500;font-size:15.5px;letter-spacing:-.01em;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .track .meta{font-family:"JetBrains Mono",monospace;font-size:11.5px;color:var(--muted);margin-top:3px;
+    display:flex;gap:12px;flex-wrap:wrap}
+  .track .desc{font-size:13px;color:var(--muted);margin-top:6px;display:none;line-height:1.55}
+  .track.expanded .desc{display:block}
+  .track .side{display:flex;align-items:center;gap:8px}
+  .iconbtn{background:none;border:1px solid var(--line);border-radius:8px;cursor:pointer;width:34px;height:34px;
+    color:var(--muted);display:grid;place-items:center;font-size:15px;text-decoration:none}
+  .iconbtn:hover{color:var(--ink);border-color:var(--muted)}
+  .chk{appearance:none;width:22px;height:22px;border:2px solid var(--line);border-radius:6px;cursor:pointer;
+    position:relative;background:var(--surface-2);flex:none;transition:.12s}
+  .chk:hover{border-color:var(--cue)}
+  .chk:checked{background:var(--cue);border-color:var(--cue)}
+  .chk:checked::after{content:"";position:absolute;left:6px;top:2px;width:6px;height:11px;
+    border:solid #fff;border-width:0 2.5px 2.5px 0;transform:rotate(45deg)}
+  .chk:focus-visible{outline:2px solid var(--cue);outline-offset:2px}
+  .transport{position:fixed;left:0;right:0;bottom:0;transform:translateY(120%);
+    transition:transform .28s cubic-bezier(.2,.8,.2,1);background:var(--surface);border-top:1px solid var(--line);
+    box-shadow:0 -8px 30px -18px rgba(0,0,0,.4);z-index:20;}
+  .transport.up{transform:translateY(0)}
+  .transport .inner{max-width:920px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .counter{font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:20px}
+  .counter small{font-family:"JetBrains Mono",monospace;font-weight:400;font-size:12px;color:var(--muted);
+    display:block;letter-spacing:.03em}
+  .transport .spacer{flex:1}
+  .prog{width:100%;height:4px;background:var(--surface-2);border-radius:99px;overflow:hidden;margin-top:2px;display:none}
+  .prog.show{display:block}
+  .prog i{display:block;height:100%;width:0;background:var(--rec);transition:width .2s}
+  @media (max-width:560px){.track{grid-template-columns:auto 1fr auto;gap:10px}.track .thumb{display:none}.counter{font-size:17px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand"><span class="dot"></span><h1>Feed 音軌下載器</h1></div>
+  <p class="tag">貼上 RSS &middot; 挑選集數 &middot; 送進下載佇列 &middot; <span style="color:var(--cue)">build v3</span></p>
+
+  <div class="console">
+    <div class="row">
+      <div class="field">
+        <label class="k" for="feedurl">RSS Feed 網址</label>
+        <input type="url" id="feedurl" spellcheck="false" placeholder="https://…/rss/…">
+      </div>
+      <div class="field" style="flex:0 0 auto;justify-content:flex-end">
+        <label class="k" style="visibility:hidden">load</label>
+        <button class="btn" id="loadBtn">載入 Feed</button>
+      </div>
+    </div>
+    <p class="hint">貼上任一 podcast 的 RSS feed 網址，按載入即可挑選、下載每一集。時間以台北時區顯示。</p>
+  </div>
+
+  <div class="status" id="status"></div>
+
+  <div class="feedhead" id="feedhead">
+    <img id="fimg" alt="" onerror="this.style.visibility='hidden'">
+    <div><div class="ft" id="ftitle"></div><div class="fc" id="fcount"></div></div>
+  </div>
+
+  <div class="toolbar" id="toolbar">
+    <div class="sel">
+      <button class="linkbtn" id="selAll">全選（目前篩選）</button>
+      <button class="linkbtn" id="selNone">清除</button>
+    </div>
+    <input class="search" id="search" placeholder="篩選集名…">
+  </div>
+
+  <div id="list">
+    <div class="empty">在上方貼一個 <b>RSS feed 網址</b>，再按載入 Feed。</div>
+  </div>
+</div>
+
+<div class="transport" id="transport">
+  <div class="inner">
+    <div class="counter"><span id="tcount">0</span> 集<small id="tsize">未選取任何集數</small></div>
+    <div class="spacer"></div>
+    <button class="btn rec" id="dlBtn">下載所選</button>
+    <div class="prog" id="prog"><i></i></div>
+  </div>
+</div>
+
+<script>
+// 你的 Cloudflare Worker 代理（已寫死）
+const WORKER_BASE = "https://dl-podcast.kevinshih870602.workers.dev";
+console.log("Feed 音軌下載器 build v3 — blob 下載");
+
+const $ = s => document.querySelector(s);
+let episodes = [];
+let selected = new Set();
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+function imgProxy(u){ return u ? (WORKER_BASE + "/img?url=" + encodeURIComponent(u)) : ""; }
+function safeName(s){ return (s||"episode").replace(/[\\/:*?"<>|]/g,"_").replace(/\s+/g," ").trim().slice(0,120) || "episode"; }
+
+function tagText(el, name){ const n = el.getElementsByTagName(name)[0]; return n ? n.textContent.trim() : ""; }
+function stripHtml(s){ const d=document.createElement("div"); d.innerHTML=s||""; return (d.textContent||"").replace(/\s+/g," ").trim(); }
+function fmtDur(raw){
+  if(!raw) return ""; raw=raw.trim();
+  if(/^\d+$/.test(raw)){ let s=+raw,h=Math.floor(s/3600),m=Math.floor(s%3600/60),ss=s%60;
+    return (h?h+":":"")+String(m).padStart(h?2:1,"0")+":"+String(ss).padStart(2,"0"); }
+  return raw;
+}
+function fmtSize(b){ b=+b; if(!b) return ""; return b>=1e9?(b/1e9).toFixed(2)+" GB":(b/1e6).toFixed(1)+" MB"; }
+
+// 平台顯示的是台北時間；feed 的 pubDate 為 GMT，這裡明確轉成 Asia/Taipei（日期＋時間）
+function fmtDateTime(raw){
+  const d = new Date(raw);
+  if(isNaN(d)) return raw || "";
+  try{
+    return new Intl.DateTimeFormat("zh-TW", {
+      timeZone:"Asia/Taipei", year:"numeric", month:"2-digit", day:"2-digit",
+      hour:"2-digit", minute:"2-digit", hour12:false
+    }).format(d).replace(/\//g,"/");
+  }catch(e){ return d.toLocaleString("zh-TW"); }
+}
+
+async function loadFeed(){
+  const url = $("#feedurl").value.trim();
+  if(!url){ showStatus("err","請輸入 feed 網址。"); return; }
+  setBusy(true); showStatus("info","讀取中…");
+  try{
+    const res = await fetch(WORKER_BASE + "/feed?url=" + encodeURIComponent(url));
+    if(!res.ok){
+      let m = "HTTP " + res.status;
+      try { const j = await res.json(); if(j.error) m = j.error; } catch(e){}
+      throw new Error(m);
+    }
+    const text = await res.text();
+    const doc = new DOMParser().parseFromString(text, "application/xml");
+    if(doc.querySelector("parsererror")) throw new Error("回傳內容不是有效的 XML。");
+
+    const channel = doc.querySelector("channel") || doc.documentElement;
+    const fTitle = tagText(channel,"title") || "未命名 Feed";
+    let fImg = "";
+    const iImg = channel.getElementsByTagName("itunes:image")[0];
+    if(iImg) fImg = iImg.getAttribute("href") || "";
+    if(!fImg){ const im = channel.querySelector("image > url"); if(im) fImg = im.textContent.trim(); }
+
+    const items = [...doc.getElementsByTagName("item")];
+    episodes = items.map(it => {
+      const enc = it.getElementsByTagName("enclosure")[0];
+      const iThumb = it.getElementsByTagName("itunes:image")[0];
+      return {
+        title: tagText(it,"title") || "（無標題）",
+        url: enc ? enc.getAttribute("url") : "",
+        type: enc ? (enc.getAttribute("type")||"") : "",
+        size: enc ? enc.getAttribute("length") : "",
+        dur: fmtDur(tagText(it,"itunes:duration")),
+        date: tagText(it,"pubDate"),
+        desc: stripHtml(tagText(it,"itunes:summary") || tagText(it,"description")),
+        thumb: (iThumb ? iThumb.getAttribute("href") : "") || fImg,
+      };
+    }).filter(e => e.url);
+
+    selected = new Set();
+    renderFeedHead(fTitle, fImg, episodes.length);
+    renderList();
+    showStatus("info","載入成功，共 " + episodes.length + " 集。"); setTimeout(hideStatus,2200);
+  }catch(err){
+    showStatus("err","載入失敗：" + err.message);
+  }finally{ setBusy(false); }
+}
+
+function renderFeedHead(title, img, n){
+  $("#ftitle").textContent = title;
+  $("#fcount").textContent = n + " 集含音檔";
+  const im = $("#fimg");
+  if(img){ im.src = imgProxy(img); im.style.visibility="visible"; } else { im.style.visibility="hidden"; }
+  $("#feedhead").classList.add("show");
+  $("#toolbar").classList.toggle("show", n>0);
+}
+
+function renderList(){
+  const q = $("#search").value.trim().toLowerCase();
+  const list = $("#list"); list.innerHTML = "";
+  const shown = episodes.map((e,i)=>({e,i})).filter(({e}) => !q || e.title.toLowerCase().includes(q));
+  if(shown.length===0){ list.innerHTML = '<div class="empty">沒有符合的集數。</div>'; return; }
+  const frag = document.createDocumentFragment();
+  for(const {e,i} of shown){
+    const row = document.createElement("div");
+    row.className = "track" + (selected.has(i) ? " on" : "");
+    const meta = [fmtDateTime(e.date), e.dur, fmtSize(e.size), (e.type||"").replace("audio/","")]
+      .filter(Boolean).map(x=>"<span>"+x+"</span>").join("");
+    row.innerHTML =
+      '<input type="checkbox" class="chk" '+(selected.has(i)?"checked":"")+' data-i="'+i+'" aria-label="選取">'+
+      '<img class="thumb" src="'+imgProxy(e.thumb)+'" alt="" onerror="this.style.visibility=\'hidden\'">'+
+      '<div class="mid"><div class="ttl" title="'+e.title.replace(/"/g,"&quot;")+'">'+e.title+'</div>'+
+      '<div class="meta">'+meta+'</div><div class="desc">'+(e.desc||"（無簡介）")+'</div></div>'+
+      '<div class="side"><button class="iconbtn expand" data-i="'+i+'" title="展開簡介" aria-label="展開簡介">&#8596;</button></div>';
+    frag.appendChild(row);
+  }
+  list.appendChild(frag);
+  updateTransport();
+}
+
+function updateTransport(){
+  const n = selected.size;
+  $("#tcount").textContent = n;
+  let bytes=0, known=0;
+  selected.forEach(i=>{ const b=+episodes[i].size; if(b){bytes+=b;known++;} });
+  $("#tsize").textContent = bytes ? ("約 "+fmtSize(bytes)+(known<n?"（部分未知）":"")) : (n?"檔案大小未提供":"未選取任何集數");
+  $("#transport").classList.toggle("up", n>0);
+  $("#dlBtn").disabled = n===0;
+}
+
+$("#loadBtn").addEventListener("click", loadFeed);
+$("#feedurl").addEventListener("keydown", e => { if(e.key==="Enter") loadFeed(); });
+$("#search").addEventListener("input", renderList);
+$("#list").addEventListener("click", e => {
+  const chk = e.target.closest(".chk");
+  if(chk){ const i=+chk.dataset.i; chk.checked?selected.add(i):selected.delete(i);
+    chk.closest(".track").classList.toggle("on", chk.checked); updateTransport(); return; }
+  const ex = e.target.closest(".expand");
+  if(ex){ ex.closest(".track").classList.toggle("expanded"); }
+});
+$("#selAll").addEventListener("click", ()=>{
+  const q = $("#search").value.trim().toLowerCase();
+  episodes.forEach((e,i)=>{ if(!q || e.title.toLowerCase().includes(q)) selected.add(i); });
+  renderList();
+});
+$("#selNone").addEventListener("click", ()=>{ selected.clear(); renderList(); });
+
+// 透過 Worker 抓成 blob（同源），再用 download 屬性存檔 → 檔名生效、無跨來源警告
+async function downloadOne(e){
+  const res = await fetch(WORKER_BASE + "/download?url=" + encodeURIComponent(e.url) +
+                          "&name=" + encodeURIComponent(safeName(e.title) + ".mp3"));
+  if(!res.ok) throw new Error("HTTP " + res.status);
+  const blob = await res.blob();
+  if(!blob || blob.size === 0) throw new Error("收到 0 位元組（來源或 Worker 可能有問題）");
+  const objUrl = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = objUrl; a.download = safeName(e.title) + ".mp3";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(objUrl), 10000);
+}
+
+async function downloadSelected(){
+  const idx = [...selected];
+  if(idx.length===0) return;
+  const btn = $("#dlBtn"); btn.disabled = true;
+  const prog = $("#prog"); prog.classList.add("show");
+  let fail = 0;
+  for(let k=0;k<idx.length;k++){
+    const e = episodes[idx[k]];
+    showStatus("info","下載 "+(k+1)+"/"+idx.length+"："+e.title);
+    try{ await downloadOne(e); }
+    catch(err){ fail++; showStatus("err","第 "+(k+1)+" 集失敗："+err.message); await sleep(1500); }
+    prog.querySelector("i").style.width = Math.round((k+1)/idx.length*100)+"%";
+    await sleep(600);
+  }
+  prog.classList.remove("show"); prog.querySelector("i").style.width="0";
+  showStatus(fail?"err":"info", fail ? ("完成，"+fail+" 集失敗。") : ("完成，已下載 "+idx.length+" 集。"));
+  setTimeout(hideStatus,3500);
+  btn.disabled = false;
+}
+$("#dlBtn").addEventListener("click", downloadSelected);
+
+function showStatus(kind,msg){ const s=$("#status"); s.className="status show "+kind; s.textContent=msg; }
+function hideStatus(){ $("#status").className="status"; }
+function setBusy(b){ $("#loadBtn").disabled=b; $("#loadBtn").textContent=b?"載入中…":"載入 Feed"; }
+</script>
+</body>
+</html>
