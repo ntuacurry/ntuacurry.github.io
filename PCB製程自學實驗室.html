@@ -1,0 +1,717 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>PCB 製程自學實驗室</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: sticky unit rail on the left (top strip on phones); each unit = conclusion, explanation, then a hands-on lab panel with live calculations. Fully offline: no external fonts or scripts. */
+:root{
+  --bg:#F3F5F1; --surface:#FFFFFF; --sunk:#E9EEEA; --ink:#14231D; --muted:#55665E; --line:#D2DBD5;
+  --mask:#1D6A4C; --mask-soft:#E1EEE6; --copper:#B5652A; --copper-ink:#9A5220; --copper-soft:#F5E5D5;
+  --resin:#DCD4BF; --hole:#F3F5F1; --grey:#A9B4AE; --good:#2C7A52; --bad:#B23B3B; --bad-soft:#F7E2E0; --good-soft:#E0F0E6;
+  --f-body:"PingFang TC","Noto Sans TC","Microsoft JhengHei","Heiti TC",system-ui,sans-serif;
+  --f-mono:ui-monospace,"SFMono-Regular",Menlo,Consolas,"Liberation Mono",monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E1C16; --surface:#14261E; --sunk:#10211A; --ink:#E9EEE6; --muted:#9BAEA4; --line:#28413A;
+  --mask:#5BC495; --mask-soft:#173528; --copper:#E39A58; --copper-ink:#EBAA6E; --copper-soft:#3A2A1B;
+  --resin:#5C5644; --hole:#0E1C16; --grey:#506259; --good:#5CC48F; --bad:#E57373; --bad-soft:#3A1F1F; --good-soft:#163628; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E1C16; --surface:#14261E; --sunk:#10211A; --ink:#E9EEE6; --muted:#9BAEA4; --line:#28413A;
+  --mask:#5BC495; --mask-soft:#173528; --copper:#E39A58; --copper-ink:#EBAA6E; --copper-soft:#3A2A1B;
+  --resin:#5C5644; --hole:#0E1C16; --grey:#506259; --good:#5CC48F; --bad:#E57373; --bad-soft:#3A1F1F; --good-soft:#163628; color-scheme:dark}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.75}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+h1,h2,h3,h4{line-height:1.3;margin:0;text-wrap:balance}
+h1{font-size:clamp(26px,4.4vw,38px);font-weight:900;letter-spacing:-.01em}
+h2{font-size:clamp(22px,3.2vw,30px);font-weight:900}
+h3{font-size:19px;font-weight:700}
+h4{font-size:16px;font-weight:700}
+p{margin:0;max-width:68ch}
+a{color:var(--mask)}
+.mono{font-family:var(--f-mono)}
+.muted{color:var(--muted)}
+.small{font-size:14px}
+.app{display:grid;grid-template-columns:240px minmax(0,1fr);min-height:100%}
+.rail{position:sticky;top:env(safe-area-inset-top,0px);height:100vh;overflow-y:auto;background:var(--surface);border-right:1px solid var(--line);padding:24px 16px 24px max(16px,env(safe-area-inset-left,0px))}
+.rail .brand{font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;color:var(--copper-ink);margin-bottom:4px}
+.rail .name{font-weight:900;font-size:18px;margin-bottom:16px}
+.rail ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.rail a{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;text-decoration:none;color:var(--ink);font-size:15px}
+.rail a:hover,.rail a:focus-visible{background:var(--sunk)}
+.rail a.on{background:var(--mask-soft);color:var(--mask);font-weight:700}
+.rail .dot{width:22px;height:22px;flex:none;border-radius:50%;border:2px solid var(--line);font-family:var(--f-mono);font-size:11px;display:grid;place-items:center;color:var(--muted)}
+.rail .dot.done{background:var(--mask);border-color:var(--mask);color:var(--surface)}
+.rail .prog{margin-top:20px;font-size:13px;color:var(--muted)}
+.bar{height:6px;background:var(--sunk);border-radius:3px;overflow:hidden;margin-top:6px}
+.bar i{display:block;height:100%;background:var(--mask);width:0;transition:width .3s}
+main{min-width:0;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.col{max-width:880px;margin:0 auto}
+section.unit{padding-block:56px;border-bottom:1px solid var(--line);scroll-margin-top:16px}
+.eyebrow{font-family:var(--f-mono);font-size:12.5px;letter-spacing:.08em;color:var(--copper-ink);margin-bottom:8px}
+.lead{margin-top:14px;padding:14px 18px;background:var(--copper-soft);border-radius:10px;font-weight:500;max-width:none}
+.prose{display:flex;flex-direction:column;gap:14px;margin-top:22px}
+.prose h3{margin-top:14px}
+.prose ul,.prose ol{margin:0;padding-left:1.3em}
+.prose li{margin-bottom:4px}
+.formula{font-family:var(--f-mono);background:var(--sunk);border-radius:8px;padding:10px 14px;font-size:15px;overflow-x:auto;white-space:nowrap}
+.example{border-left:3px solid var(--mask);padding:8px 14px;background:var(--surface);border-radius:0 8px 8px 0}
+.example b:first-child{color:var(--mask)}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:14.5px}
+.tablewrap table{min-width:560px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:13px;color:var(--muted);font-weight:500;white-space:nowrap}
+tr:last-child td{border-bottom:0}
+td.num{text-align:right;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+/* lab */
+.lab{margin-top:26px;border:2px solid var(--mask);border-radius:12px;background:var(--surface);overflow:hidden}
+.lab>header{background:var(--mask);color:var(--surface);padding:10px 18px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.lab>header h3{font-size:17px;color:var(--surface)}
+.lab>header span{font-family:var(--f-mono);font-size:12px;opacity:.85}
+.lab .body{padding:18px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:20px;align-items:start}
+.lab .body.one{grid-template-columns:1fr}
+@media (max-width:820px){.lab .body{grid-template-columns:1fr}}
+.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.field{display:flex;flex-direction:column;gap:4px;font-size:13.5px;color:var(--muted);min-width:0}
+.field input,.field select{font:inherit;font-size:16px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:7px;padding:7px 9px;width:100%;min-width:0}
+.field input[type=range]{padding:0;background:transparent;border:0;accent-color:var(--copper)}
+.field input:focus-visible,.field select:focus-visible,button:focus-visible,textarea:focus-visible{outline:2px solid var(--copper);outline-offset:2px}
+.out{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-top:14px}
+.kv{background:var(--sunk);border-radius:8px;padding:8px 12px}
+.kv .k{font-size:12.5px;color:var(--muted)}
+.kv .v{font-family:var(--f-mono);font-size:20px;font-weight:600;font-variant-numeric:tabular-nums}
+.verdict{margin-top:12px;padding:8px 12px;border-radius:8px;font-weight:600;font-size:15px}
+.verdict.ok{background:var(--good-soft);color:var(--good)}
+.verdict.ng{background:var(--bad-soft);color:var(--bad)}
+.fig{background:var(--sunk);border-radius:10px;padding:10px;min-width:0}
+.fig svg{width:100%;height:auto;display:block}
+.fig .cap{font-size:12.5px;color:var(--muted);margin-top:6px}
+svg text{font-family:var(--f-body);fill:var(--ink)}
+.s-cu{fill:var(--copper)} .s-resin{fill:var(--resin)} .s-hole{fill:var(--hole)} .s-film{fill:var(--mask);opacity:.35}
+.s-mut{fill:var(--muted)} .s-axis{stroke:var(--line)} .s-grid{stroke:var(--line);stroke-dasharray:2 3}
+button.btn{font:inherit;font-size:14px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:7px;padding:6px 14px;cursor:pointer}
+button.btn:hover{border-color:var(--mask)}
+button.btn.primary{background:var(--mask);color:var(--surface);border-color:var(--mask)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+textarea{font-family:var(--f-mono);font-size:16px;width:100%;min-height:120px;border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--bg);color:var(--ink);resize:vertical}
+/* questions */
+.qs{display:flex;flex-direction:column;gap:12px;margin-top:22px}
+.q{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.q .qh{display:flex;gap:10px;align-items:flex-start}
+.q .qn{font-family:var(--f-mono);font-size:12px;background:var(--copper-soft);color:var(--copper-ink);border-radius:4px;padding:1px 7px;flex:none;margin-top:3px}
+.q .ans{margin-top:10px;padding:10px 12px;background:var(--mask-soft);border-radius:8px}
+.q .ctl{display:flex;gap:12px;align-items:center;margin-top:10px;flex-wrap:wrap}
+.q label{display:flex;gap:6px;align-items:center;font-size:14px;cursor:pointer;color:var(--muted)}
+.q input[type=checkbox]{accent-color:var(--mask);width:16px;height:16px}
+/* quiz */
+.opt{display:block;width:100%;text-align:left;font:inherit;font-size:15px;padding:8px 12px;margin-top:6px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);cursor:pointer}
+.opt:hover{border-color:var(--mask)}
+.opt.right{background:var(--good-soft);border-color:var(--good)}
+.opt.wrong{background:var(--bad-soft);border-color:var(--bad)}
+.hotspot{cursor:pointer}
+.hotspot circle{fill:var(--bad);fill-opacity:.12;stroke:var(--bad);stroke-width:2}
+.hotspot:hover circle,.hotspot.sel circle{fill-opacity:.3}
+.hotspot:focus-visible{outline:none}
+.hotspot:focus-visible circle{stroke-width:4}
+.infobox{min-height:150px}
+.d8{display:flex;flex-direction:column;gap:10px}
+.d8 label{font-size:13.5px;color:var(--muted);display:flex;flex-direction:column;gap:4px}
+.d8 textarea{min-height:56px;font-family:var(--f-body);font-size:16px}
+.toast{font-size:13px;color:var(--good)}
+.hero{padding-block:48px 40px}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:22px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.card .mono{font-size:12px;color:var(--copper-ink)}
+footer{padding-block:40px;font-size:13px;color:var(--muted)}
+footer li{word-break:break-all;margin-bottom:4px}
+@media (max-width:900px){
+  .app{grid-template-columns:1fr}
+  .rail{position:sticky;top:env(safe-area-inset-top,0px);height:auto;z-index:5;border-right:0;border-bottom:1px solid var(--line);padding:8px max(16px,env(safe-area-inset-right,0px)) 8px max(16px,env(safe-area-inset-left,0px))}
+  .rail .brand,.rail .name,.rail .prog{display:none}
+  .rail ol{flex-direction:row;overflow-x:auto;scrollbar-width:none}
+  .rail a{white-space:nowrap;padding:6px 10px;font-size:14px}
+  .fields{grid-template-columns:1fr 1fr}
+  section.unit{scroll-margin-top:64px;padding-block:40px}
+  .kv .v{font-size:17px}
+  .lab .body{padding:14px;gap:16px}
+  .lab>header{padding:10px 14px}
+  button.btn{min-height:40px}
+  .q input[type=checkbox]{width:20px;height:20px}
+  .q label{padding:6px 0}
+}
+@media (max-width:380px){.fields{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="app">
+<nav class="rail" aria-label="單元">
+  <div class="brand">PCB PROCESS LAB</div>
+  <div class="name">製程自學實驗室</div>
+  <ol id="nav"></ol>
+  <div class="prog"><span id="progText">練習題完成 0 / 19</span><div class="bar"><i id="progBar"></i></div></div>
+</nav>
+<main><div class="col">
+
+<section class="unit hero" id="start">
+  <div class="eyebrow">START · 怎麼用</div>
+  <h1>PCB 製程自學實驗室</h1>
+  <p class="lead">六個單元帶你認識印刷電路板（PCB）的製程原理、設計準則、統計製程管制、實驗設計、缺陷分析與問題解決，只需要瀏覽器，不必安裝軟體。每單元先給結論，再用實驗室動手算、動手看，最後做練習題檢查自己是否理解。</p>
+  <div class="grid3" id="unitCards"></div>
+  <p class="small muted" style="margin-top:18px">數字都是業界常見的概略值，用來建立量級感；各廠實際值不同。練習題勾選「我會了」後，進度會記在這台裝置的瀏覽器中。本頁可下載後離線使用。</p>
+</section>
+
+<!-- ============ UNIT 1 ============ -->
+<section class="unit" id="u1">
+  <div class="eyebrow">UNIT 1 · 電鍍、蝕刻、壓合、鑽孔</div>
+  <h2>製程原理：每段製程都有兩三個關鍵變數</h2>
+  <p class="lead">電鍍看電流密度與時間，蝕刻看側蝕，壓合看溫度、壓力與樹脂流動，鑽孔看轉速與進刀量。能把這些變數講清楚，就掌握了理解 PCB 製程的基本語言。</p>
+  <div class="prose">
+    <h3>電鍍：用電把銅搬到板子上</h3>
+    <p>電鍍槽裡銅板當陽極、PCB 當陰極，通電後銅離子在 PCB 表面得到電子變成銅。常見酸性鍍銅液由硫酸銅、硫酸、少量氯離子與三類添加劑組成：抑制劑、光澤劑（加速劑）、整平劑。盲孔「由下往上填滿」就是靠添加劑在孔底與孔口的濃度差。</p>
+    <div class="formula">m = I × t × M ÷ (n × F)　　M = 63.55 g/mol，n = 2，F = 96,485 C/mol</div>
+    <p>換算成現場用法：每 1 A/dm²（ASD）每分鐘約鍍 <b>0.22 µm</b>（效率 100%）。</p>
+    <h3>縱橫比與深鍍能力</h3>
+    <p><b>縱橫比</b> = 板厚 ÷ 孔徑；<b>深鍍能力</b> = 孔中心銅厚 ÷ 板面銅厚。孔越深越細，鍍液越難進到孔中心，孔口厚、孔中心薄。對策：加強攪拌、降低電流密度，或用脈衝電鍍（正反向電流交替，把孔口多鍍的銅溶回去）。</p>
+  </div>
+  <div class="lab" id="lab1a">
+    <header><h3>實驗室 1A：電鍍時間與深鍍能力</h3><span>改數字，剖面圖會跟著變</span></header>
+    <div class="body">
+      <div>
+        <div class="fields">
+          <label class="field">電流密度（ASD）<input id="p_j" type="number" step="0.1" value="2"></label>
+          <label class="field">電流效率（%）<input id="p_eff" type="number" step="1" value="95"></label>
+          <label class="field">目標板面銅厚（µm）<input id="p_t" type="number" step="1" value="25"></label>
+          <label class="field">孔壁最低規格（µm）<input id="p_min" type="number" step="1" value="20"></label>
+          <label class="field">板厚（mm）<input id="p_board" type="number" step="0.1" value="2.4"></label>
+          <label class="field">孔徑（mm）<input id="p_hole" type="number" step="0.01" value="0.25"></label>
+          <label class="field" style="grid-column:1/-1">深鍍能力（%）：<b id="p_tpv">80</b><input id="p_tp" type="range" min="40" max="100" value="80"></label>
+        </div>
+        <div class="out" id="p_out"></div>
+        <div class="verdict" id="p_ver"></div>
+      </div>
+      <div class="fig"><svg id="p_svg" viewBox="0 0 360 300" role="img" aria-label="通孔電鍍剖面"></svg><div class="cap">示意：孔中心銅厚 = 板面銅厚 × 深鍍能力。縱橫比越大，實務上深鍍能力越難維持。</div></div>
+    </div>
+  </div>
+  <div class="prose">
+    <h3>蝕刻：側蝕與蝕刻補償</h3>
+    <p>傳統減成法用乾膜保護線路，把其他銅溶掉。蝕刻液也會往旁邊溶，造成<b>側蝕</b>，線路斷面變梯形。蝕刻因子 = 銅厚 ÷ 單邊側蝕；越大側壁越直。CAM 會先把底片上的線加寬，叫<b>蝕刻補償</b>。mSAP 從 2 到 3 µm 的極薄底銅開始只在線路處鍍銅，最後只蝕掉薄底銅，側蝕極小，所以能做 20 µm 等級細線。</p>
+  </div>
+  <div class="lab" id="lab1b">
+    <header><h3>實驗室 1B：蝕刻補償</h3><span>銅越厚，要補償越多</span></header>
+    <div class="body">
+      <div>
+        <div class="fields">
+          <label class="field">銅厚（µm）<input id="e_t" type="number" step="1" value="35"></label>
+          <label class="field">蝕刻因子<input id="e_ef" type="number" step="0.1" value="3.5"></label>
+          <label class="field">目標成品線寬（µm）<input id="e_w" type="number" step="1" value="75"></label>
+          <label class="field">設計線距（µm）<input id="e_s" type="number" step="1" value="75"></label>
+        </div>
+        <div class="out" id="e_out"></div>
+        <div class="verdict" id="e_ver"></div>
+      </div>
+      <div class="fig"><svg id="e_svg" viewBox="0 0 360 220" role="img" aria-label="蝕刻後線路剖面"></svg><div class="cap">示意：藍框為乾膜（底片線寬），橘色為蝕刻後的銅。線距以底部最窄處計。</div></div>
+    </div>
+  </div>
+  <div class="prose">
+    <h3>壓合：把多層熱壓成一塊</h3>
+    <p>用<b>膠片</b>（Prepreg，半固化的樹脂玻纖布）把內層板黏在一起。升溫時樹脂先軟化流動、填滿線路間隙，再交聯硬化。升溫太快容易有空洞，太慢則樹脂流太多、介電層變薄；壓力與真空負責排氣；層數越多對位誤差越容易累積。材料看 <b>Dk</b>（影響訊號速度與阻抗）、<b>Df</b>（影響訊號衰減）、<b>Tg</b>（樹脂軟化溫度）。業界俗稱的 M6 到 M9 等級，數字越大損耗越低、越難加工。</p>
+    <h3>鑽孔：機械鑽與雷射鑽</h3>
+    <p>機械鑽的關鍵是<b>進刀量</b> = 進給速度 ÷ 轉速。進刀太大易斷針、孔壁粗；太小摩擦生熱產生膠渣，需要<b>除膠渣</b>，否則孔壁銅與內層接不牢。HDI 盲孔用雷射：CO₂ 雷射燒樹脂但被銅反射，UV 雷射能打穿銅。背鑽是從背面鑽掉通孔裡用不到的那段銅（stub），難在深度控制。</p>
+    <div class="example"><b>例題</b>　轉速 120,000 rpm、進給 2.4 m/min，進刀量 = 2,400 ÷ 120,000 = 0.02 mm/轉 = 20 µm/轉。</div>
+    <h3>表面處理</h3>
+    <div class="tablewrap"><table><thead><tr><th>種類</th><th>做法</th><th>特點</th></tr></thead><tbody>
+      <tr><td>ENIG 化鎳浸金</td><td>化學鍍鎳後置換薄金</td><td>平整耐存放；鎳層異常腐蝕會出現「黑墊」</td></tr>
+      <tr><td>ENEPIG 化鎳鈀浸金</td><td>鎳與金之間多一層鈀</td><td>可打線可焊接，高階產品常用</td></tr>
+      <tr><td>OSP 有機保焊膜</td><td>塗一層有機膜</td><td>便宜平整；存放時間短</td></tr>
+      <tr><td>化銀、化錫</td><td>置換薄銀或錫</td><td>平整；銀怕硫化、錫有錫鬚風險</td></tr>
+    </tbody></table></div>
+  </div>
+  <div class="qs" data-unit="1"></div>
+</section>
+
+<!-- ============ UNIT 2 ============ -->
+<section class="unit" id="u2">
+  <div class="eyebrow">UNIT 2 · 線寬、孔徑、孔環、縱橫比</div>
+  <h2>設計準則：每條規則背後都有一個製程原因</h2>
+  <p class="lead">設計準則就是「這段製程最多能做到多細、多小、多準」的清單。理解「為什麼有這個下限」，比背數字更重要，遇到新的規格也能自己判斷。</p>
+  <div class="lab" id="lab2a">
+    <header><h3>實驗室 2A：單位換算</h3><span>輸入任一欄，其他欄自動換算</span></header>
+    <div class="body one">
+      <div class="fields" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">
+        <label class="field">mil<input id="c_mil" type="number" step="0.1" value="4"></label>
+        <label class="field">µm<input id="c_um" type="number" step="0.1"></label>
+        <label class="field">mm<input id="c_mm" type="number" step="0.001"></label>
+        <label class="field">銅重 oz（以 1 oz ≈ 35 µm）<input id="c_oz" type="number" step="0.01"></label>
+      </div>
+    </div>
+  </div>
+  <div class="prose">
+    <div class="tablewrap"><table><thead><tr><th>規則</th><th>定義</th><th>為什麼有下限</th></tr></thead><tbody>
+      <tr><td>最小線寬、線距</td><td>線的寬度與間隔</td><td>側蝕與曝光解析度；銅越厚下限越大</td></tr>
+      <tr><td>最小孔徑</td><td>能鑽的最小孔</td><td>細鑽針易斷、雷射能量限制；孔小縱橫比也變大</td></tr>
+      <tr><td>最大縱橫比</td><td>板厚 ÷ 孔徑上限</td><td>深鍍能力；孔中心鍍不到足夠的銅</td></tr>
+      <tr><td>最小孔環</td><td>孔周圍銅墊寬度</td><td>鑽孔位置與層間對位誤差，太窄會破環</td></tr>
+      <tr><td>最小防焊橋</td><td>兩焊墊間綠漆寬度</td><td>綠漆太窄會剝落，焊接時可能短路</td></tr>
+    </tbody></table></div>
+    <div class="formula">孔環 = (焊墊直徑 − 孔徑) ÷ 2　　最小孔環 ＞ 鑽孔位置誤差 ＋ 層間對位誤差</div>
+  </div>
+  <div class="lab" id="lab2b">
+    <header><h3>實驗室 2B：孔環與破環</h3><span>拖動「孔偏移」看什麼時候破環</span></header>
+    <div class="body">
+      <div>
+        <div class="fields">
+          <label class="field">焊墊直徑（mm）<input id="r_pad" type="number" step="0.01" value="0.50"></label>
+          <label class="field">孔徑（mm）<input id="r_hole" type="number" step="0.01" value="0.30"></label>
+          <label class="field" style="grid-column:1/-1">孔偏移（mm）：<b id="r_offv">0.000</b><input id="r_off" type="range" min="0" max="0.2" step="0.005" value="0"></label>
+          <label class="field">鑽孔位置公差 ±（mm）<input id="r_tol" type="number" step="0.005" value="0.075"></label>
+          <label class="field">層間對位誤差 ±（mm）<input id="r_reg" type="number" step="0.005" value="0.025"></label>
+        </div>
+        <div class="out" id="r_out"></div>
+        <div class="verdict" id="r_ver"></div>
+      </div>
+      <div class="fig"><svg id="r_svg" viewBox="0 0 300 300" role="img" aria-label="孔環俯視圖"></svg><div class="cap">俯視：橘色是焊墊，深色是孔。紅色代表孔已經超出焊墊。</div></div>
+    </div>
+  </div>
+  <div class="prose">
+    <h3>看兩家板廠的公開能力表</h3>
+    <p>許多板廠把製程能力公開給客戶參考，這就是設計準則的對外樣子（2026/10/28 摘錄；屬快板與打樣廠，高階量產廠能力更強）。</p>
+    <div class="tablewrap"><table><thead><tr><th>項目</th><th><a href="https://jlcpcb.com/capabilities/pcb-capabilities" target="_blank" rel="noopener">JLCPCB</a></th><th><a href="https://www.pcbway.com/capabilities.html" target="_blank" rel="noopener">PCBWay</a></th></tr></thead><tbody>
+      <tr><td>最小線寬線距（多層 1 oz）</td><td>3.5 / 3.5 mil</td><td>標準 4 / 4 mil；外層 35 µm 一般製程 5 / 6 mil</td></tr>
+      <tr><td>最小鑽孔（多層）</td><td>0.15 mm</td><td>0.15 mm（小於 0.2 mm 加價）</td></tr>
+      <tr><td>最小孔環</td><td>建議 0.20 mm，最小 0.15 mm</td><td>0.15 mm（6 mil）</td></tr>
+      <tr><td>縱橫比</td><td>未標示</td><td>≤ 8 一般；8 到 10 中等；＞ 12 做不到</td></tr>
+      <tr><td>防焊橋（1 oz 綠漆）</td><td>0.10 mm</td><td>4 mil</td></tr>
+      <tr><td>孔位公差</td><td>±0.075 mm</td><td>—</td></tr>
+    </tbody></table></div>
+  </div>
+  <div class="lab" id="lab2c">
+    <header><h3>實驗室 2C：縱橫比難度判斷</h3><span>依 PCBWay 公開分級</span></header>
+    <div class="body one">
+      <div class="fields" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr))">
+        <label class="field">板厚（mm）<input id="a_t" type="number" step="0.1" value="2.0"></label>
+        <label class="field">孔徑（mm）<input id="a_d" type="number" step="0.01" value="0.20"></label>
+      </div>
+      <div class="verdict" id="a_ver"></div>
+    </div>
+  </div>
+  <div class="qs" data-unit="2"></div>
+</section>
+
+<!-- ============ UNIT 3 ============ -->
+<section class="unit" id="u3">
+  <div class="eyebrow">UNIT 3 · 管制圖、製程能力</div>
+  <h2>SPC 與製程能力：先看穩不穩，再看夠不夠</h2>
+  <p class="lead">SPC 回答「製程現在穩不穩」，Cpk 回答「穩的話能不能符合規格」。穩定但偏離中心的製程，Cpk 一樣不及格。</p>
+  <div class="prose">
+    <p><b>共同原因</b>是永遠存在的小波動，要改設備或製程才能降低；<b>特殊原因</b>是特定事件（換藥水、斷針），要找出來排除。管制圖就是把兩者分開。</p>
+    <div class="formula">UCL / LCL = X̄̄ ± A₂ × R̄　　n = 5 時 A₂ = 0.577、D₄ = 2.114、d₂ = 2.326</div>
+    <p>管制界限由製程自己的數據算出（製程的聲音），規格界限是客戶訂的（客戶的聲音），兩者不能混用。</p>
+    <h3>判異規則（簡化版）</h3>
+    <ol><li>任一點超出管制界限</li><li>連續 8 點在中心線同一側</li><li>連續 6 點持續上升或下降</li><li>連續 3 點中有 2 點超過 2σ（同一側）</li></ol>
+  </div>
+  <div class="lab" id="lab3a">
+    <header><h3>實驗室 3A：管制圖判異</h3><span>先自己找訊號，再按「檢查」</span></header>
+    <div class="body one">
+      <div class="fig"><svg id="s_svg" viewBox="0 0 760 320" role="img" aria-label="X̄ 管制圖"></svg></div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn primary" id="s_check">檢查判異規則</button>
+        <button class="btn" id="s_new">產生新數據</button>
+        <button class="btn" id="s_reset">回到教材範例</button>
+        <span class="small muted" id="s_stat"></span>
+      </div>
+      <div id="s_result" class="small" style="margin-top:10px"></div>
+      <details style="margin-top:12px"><summary class="small">貼上自己的數據（每行：組平均, 全距）</summary>
+        <textarea id="s_text" aria-label="管制圖數據"></textarea>
+        <div class="row" style="margin-top:6px"><button class="btn" id="s_apply">套用數據</button><span class="small muted" id="s_msg"></span></div>
+      </details>
+    </div>
+  </div>
+  <div class="prose">
+    <h3>製程能力</h3>
+    <div class="formula">Cp = (USL − LSL) ÷ 6σ　　Cpk = min(USL − μ, μ − LSL) ÷ 3σ</div>
+    <p>Cp 只看寬度，Cpk 同時考慮偏離中心，所以 Cpk ≤ Cp。業界常見門檻：Cpk ≥ 1.33 合格，新製程常要求 1.67。</p>
+  </div>
+  <div class="lab" id="lab3b">
+    <header><h3>實驗室 3B：Cp 與 Cpk</h3><span>預設值為教材例題</span></header>
+    <div class="body">
+      <div>
+        <div class="fields">
+          <label class="field">規格下限 LSL<input id="k_lsl" type="number" step="0.1" value="20"></label>
+          <label class="field">規格上限 USL<input id="k_usl" type="number" step="0.1" value="30"></label>
+          <label class="field">平均 μ<input id="k_mu" type="number" step="0.01" value="25.43"></label>
+          <label class="field">標準差 σ<input id="k_sd" type="number" step="0.01" value="1.29"></label>
+        </div>
+        <div class="out" id="k_out"></div>
+        <div class="verdict" id="k_ver"></div>
+        <p class="small muted" style="margin-top:10px">試試：平均改成 25，Cpk 會接近 Cp；標準差降到 1.0，Cpk 就過 1.33。</p>
+      </div>
+      <div class="fig"><svg id="k_svg" viewBox="0 0 360 220" role="img" aria-label="製程分佈與規格"></svg><div class="cap">預估不良率假設常態分佈。</div></div>
+    </div>
+  </div>
+  <div class="qs" data-unit="3"></div>
+</section>
+
+<!-- ============ UNIT 4 ============ -->
+<section class="unit" id="u4">
+  <div class="eyebrow">UNIT 4 · 實驗設計、因子與交互作用</div>
+  <h2>DOE：用 8 次實驗同時找出重要參數與交互作用</h2>
+  <p class="lead">一次只改一個參數（OFAT）次數多，而且看不到交互作用。2³ 全因子實驗把 3 個因子各設高低兩水準，8 種組合各做一次，就能算出所有主效果與交互作用。</p>
+  <div class="prose">
+    <p>例題：盲孔填孔後孔口的凹陷越淺越好。因子 A 電流密度（1.5 / 2.5 ASD）、B 光澤劑濃度（低 / 高）、C 攪拌（弱 / 強）。</p>
+    <div class="formula">主效果 = 該因子為＋的 4 組平均 − 為−的 4 組平均　　交互作用 AB 的符號 = A 符號 × B 符號</div>
+  </div>
+  <div class="lab" id="lab4">
+    <header><h3>實驗室 4：DOE 分析器</h3><span>改任一組結果，效果與圖表即時重算</span></header>
+    <div class="body">
+      <div>
+        <div class="tablewrap" style="border:0"><table id="d_tab" style="min-width:0"></table></div>
+        <div class="row" style="margin-top:8px"><button class="btn" id="d_reset">回到教材數據</button></div>
+      </div>
+      <div class="fig"><svg id="d_eff" viewBox="0 0 400 250" role="img" aria-label="各效果大小"></svg><div class="cap">紅色讓凹陷變深，綠色讓凹陷變淺。</div></div>
+    </div>
+    <div class="body">
+      <div class="fig"><svg id="d_int" viewBox="0 0 380 240" role="img" aria-label="A×B 交互作用圖"></svg><div class="cap">兩條線越不平行，交互作用越大。</div></div>
+      <div>
+        <h4>用模型預測任一條件</h4>
+        <p class="small muted">以編碼值 −1（低）到 ＋1（高）表示；0 是中間點，例如電流 2.0 ASD。預測假設效果是線性的，實務上要做確認實驗。</p>
+        <div class="fields" style="grid-template-columns:1fr;margin-top:10px">
+          <label class="field">A 電流密度：<b id="d_av">0</b><input id="d_a" type="range" min="-1" max="1" step="0.25" value="0"></label>
+          <label class="field">B 光澤劑濃度：<b id="d_bv">1</b><input id="d_b" type="range" min="-1" max="1" step="0.25" value="1"></label>
+          <label class="field">C 攪拌強度：<b id="d_cv">1</b><input id="d_c" type="range" min="-1" max="1" step="0.25" value="1"></label>
+        </div>
+        <div class="out" id="d_out"></div>
+        <div class="verdict" id="d_ver"></div>
+      </div>
+    </div>
+  </div>
+  <div class="prose">
+    <h3>做 DOE 的標準步驟</h3>
+    <ol><li>定義要改善的結果與規格（例如凹陷 ≤ 10 µm）</li><li>用經驗或魚骨圖挑因子、訂高低水準</li><li>隨機安排實驗順序，避免藥水老化等時間因素混入</li><li>可行時重複實驗並加中心點，檢查是否非線性</li><li>計算效果，判斷哪些重要</li><li>用最佳條件做確認實驗，再寫進製程規範</li></ol>
+  </div>
+  <div class="qs" data-unit="4"></div>
+</section>
+
+<!-- ============ UNIT 5 ============ -->
+<section class="unit" id="u5">
+  <div class="eyebrow">UNIT 5 · 缺陷種類、失效分析</div>
+  <h2>缺陷判讀：從缺陷長相推回出問題的站別</h2>
+  <p class="lead">分析順序是先非破壞後破壞：外觀、電測、X 光，最後才切片。切片會破壞樣品，證據只有一次機會。很多缺陷要經過熱應力測試（模擬焊接高溫）才會出現。</p>
+  <div class="lab" id="lab5a">
+    <header><h3>實驗室 5A：點選切片上的缺陷</h3><span>點紅圈看缺陷說明</span></header>
+    <div class="body">
+      <div class="fig"><svg id="x_svg" viewBox="0 0 360 300" role="img" aria-label="通孔切片缺陷示意，可點選"></svg></div>
+      <div class="infobox" id="x_info" aria-live="polite"><p class="muted">點圖中任一紅圈，這裡會顯示缺陷名稱、成因、該查哪個站別。</p></div>
+    </div>
+  </div>
+  <div class="prose">
+    <div class="tablewrap"><table><thead><tr><th>缺陷</th><th>常見成因</th><th>可能站別</th><th>怎麼發現</th></tr></thead><tbody id="defTable"></tbody></table></div>
+  </div>
+  <div class="lab" id="lab5b">
+    <header><h3>實驗室 5B：情境小測驗</h3><span id="z_score">0 / 5</span></header>
+    <div class="body one"><div id="z_box"></div></div>
+  </div>
+  <div class="qs" data-unit="5"></div>
+</section>
+
+<!-- ============ UNIT 6 ============ -->
+<section class="unit" id="u6">
+  <div class="eyebrow">UNIT 6 · 8D、魚骨圖、5 個為什麼</div>
+  <h2>客訴與 8D：先止血，再找根因，最後防止再發</h2>
+  <p class="lead">客戶看 8D 看兩件事：有沒有找到真正的根因，以及怎麼保證不再發生。根因要同時找「為什麼發生」與「為什麼沒被攔下」。</p>
+  <div class="prose">
+    <div class="tablewrap"><table><thead><tr><th>步驟</th><th>要做什麼</th><th>常見錯誤</th></tr></thead><tbody>
+      <tr><td>D1 成立團隊</td><td>找齊相關站別、品保、生產</td><td>只有一個人寫報告</td></tr>
+      <tr><td>D2 描述問題</td><td>5W2H：料號、批號、比例、現象、發現地點</td><td>描述模糊，例如「孔有問題」</td></tr>
+      <tr><td>D3 暫時圍堵</td><td>凍結同批、加嚴檢驗、提供替換品</td><td>只顧找原因忘了止血</td></tr>
+      <tr><td>D4 找根因</td><td>發生原因＋流出原因</td><td>把「作業員疏失」當根因</td></tr>
+      <tr><td>D5 選定對策</td><td>永久對策並用數據驗證</td><td>沒驗證就宣布結案</td></tr>
+      <tr><td>D6 實施確認</td><td>導入並追蹤後續批次</td><td>只追一兩批</td></tr>
+      <tr><td>D7 防止再發</td><td>更新 SOP、管制計畫、FMEA，水平展開</td><td>只修這一條線</td></tr>
+      <tr><td>D8 結案</td><td>客戶接受、表揚團隊</td><td>不了了之</td></tr>
+    </tbody></table></div>
+    <h3>範例：內層分離客訴的 5 個為什麼</h3>
+    <ol><li>為什麼開路？孔壁銅與內層銅分離。</li><li>為什麼分離？內層銅面殘留膠渣，化學銅沒附著好。</li><li>為什麼有膠渣？除膠渣咬蝕量不足。</li><li>為什麼不足？藥水主成分濃度偏低。</li><li>為什麼沒發現？添加泵浦故障無警報，人工分析一天只做一次。</li></ol>
+    <p>流出原因：出貨前熱應力抽驗頻率低。對策：修泵浦、加濃度連續監測與警報、分析改每班一次；D7 水平展開到全廠其他自動添加的藥水槽。</p>
+  </div>
+  <div class="lab" id="lab6">
+    <header><h3>實驗室 6：寫你自己的 8D</h3><span>內容只存在你的瀏覽器</span></header>
+    <div class="body one">
+      <p class="small muted">挑一個學校實驗、專題或工作中遇過的問題，用 8D 的架構寫下來，練習把問題、根因與對策講清楚。</p>
+      <div class="d8" id="d8"></div>
+      <div class="row" style="margin-top:12px"><button class="btn primary" id="d8_copy">複製全文</button><button class="btn" id="d8_example">載入範例</button><button class="btn" id="d8_clear">清空</button><span class="toast" id="d8_msg" aria-live="polite"></span></div>
+    </div>
+  </div>
+  <div class="qs" data-unit="6"></div>
+</section>
+
+<section class="unit" id="res">
+  <div class="eyebrow">RESOURCES · 免費延伸</div>
+  <h2>免費延伸資源</h2>
+  <div class="prose">
+    <ul>
+      <li><a href="https://www.itl.nist.gov/div898/handbook/pmc/pmc.htm" target="_blank" rel="noopener">NIST/SEMATECH 統計手冊：製程監控</a>（管制圖、製程能力，英文）</li>
+      <li><a href="https://www.itl.nist.gov/div898/handbook/pri/pri.htm" target="_blank" rel="noopener">NIST/SEMATECH 統計手冊：製程改善</a>（DOE 完整教學，英文）</li>
+      <li><a href="https://jlcpcb.com/capabilities/pcb-capabilities" target="_blank" rel="noopener">JLCPCB 製程能力表</a>、<a href="https://www.pcbway.com/capabilities.html" target="_blank" rel="noopener">PCBWay 製程能力表</a></li>
+      <li>上市櫃 PCB 公司的年報（可在公開資訊觀測站或各公司官網免費下載）：找到「研究發展」或「技術發展計畫」章節，試著為每一項寫「屬於哪段製程、難在哪個變數」</li>
+    </ul>
+  </div>
+</section>
+<footer><p>自學用途。數據為教學範例或公開資料摘錄，非任何公司的內部規格。</p></footer>
+</div></main>
+</div>
+
+<script>
+(function(){
+"use strict";
+var NS='http://www.w3.org/2000/svg';
+function $(id){return document.getElementById(id);}
+function num(id){var v=parseFloat($(id).value);return isFinite(v)?v:0;}
+function el(tag,a,parent,text){var e=document.createElementNS(NS,tag);for(var k in a)e.setAttribute(k,a[k]);if(text!=null)e.textContent=text;if(parent)parent.appendChild(e);return e;}
+function clear(s){while(s.firstChild)s.removeChild(s.firstChild);}
+function kv(box,list){box.innerHTML='';list.forEach(function(x){var d=document.createElement('div');d.className='kv';d.innerHTML='<div class="k"></div><div class="v"></div>';d.children[0].textContent=x[0];d.children[1].textContent=x[1];box.appendChild(d);});}
+function verdict(id,ok,text){var v=$(id);v.className='verdict '+(ok?'ok':'ng');v.textContent=text;}
+function store(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v);}catch(e){return null;}}
+function fx(n,d){return (Math.round(n*Math.pow(10,d))/Math.pow(10,d)).toFixed(d);}
+
+/* ---------- nav ---------- */
+var UNITS=[['start','▶','開始'],['u1','1','製程原理'],['u2','2','設計準則'],['u3','3','SPC 與 Cpk'],['u4','4','DOE'],['u5','5','缺陷判讀'],['u6','6','客訴與 8D'],['res','＋','延伸資源']];
+var nav=$('nav');
+UNITS.forEach(function(u){var li=document.createElement('li');li.innerHTML='<a href="#'+u[0]+'"><span class="dot" data-u="'+u[0]+'">'+u[1]+'</span><span>'+u[2]+'</span></a>';nav.appendChild(li);});
+var cards=$('unitCards');
+UNITS.slice(1,7).forEach(function(u){var a=document.createElement('a');a.href='#'+u[0];a.className='card';a.style.textDecoration='none';a.style.color='inherit';
+ var lab={u1:'電鍍、深鍍、蝕刻計算',u2:'單位換算、孔環破環',u3:'管制圖判異、Cpk',u4:'DOE 分析器與預測',u5:'點選缺陷、情境測驗',u6:'8D 填寫範本'}[u[0]];
+ a.innerHTML='<div class="mono">UNIT '+u[1]+'</div><h3 style="margin-top:4px">'+u[2]+'</h3><p class="small muted" style="margin-top:4px">實驗室：'+lab+'</p>';cards.appendChild(a);});
+var links=nav.querySelectorAll('a');
+if('IntersectionObserver' in window){var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){links.forEach(function(l){var on=l.getAttribute('href')==='#'+e.target.id;l.classList.toggle('on',on);if(on&&nav.scrollWidth>nav.clientWidth){nav.scrollLeft=l.parentNode.offsetLeft-16;}});}});},{rootMargin:'-40% 0px -55% 0px'});
+ UNITS.forEach(function(u){var s=$(u[0]);if(s)io.observe(s);});}
+
+document.querySelectorAll('input[type=number]').forEach(function(i){i.setAttribute('inputmode','decimal');});
+/* ---------- questions ---------- */
+var Q=[
+[1,'電流密度 1.5 ASD、效率 100%，鍍 30 分鐘大約鍍多厚？','0.22 × 1.5 × 30 ≈ 9.9 µm，約 10 µm。可在實驗室 1A 驗證：把目標厚度改成 10，時間約 30 分鐘。'],
+[1,'板厚 2.4 mm、孔徑 0.25 mm，縱橫比是多少？若板面銅 30 µm、孔中心 24 µm，深鍍能力是多少？','縱橫比 = 2.4 ÷ 0.25 = 9.6；深鍍能力 = 24 ÷ 30 = 80%。'],
+[1,'為什麼厚銅板很難做細線路？請用側蝕解釋。','側蝕約等於銅厚 ÷ 蝕刻因子。銅越厚，往旁邊溶掉越多，線路頂部變窄；線距也要夠寬才能把底部的銅蝕乾淨。用實驗室 1B 把銅厚從 35 改成 70 µm 就看得出來。'],
+[1,'鑽孔後孔壁殘膠沒除乾淨，可能造成什麼問題？','膠渣留在內層銅面，化學銅附著不良，孔壁銅與內層銅分離。平時可能還通，經過回焊熱衝擊後出現間歇開路，也就是單元五、六的案例。'],
+[2,'3 mil 等於幾微米？0.5 oz 銅大約多厚？','3 × 25.4 = 76.2 µm；0.5 oz 約 17 到 18 µm。'],
+[2,'焊墊 0.45 mm、鑽孔 0.25 mm，孔環是多少 mil？','(0.45 − 0.25) ÷ 2 = 0.10 mm ≈ 3.9 mil。'],
+[2,'為什麼縱橫比有上限？請連結到深鍍能力說明。','縱橫比越大，鍍液越難進孔中心、電流分佈越不均，深鍍能力下降，孔中心銅厚可能低於規格；細長孔也容易斷針或鑽偏。'],
+[3,'線寬規格 75 ± 10 µm，平均 78 µm、σ = 2.5 µm，計算 Cp 與 Cpk，並說明優先改善什麼。','Cp = 20 ÷ 15 ≈ 1.33；Cpk = min(7, 13) ÷ 7.5 ≈ 0.93。變異夠小，問題在平均偏高 3 µm，優先對中（調整蝕刻補償或蝕刻速度）。'],
+[3,'所有點都在界限內，但連續 7 點逐步上升，該不該行動？可能原因？','要行動，符合「連續 6 點上升」的趨勢規則。可能是藥水老化或濃度漂移、鑽針或刷輪磨耗、溫度上升、過濾器阻塞。'],
+[3,'為什麼不能把規格界限直接畫在 X̄ 管制圖上當管制界限？','規格是客戶的要求，不是製程的自然變異；而且 X̄ 圖畫的是組平均，波動比單一數值小，用單品規格比組平均會誤判。點都在規格內也可能已失控。'],
+[4,'用教材數據算出 AC 交互作用，它重要嗎？','AC 為＋的組（1、3、6、8）平均 10.0，為−的組（2、4、5、7）平均 10.0，AC = 0，不重要。實驗室 4 的效果圖也顯示為 0。'],
+[4,'為什麼實驗順序要隨機？','避免時間相關的變化混進因子效果。例如第 1 到 4 組（攪拌弱）早上做、第 5 到 8 組（攪拌強）下午剛補完藥水，看到的「攪拌效果」可能是藥水新舊的差別。'],
+[4,'要求凹陷 ≤ 10 µm 且產能最高，你會建議什麼條件？','實驗過的高電流 4 組都超過 10 µm。可提議確認實驗：電流 2.0 ASD（A = 0）、光澤劑高、攪拌強，模型預估約 7.5 µm。在實驗室 4 把 A 拉到 0、B 和 C 拉到 ＋1 就能看到。'],
+[5,'熱應力後切片看到孔角斷裂，優先檢查哪兩件事？','一是銅的延展性（鍍液有機污染會讓銅變脆）；二是板材熱膨脹（Z 軸膨脹太大或樹脂沒完全硬化）。'],
+[5,'釘頭和內層分離都在孔壁與內層交界，成因有何不同？','釘頭是鑽孔的機械問題（鑽針磨損、參數不當，把內層銅擠壓變形）；內層分離是清潔附著問題（膠渣沒除乾淨）。一個查鑽孔，一個查除膠渣與化學銅。'],
+[5,'為什麼要先做非破壞檢查，再切片？','切片會破壞樣品，證據只有一次機會；先用電測與 X 光定位，才能切在正確位置。退回樣品通常也很少。'],
+[6,'為什麼「作業員疏失」不能當 D4 的根因？','人一定會犯錯，要追問系統為什麼允許錯誤發生：SOP 不清、沒有防呆、沒有警報。只寫「再教育訓練」很難保證不再發生。'],
+[6,'D3 和 D5 的對策有什麼不同？','D3 是暫時保護客戶（凍結庫存、全數加驗）；D5 是消除根因的永久對策（例如加裝濃度警報）。D3 要等 D5 生效後才撤除。'],
+[6,'「水平展開」是什麼意思？範例中做了什麼？','把教訓套用到相似製程、產線或產品。範例中檢查全廠其他使用自動添加的藥水槽，是否也缺警報。']
+];
+function progress(){var done=0;Q.forEach(function(q,i){if(store('pcb-q'+i)==='1')done++;});$('progText').textContent='練習題完成 '+done+' / '+Q.length;$('progBar').style.width=(done/Q.length*100)+'%';
+ for(var u=1;u<=6;u++){var all=true;Q.forEach(function(q,i){if(q[0]===u&&store('pcb-q'+i)!=='1')all=false;});var dot=nav.querySelector('.dot[data-u="u'+u+'"]');if(dot)dot.classList.toggle('done',all);}}
+document.querySelectorAll('.qs').forEach(function(box){var u=+box.dataset.unit;var h=document.createElement('h3');h.textContent='練習題';box.appendChild(h);
+ Q.forEach(function(q,i){if(q[0]!==u)return;var d=document.createElement('div');d.className='q';
+  d.innerHTML='<div class="qh"><span class="qn">Q'+(i+1)+'</span><div></div></div><div class="ans" hidden></div><div class="ctl"><button class="btn">顯示解答</button><label><input type="checkbox" id="qc'+i+'">我會了</label></div>';
+  d.querySelector('.qh div').textContent=q[1];d.querySelector('.ans').textContent=q[2];
+  var b=d.querySelector('button'),a=d.querySelector('.ans');b.addEventListener('click',function(){a.hidden=!a.hidden;b.textContent=a.hidden?'顯示解答':'收起解答';});
+  var cb=d.querySelector('input');cb.checked=store('pcb-q'+i)==='1';cb.addEventListener('change',function(){store('pcb-q'+i,cb.checked?'1':'0');progress();});
+  box.appendChild(d);});});
+progress();
+
+/* ---------- Lab 1A plating ---------- */
+function lab1a(){var j=num('p_j'),eff=num('p_eff')/100,t=num('p_t'),mn=num('p_min'),bt=num('p_board'),hd=num('p_hole'),tp=num('p_tp')/100;$('p_tpv').textContent=Math.round(tp*100);
+ var rate=0.2205*j*eff,time=rate>0?t/rate:0,ar=hd>0?bt/hd:0,center=t*tp;
+ kv($('p_out'),[['鍍銅速率','≈ '+fx(rate,2)+' µm/min'],['所需時間','≈ '+fx(time,0)+' 分'],['縱橫比',fx(ar,1)],['孔中心銅厚',fx(center,1)+' µm']]);
+ var ok=center>=mn;verdict('p_ver',ok,ok?'孔中心 '+fx(center,1)+' µm ≥ 規格 '+mn+' µm，合格':'孔中心 '+fx(center,1)+' µm ＜ 規格 '+mn+' µm，不合格：提高深鍍能力（降電流、加強攪拌、脈衝電鍍）或加長電鍍時間'+(ar>8?'；縱橫比 '+fx(ar,1)+' 偏高，深鍍能力本來就較難維持':''));
+ var s=$('p_svg');clear(s);var top=40,bot=260,hw=Math.max(14,Math.min(70,260/Math.max(ar,1)*2.2)),cx=180,k=0.9;
+ var sc=Math.min(18,t*0.45),cc=sc*tp;
+ el('rect',{x:30,y:top,width:cx-hw/2-30,height:bot-top,'class':'s-resin'},s);el('rect',{x:cx+hw/2,y:top,width:330-cx-hw/2,height:bot-top,'class':'s-resin'},s);
+ el('rect',{x:30,y:top-sc,width:cx-hw/2-30+sc,height:sc,'class':'s-cu'},s);el('rect',{x:cx+hw/2-sc,y:top-sc,width:330-cx-hw/2+sc,height:sc,'class':'s-cu'},s);
+ el('rect',{x:30,y:bot,width:cx-hw/2-30+sc,height:sc,'class':'s-cu'},s);el('rect',{x:cx+hw/2-sc,y:bot,width:330-cx-hw/2+sc,height:sc,'class':'s-cu'},s);
+ var L=cx-hw/2,R=cx+hw/2,m=(top+bot)/2;
+ el('path',{d:'M'+L+' '+top+'L'+(L+sc)+' '+top+'L'+(L+cc)+' '+m+'L'+(L+sc)+' '+bot+'L'+L+' '+bot+'Z','class':'s-cu'},s);
+ el('path',{d:'M'+R+' '+top+'L'+(R-sc)+' '+top+'L'+(R-cc)+' '+m+'L'+(R-sc)+' '+bot+'L'+R+' '+bot+'Z','class':'s-cu'},s);
+ el('text',{x:180,y:20,'text-anchor':'middle','font-size':13},s,'縱橫比 '+fx(ar,1)+'　深鍍能力 '+Math.round(tp*100)+'%');
+ el('text',{x:180,y:292,'text-anchor':'middle','font-size':12,'class':'s-mut'},s,'孔中心 '+fx(center,1)+' µm ／ 板面 '+t+' µm');}
+['p_j','p_eff','p_t','p_min','p_board','p_hole','p_tp'].forEach(function(i){$(i).addEventListener('input',lab1a);});lab1a();
+
+/* ---------- Lab 1B etch ---------- */
+function lab1b(){var t=num('e_t'),ef=num('e_ef'),w=num('e_w'),sp=num('e_s');var u=ef>0?t/ef:0,art=w+2*u,gap=sp;
+ kv($('e_out'),[['單邊側蝕','≈ '+fx(u,1)+' µm'],['底片線寬','≈ '+fx(art,0)+' µm'],['線路頂寬','≈ '+fx(art-2*u,0)+' µm'],['底部線距','≈ '+fx(gap,0)+' µm']]);
+ var ratio=art>0?(sp-0)/1:0;var ok=sp>=t*1.5;verdict('e_ver',ok,ok?'線距 '+sp+' µm 相對銅厚 '+t+' µm 足夠，蝕刻液能把底部蝕乾淨':'線距 '+sp+' µm 對 '+t+' µm 銅厚偏窄（經驗上常要求線距 ≥ 約 1.5 倍銅厚），底部容易殘銅短路；考慮減薄銅或改 mSAP');
+ var s=$('e_svg');clear(s);var scale=Math.min(1.6,220/(art*2+sp+20)),hc=Math.min(110,t*1.6),base=180,cx1=180-(sp/2+w/2)*scale,cx2=180+(sp/2+w/2)*scale;
+ el('rect',{x:10,y:base,width:340,height:24,'class':'s-resin'},s);
+ [cx1,cx2].forEach(function(c){var bw=w*scale/2,tw=(w-2*u)*scale/2;if(tw<1)tw=1;el('path',{d:'M'+(c-tw)+' '+(base-hc)+'L'+(c+tw)+' '+(base-hc)+'L'+(c+bw)+' '+base+'L'+(c-bw)+' '+base+'Z','class':'s-cu'},s);
+  el('rect',{x:c-art*scale/2,y:base-hc-12,width:art*scale,height:12,'class':'s-film'},s);});
+ el('text',{x:180,y:22,'text-anchor':'middle','font-size':13},s,'蝕刻因子 '+ef+'：側蝕 '+fx(u,1)+' µm／邊');
+ el('text',{x:180,y:214,'text-anchor':'middle','font-size':12,'class':'s-mut'},s,'線距 '+sp+' µm');}
+['e_t','e_ef','e_w','e_s'].forEach(function(i){$(i).addEventListener('input',lab1b);});lab1b();
+
+/* ---------- Lab 2A units ---------- */
+var lock=false;function setU(src){if(lock)return;lock=true;var um;var v=parseFloat($(src).value);if(!isFinite(v)){lock=false;return;}
+ if(src==='c_mil')um=v*25.4;else if(src==='c_um')um=v;else if(src==='c_mm')um=v*1000;else um=v*35;
+ if(src!=='c_mil')$('c_mil').value=fx(um/25.4,2);if(src!=='c_um')$('c_um').value=fx(um,1);if(src!=='c_mm')$('c_mm').value=fx(um/1000,4);if(src!=='c_oz')$('c_oz').value=fx(um/35,2);lock=false;}
+['c_mil','c_um','c_mm','c_oz'].forEach(function(i){$(i).addEventListener('input',function(){setU(i);});});setU('c_mil');
+
+/* ---------- Lab 2B annular ring ---------- */
+function lab2b(){var pad=num('r_pad'),hole=num('r_hole'),off=num('r_off'),tol=num('r_tol'),reg=num('r_reg');$('r_offv').textContent=fx(off,3);
+ var r4=function(x){return Math.round(x*10000)/10000;};var ring=r4((pad-hole)/2),minr=r4(ring-off),worst=r4(ring-tol-reg);
+ kv($('r_out'),[['設計孔環',fx(ring,3)+' mm／'+fx(ring/0.0254,1)+' mil'],['目前最窄處',fx(minr,3)+' mm'],['最壞情況剩',fx(worst,3)+' mm']]);
+ var bo=minr<0;verdict('r_ver',!bo&&worst>0,bo?'破環：孔已超出焊墊 '+fx(-minr,3)+' mm':(worst>0?'目前未破環；即使誤差全疊在同一側，仍剩 '+fx(worst,3)+' mm':(worst===0?'目前未破環，但誤差全疊在同一側時孔環剛好歸零、毫無餘裕；應加大焊墊或縮小孔徑':'目前未破環，但誤差疊加時最壞會破環（差 '+fx(-worst,3)+' mm），應加大焊墊或縮小孔徑')));
+ var s=$('r_svg');clear(s);var k=220/Math.max(pad,hole+2*off,0.01);var c=150;
+ el('circle',{cx:c,cy:c,r:pad*k/2,'class':'s-cu'},s);
+ el('circle',{cx:c+off*k,cy:c,r:hole*k/2,fill:'var(--hole)',stroke:bo?'var(--bad)':'var(--muted)','stroke-width':bo?3:1.5},s);
+ el('circle',{cx:c,cy:c,r:3,fill:'var(--ink)'},s);el('text',{x:c,y:290,'text-anchor':'middle','font-size':12,'class':'s-mut'},s,'黑點為焊墊中心');}
+['r_pad','r_hole','r_off','r_tol','r_reg'].forEach(function(i){$(i).addEventListener('input',lab2b);});lab2b();
+
+/* ---------- Lab 2C aspect ratio ---------- */
+function lab2c(){var t=num('a_t'),d=num('a_d');var ar=d>0?t/d:0;var lv,ok=true;if(ar<=8)lv='一般製程';else if(ar<=10)lv='中等難度';else if(ar<=12){lv='較高難度（介於 10 到 12，該表未明確分級）';ok=false;}else{lv='超過 12，依該廠規則做不到';ok=false;}
+ verdict('a_ver',ok,'縱橫比 '+fx(ar,1)+'：'+lv);}
+['a_t','a_d'].forEach(function(i){$(i).addEventListener('input',lab2c);});lab2c();
+
+/* ---------- Lab 3A control chart ---------- */
+var BASE=[[25.1,2.8],[24.8,3.1],[25.3,2.6],[24.9,3.3],[25.0,2.9],[25.4,3.0],[24.7,3.4],[25.2,2.7],[24.9,3.1],[25.1,2.9],[25.3,3.2],[24.8,2.8],[25.5,3.0],[25.6,3.1],[25.9,2.9],[26.1,3.3],[27.4,3.0],[25.8,2.7],[26.0,3.2],[25.7,2.9]];
+var data=BASE.slice(),shown=false;
+function limits(d){var n=d.length,xb=0,rb=0;d.forEach(function(p){xb+=p[0];rb+=p[1];});xb/=n;rb/=n;var a=0.577*rb;return {cl:xb,ucl:xb+a,lcl:xb-a,s:a/3,rb:rb};}
+function rules(d,L){var hits={};function add(i,r){(hits[i]=hits[i]||[]).push(r);}var runs=[];
+ function run(r,a,b,tag){var last=runs.length?runs[runs.length-1]:null;if(last&&last.r===r&&last.tag===tag&&a<=last.b+1){last.b=Math.max(last.b,b);}else runs.push({r:r,a:a,b:b,tag:tag});}
+ d.forEach(function(p,i){if(p[0]>L.ucl||p[0]<L.lcl){add(i,1);run(1,i,i,'o'+i);}});
+ for(var i=7;i<d.length;i++){var up=true,dn=true;for(var j=i-7;j<=i;j++){if(d[j][0]<=L.cl)up=false;if(d[j][0]>=L.cl)dn=false;}if(up||dn){for(j=i-7;j<=i;j++)add(j,2);run(2,i-7,i,up?'上':'下');}}
+ for(i=5;i<d.length;i++){var inc=true,dec=true;for(j=i-4;j<=i;j++){if(!(d[j][0]>d[j-1][0]))inc=false;if(!(d[j][0]<d[j-1][0]))dec=false;}if(inc||dec){for(j=i-5;j<=i;j++)add(j,3);run(3,i-5,i,inc?'上升':'下降');}}
+ for(i=2;i<d.length;i++){var hu=0,hd=0;for(j=i-2;j<=i;j++){if(d[j][0]>L.cl+2*L.s)hu++;if(d[j][0]<L.cl-2*L.s)hd++;}if(hu>=2||hd>=2){for(j=i-2;j<=i;j++){if(Math.abs(d[j][0]-L.cl)>2*L.s)add(j,4);}run(4,i-2,i,hu>=2?'上':'下');}}
+ runs.sort(function(x,y){return x.r-y.r||x.a-y.a;});
+ var msgs=runs.map(function(u){var rg='第 '+(u.a+1)+(u.b>u.a?' 到 '+(u.b+1):'')+' 組';
+  if(u.r===1)return '規則 1：'+rg+'超出管制界限（特殊原因，應立即追查）';
+  if(u.r===2)return '規則 2：'+rg+'連續在中心線'+u.tag+'方（平均可能已偏移）';
+  if(u.r===3)return '規則 3：'+rg+'持續'+u.tag+'（趨勢，例如藥水老化或刀具磨耗）';
+  return '規則 4：'+rg+'有 2 點超過 2σ（'+u.tag+'側）';});
+ return {hits:hits,msgs:msgs};}
+function drawChart(){var s=$('s_svg');clear(s);var L=limits(data),R=rules(data,L);var vals=data.map(function(p){return p[0];});
+ var narrow=(s.parentNode.clientWidth||760)<560,W=narrow?400:760,fs=narrow?14:11;s.setAttribute('viewBox','0 0 '+W+' 320');
+ var lo=Math.min(L.lcl,Math.min.apply(null,vals))-0.5,hi=Math.max(L.ucl,Math.max.apply(null,vals))+0.5;var left=narrow?44:56,right=W-(narrow?92:100),y0=24,base=280;
+ var X=function(i){return left+i/(data.length-1)*(right-left);},Y=function(v){return base-(v-lo)/(hi-lo)*(base-y0);};
+ var step=(hi-lo)>4?1:0.5;for(var t=Math.ceil(lo/step)*step;t<=hi;t+=step){el('line',{x1:left,x2:right,y1:Y(t),y2:Y(t),'class':'s-grid'},s);el('text',{x:left-6,y:Y(t)+4,'text-anchor':'end','font-size':fs,'class':'s-mut'},s,fx(t,1));}
+ [['UCL',L.ucl,'var(--bad)'],['CL',L.cl,'var(--ink)'],['LCL',L.lcl,'var(--bad)']].forEach(function(l){el('line',{x1:left,x2:right,y1:Y(l[1]),y2:Y(l[1]),stroke:l[2],'stroke-dasharray':l[0]==='CL'?'':'6 4'},s);el('text',{x:right+6,y:Y(l[1])+4,'font-size':fs+1,fill:l[2]},s,l[0]+' '+fx(l[1],2));});
+ el('path',{d:data.map(function(p,i){return (i?'L':'M')+X(i)+' '+Y(p[0]);}).join(''),fill:'none',stroke:'var(--grey)','stroke-width':1.5},s);
+ data.forEach(function(p,i){var h=shown&&R.hits[i];var c=el('circle',{cx:X(i),cy:Y(p[0]),r:(h?6:4)*(narrow?0.85:1),fill:h?'var(--bad)':'var(--mask)'},s);el('title',{},c,'第 '+(i+1)+' 組：平均 '+p[0]+'，全距 '+p[1]);
+  var every=narrow?Math.max(2,Math.ceil(data.length/6)):2;if(i%every===0||i===data.length-1)el('text',{x:X(i),y:base+18,'text-anchor':'middle','font-size':fs,'class':'s-mut'},s,i+1);});
+ el('text',{x:(left+right)/2,y:base+36,'text-anchor':'middle','font-size':fs,'class':'s-mut'},s,'組別');
+ $('s_stat').textContent='X̄̄ = '+fx(L.cl,2)+'，R̄ = '+fx(L.rb,2)+'，σ̂（單一值）≈ '+fx(L.rb/2.326,2);
+ var r=$('s_result');if(shown){r.innerHTML='';if(!R.msgs.length){r.textContent='沒有觸發任何判異規則，製程看起來穩定。';}else{var ul=document.createElement('ul');ul.style.margin='0';R.msgs.forEach(function(m){var li=document.createElement('li');li.textContent=m;ul.appendChild(li);});r.appendChild(ul);}}else r.textContent='';
+ $('s_text').value=data.map(function(p){return p[0]+', '+p[1];}).join('\n');}
+$('s_check').addEventListener('click',function(){shown=true;drawChart();});
+$('s_reset').addEventListener('click',function(){data=BASE.slice();shown=false;drawChart();});
+$('s_new').addEventListener('click',function(){var d=[],kind=Math.floor(Math.random()*4),start=8+Math.floor(Math.random()*6);
+ function g(){var u=0,v=0;while(u===0)u=Math.random();while(v===0)v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+ for(var i=0;i<20;i++){var m=25+g()*0.33;if(kind===1&&i>=start)m+=0.9;if(kind===2&&i>=start&&i<start+7)m+=(i-start)*0.25;if(kind===3&&i===start)m+=2.2;d.push([+m.toFixed(2),+(3+g()*0.3).toFixed(1)]);}
+ data=d;shown=false;drawChart();});
+$('s_apply').addEventListener('click',function(){var lines=$('s_text').value.split(/\n/).map(function(l){return l.split(/[,\s\t]+/).filter(Boolean).map(parseFloat);}).filter(function(a){return a.length>=2&&isFinite(a[0])&&isFinite(a[1]);});
+ if(lines.length<8){$('s_msg').textContent='至少需要 8 組數據，每行「平均, 全距」。';return;}data=lines.map(function(a){return [a[0],a[1]];});shown=false;$('s_msg').textContent='已套用 '+data.length+' 組。';drawChart();});
+drawChart();
+var rzT;window.addEventListener('resize',function(){clearTimeout(rzT);rzT=setTimeout(drawChart,150);});
+
+/* ---------- Lab 3B Cpk ---------- */
+function erf(x){var s=x<0?-1:1,a=Math.abs(x),t=1/(1+0.3275911*a);return s*(1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-a*a));}
+function cdf(z){return 0.5*(1+erf(z/Math.SQRT2));}
+function lab3b(){var lsl=num('k_lsl'),usl=num('k_usl'),mu=num('k_mu'),sd=num('k_sd');var ok=sd>0&&usl>lsl;
+ var cp=ok?(usl-lsl)/(6*sd):0,cpk=ok?Math.min(usl-mu,mu-lsl)/(3*sd):0,ppm=ok?((1-cdf((usl-mu)/sd))+cdf((lsl-mu)/sd))*1e6:0;
+ kv($('k_out'),[['Cp',fx(cp,2)],['Cpk',fx(cpk,2)],['預估不良',(ppm<1?'< 1':Math.round(ppm).toLocaleString())+' ppm']]);
+ var v=cpk>=1.67?'優秀（≥ 1.67）':cpk>=1.33?'合格（≥ 1.33）':cpk>=1?'勉強，需改善':'不足，不良率高';var hint=ok&&cp-cpk>0.15?'。Cp 比 Cpk 高不少，代表平均偏離中心，先對中最有效':'';
+ verdict('k_ver',cpk>=1.33,'Cpk '+fx(cpk,2)+'：'+v+hint);
+ var s=$('k_svg');clear(s);if(!ok)return;var lo=Math.min(lsl,mu-4*sd)-1,hi=Math.max(usl,mu+4*sd)+1,X=function(x){return 16+(x-lo)/(hi-lo)*328;};
+ var p='';for(var i=0;i<=100;i++){var x=lo+(hi-lo)*i/100,y=170-Math.exp(-0.5*Math.pow((x-mu)/sd,2))*130;p+=(i?'L':'M')+X(x)+' '+y;}
+ el('line',{x1:16,x2:344,y1:170,y2:170,'class':'s-axis'},s);el('path',{d:p,fill:'none',stroke:'var(--mask)','stroke-width':2.5},s);
+ [[lsl,'LSL'],[usl,'USL']].forEach(function(l){el('line',{x1:X(l[0]),x2:X(l[0]),y1:20,y2:170,stroke:'var(--bad)','stroke-dasharray':'5 4'},s);el('text',{x:X(l[0]),y:190,'text-anchor':'middle','font-size':12,fill:'var(--bad)'},s,l[1]+' '+l[0]);});
+ el('line',{x1:X(mu),x2:X(mu),y1:34,y2:170,stroke:'var(--ink)'},s);el('text',{x:X(mu),y:28,'text-anchor':'middle','font-size':12},s,'μ '+mu);}
+['k_lsl','k_usl','k_mu','k_sd'].forEach(function(i){$(i).addEventListener('input',lab3b);});lab3b();
+
+/* ---------- Lab 4 DOE ---------- */
+var DBASE=[11.25,13.75,6.75,12.25,9.25,11.75,4.75,10.25];var SG=[[-1,-1,-1],[1,-1,-1],[-1,1,-1],[1,1,-1],[-1,-1,1],[1,-1,1],[-1,1,1],[1,1,1]];var Y=DBASE.slice();
+var TERMS=[['A','A 電流密度'],['B','B 光澤劑'],['C','C 攪拌'],['AB','AB'],['AC','AC'],['BC','BC'],['ABC','ABC']];
+function sign(i,t){var s=1;if(t.indexOf('A')>=0)s*=SG[i][0];if(t.indexOf('B')>=0)s*=SG[i][1];if(t.indexOf('C')>=0)s*=SG[i][2];return s;}
+function effect(t){var p=0,m=0;for(var i=0;i<8;i++){if(sign(i,t)>0)p+=Y[i];else m+=Y[i];}return p/4-m/4;}
+function buildTable(){var t=$('d_tab');t.innerHTML='<thead><tr><th>組</th><th>A</th><th>B</th><th>C</th><th>凹陷 µm</th></tr></thead>';var tb=document.createElement('tbody');
+ for(var i=0;i<8;i++){var tr=document.createElement('tr');tr.innerHTML='<td>'+(i+1)+'</td><td>'+(SG[i][0]>0?'＋':'−')+'</td><td>'+(SG[i][1]>0?'＋':'−')+'</td><td>'+(SG[i][2]>0?'＋':'−')+'</td><td><input type="number" step="0.25" aria-label="第 '+(i+1)+' 組凹陷" id="dy'+i+'" style="width:84px;font:inherit;font-size:16px;padding:3px 6px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)"></td>';tb.appendChild(tr);}
+ t.appendChild(tb);for(i=0;i<8;i++){(function(k){var inp=$('dy'+k);inp.value=Y[k];inp.addEventListener('input',function(){var v=parseFloat(inp.value);if(isFinite(v)){Y[k]=v;lab4();}});})(i);}}
+function lab4(){var s=$('d_eff');clear(s);var E=TERMS.map(function(t){return effect(t[0]);});var mx=Math.max(1,Math.max.apply(null,E.map(Math.abs)));var zero=232,sc=105/mx;
+ el('line',{x1:zero,x2:zero,y1:8,y2:240,'class':'s-axis'},s);
+ TERMS.forEach(function(t,i){var e=E[i],y=14+i*32,w=Math.abs(e)*sc;el('text',{x:8,y:y+15,'font-size':12.5},s,t[1]);
+  el('rect',{x:e>=0?zero:zero-w,y:y+3,width:Math.max(w,1),height:18,rx:3,fill:e>=0?'var(--bad)':'var(--good)','fill-opacity':0.6},s);
+  el('text',{x:e>=0?zero+w+6:zero-w-6,y:y+16,'text-anchor':e>=0?'start':'end','font-size':12.5,'font-weight':700},s,(Math.abs(e)<0.005?'0':(e>0?'+':'')+fx(e,2)));});
+ var s2=$('d_int');clear(s2);function avg(a,b){var t=0,n=0;for(var i=0;i<8;i++)if(SG[i][0]===a&&SG[i][1]===b){t+=Y[i];n++;}return t/n;}
+ var all=[avg(-1,-1),avg(-1,1),avg(1,-1),avg(1,1)],hi=Math.max.apply(null,all)+2,lo=Math.min(0,Math.min.apply(null,all)-1);var Yp=function(v){return 200-(v-lo)/(hi-lo)*170;},xL=70,xR=250;
+ el('line',{x1:40,x2:280,y1:200,y2:200,'class':'s-axis'},s2);
+ [[-1,'var(--grey)','1.5 ASD'],[1,'var(--copper)','2.5 ASD']].forEach(function(l){var v1=avg(l[0],-1),v2=avg(l[0],1);el('line',{x1:xL,x2:xR,y1:Yp(v1),y2:Yp(v2),stroke:l[1],'stroke-width':3},s2);
+  el('circle',{cx:xL,cy:Yp(v1),r:5,fill:l[1]},s2);el('circle',{cx:xR,cy:Yp(v2),r:5,fill:l[1]},s2);el('text',{x:xL-8,y:Yp(v1)+4,'text-anchor':'end','font-size':12},s2,fx(v1,2));
+  el('text',{x:xR+8,y:Yp(v2)+4,'font-size':12,'font-weight':700},s2,fx(v2,2));el('text',{x:xR+50,y:Yp(v2)+4,'font-size':12},s2,l[2]);});
+ el('text',{x:xL,y:222,'text-anchor':'middle','font-size':12,'class':'s-mut'},s2,'光澤劑 低');el('text',{x:xR,y:222,'text-anchor':'middle','font-size':12,'class':'s-mut'},s2,'光澤劑 高');
+ predict();}
+function predict(){var a=num('d_a'),b=num('d_b'),c=num('d_c');$('d_av').textContent=a+'（'+fx(2+0.5*a,2)+' ASD）';$('d_bv').textContent=b;$('d_cv').textContent=c;
+ var mean=Y.reduce(function(s,v){return s+v;},0)/8;var y=mean;TERMS.forEach(function(t){var x=1;if(t[0].indexOf('A')>=0)x*=a;if(t[0].indexOf('B')>=0)x*=b;if(t[0].indexOf('C')>=0)x*=c;y+=effect(t[0])/2*x;});
+ kv($('d_out'),[['預測凹陷',fx(y,2)+' µm'],['相對產能','約 '+fx((2+0.5*a)/2.5*100,0)+'%']]);
+ verdict('d_ver',y<=10,y<=10?'預測 ≤ 10 µm，符合規格；記得用確認實驗驗證':'預測 > 10 µm，不符規格；試著提高光澤劑、加強攪拌或降低電流');}
+['d_a','d_b','d_c'].forEach(function(i){$(i).addEventListener('input',predict);});
+$('d_reset').addEventListener('click',function(){Y=DBASE.slice();buildTable();lab4();});buildTable();lab4();
+
+/* ---------- Lab 5A defects ---------- */
+var DEF=[
+ {k:'void',n:'孔壁空洞',x:155,y:165,c:'孔內氣泡、活化不良、除膠渣不足，化學銅沒長好',st:'化學銅、電鍍',f:'切片、電測'},
+ {k:'nail',n:'釘頭',x:140,y:110,c:'鑽針磨損或進刀不當，把內層銅擠壓變形外翻',st:'鑽孔',f:'切片'},
+ {k:'corner',n:'孔角斷裂',x:207,y:42,c:'銅延展性不足（鍍液有機污染）、板材受熱 Z 軸膨脹大',st:'電鍍、材料',f:'熱應力後切片'},
+ {k:'wick',n:'燈芯效應',x:222,y:132,c:'孔壁粗糙，化學液沿玻纖滲入，銅長進基材',st:'鑽孔、化學銅',f:'切片'},
+ {k:'icd',n:'內層分離',x:212,y:196,c:'內層銅面殘留膠渣，化學銅接不上',st:'鑽孔、除膠渣',f:'熱應力後切片'}];
+(function(){var s=$('x_svg');var L0=40,L1=150,R0=210,R1=320,t=40,b=260;
+ el('rect',{x:L0,y:t,width:L1-L0,height:b-t,'class':'s-resin'},s);el('rect',{x:R0,y:t,width:R1-R0,height:b-t,'class':'s-resin'},s);
+ [[L0,t-10,L1-L0+10,10],[R0-10,t-10,R1-R0+10,10],[L0,b,L1-L0+10,10],[R0-10,b,R1-R0+10,10],[L1,t,10,b-t],[R0-10,t,10,b-t],[L0,107,L1-L0,6],[L0,193,L1-L0,6],[R0,107,R1-R0,6],[R0+5,193,R1-R0-5,6]].forEach(function(r){el('rect',{x:r[0],y:r[1],width:r[2],height:r[3],'class':'s-cu'},s);});
+ el('path',{d:'M'+(L1-14)+' 107L'+L1+' 103L'+L1+' 117L'+(L1-14)+' 113Z','class':'s-cu'},s);
+ el('rect',{x:L1,y:155,width:10,height:20,'class':'s-hole'},s);
+ el('path',{d:'M'+R0+' 128L'+(R0+22)+' 130L'+R0+' 132ZM'+R0+' 138L'+(R0+16)+' 139L'+R0+' 141Z','class':'s-cu'},s);
+ el('path',{d:'M'+(R0-9)+' '+(t-6)+'l6 4l-4 4l6 5',stroke:'var(--bad)','stroke-width':2,fill:'none'},s);
+ el('line',{x1:R0+2,x2:R0+2,y1:190,y2:202,stroke:'var(--bad)','stroke-width':2},s);
+ el('text',{x:180,y:290,'text-anchor':'middle','font-size':12,'class':'s-mut'},s,'孔');
+ DEF.forEach(function(d){var g=el('g',{'class':'hotspot',tabindex:0,role:'button','aria-label':'缺陷：'+d.n},s);el('circle',{cx:d.x,cy:d.y,r:18},g);
+  function pick(){s.querySelectorAll('.hotspot').forEach(function(h){h.classList.remove('sel');});g.classList.add('sel');
+   $('x_info').innerHTML='<h3></h3><p style="margin-top:6px"><b>常見成因：</b><span></span></p><p><b>先查站別：</b><span></span></p><p><b>怎麼發現：</b><span></span></p>';
+   var sp=$('x_info').querySelectorAll('span');$('x_info').querySelector('h3').textContent=d.n;sp[0].textContent=d.c;sp[1].textContent=d.st;sp[2].textContent=d.f;}
+  g.addEventListener('click',pick);g.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();pick();}});});})();
+var DT=[['開路、線路缺口','乾膜破損、曝光異物、過度蝕刻','影像、蝕刻','AOI、電測'],['短路、殘銅','蝕刻不足、乾膜殘留、異物','影像、蝕刻','AOI、電測'],['孔壁空洞','氣泡、活化不良、除膠渣不足','化學銅、電鍍','切片、電測'],['孔銅過薄','縱橫比高、深鍍能力不足','電鍍','切片'],['孔角斷裂','銅延展性不足、Z 軸膨脹大','電鍍、材料','熱應力後切片'],['內層分離','膠渣未除乾淨','鑽孔、除膠渣','熱應力後切片'],['釘頭','鑽針磨損、進刀不當','鑽孔','切片'],['燈芯效應','孔壁粗糙、化學液滲入玻纖','鑽孔、化學銅','切片'],['破環','鑽孔位置與層間對位誤差','鑽孔、壓合','X 光、切片'],['填孔凹陷、空洞','添加劑失衡、電流密度不當','填孔電鍍','切片'],['分層、爆板','壓合不良、吸濕、受熱','壓合、存放','外觀、回焊後切片'],['防焊上墊、剝落','對位偏、前處理不良','防焊','外觀、AOI'],['黑墊','化鎳浸金時鎳層過度侵蝕','表面處理','拉力測試、SEM'],['板彎板翹','疊構不對稱、壓合應力','壓合、設計','平面度量測'],['阻抗超規','線寬、介電層厚度偏差','影像、壓合','TDR 量測']];
+var tb=$('defTable');DT.forEach(function(r){var tr=document.createElement('tr');r.forEach(function(c){var td=document.createElement('td');td.textContent=c;tr.appendChild(td);});tb.appendChild(tr);});
+
+/* ---------- Lab 5B quiz ---------- */
+var QZ=[
+ ['客戶回焊後，某網路時通時斷；熱應力後切片看到孔壁銅與第 3 層內層銅之間有一條細縫。最可能是？',['孔角斷裂','內層分離','燈芯效應','破環'],1,'細縫在孔壁與內層銅交界，是內層分離，先查除膠渣。'],
+ ['AOI 發現同一批板子在相鄰線路間多出細銅絲，造成短路。最該先查哪一站？',['壓合','表面處理','影像與蝕刻','鑽孔'],2,'線間殘銅通常來自蝕刻不足或乾膜殘留，屬於影像與蝕刻站。'],
+ ['切片看到內層銅在孔壁處變厚外翻，像釘子頭。最可能的原因？',['鑽針磨損或進刀不當','除膠渣過度','電鍍電流太低','板材吸濕'],0,'這是釘頭，屬鑽孔的機械問題。'],
+ ['化金板焊接後焊點整片脫落，焊墊表面發黑。下一步最合適的分析？',['再做一次 AOI','用 SEM／EDS 看鎳層','量板厚','做阻抗量測'],1,'疑似黑墊（鎳層異常腐蝕），要用 SEM 看鎳層形貌、EDS 看成分。'],
+ ['X 光看到多個孔偏到焊墊外緣，而且偏移方向在同一區域一致。最可能是？',['鑽孔或層間對位問題','電鍍藥水老化','防焊油墨問題','表面處理太薄'],0,'孔偏出焊墊是破環，方向一致常指向對位或鑽孔定位系統的偏差。']];
+var score=0,answered={};
+(function(){var box=$('z_box');QZ.forEach(function(q,i){var d=document.createElement('div');d.className='q';d.style.marginBottom='10px';d.innerHTML='<div class="qh"><span class="qn">情境 '+(i+1)+'</span><div></div></div><div class="opts"></div><div class="ans" hidden></div>';
+ d.querySelector('.qh div').textContent=q[0];var opts=d.querySelector('.opts'),ans=d.querySelector('.ans');
+ q[1].forEach(function(o,k){var b=document.createElement('button');b.className='opt';b.type='button';b.textContent=o;b.addEventListener('click',function(){if(answered[i])return;answered[i]=true;
+  opts.querySelectorAll('.opt').forEach(function(x,m){if(m===q[2])x.classList.add('right');});if(k!==q[2])b.classList.add('wrong');else score++;
+  ans.hidden=false;ans.textContent=(k===q[2]?'答對了。':'正確答案是「'+q[1][q[2]]+'」。')+q[3];$('z_score').textContent=score+' / '+QZ.length;});opts.appendChild(b);});
+ box.appendChild(d);});})();
+
+/* ---------- Lab 6 8D ---------- */
+var D8=[['d1','D1 團隊','有哪些人、各自負責什麼'],['d2','D2 問題描述（5W2H）','什麼東西、哪一批、多少比例、什麼現象、在哪裡發現'],['d3','D3 暫時圍堵','先怎麼保護客戶或下游'],['d4a','D4 發生原因（5 個為什麼）','一路問到可以下對策的系統原因'],['d4b','D4 流出原因','為什麼沒有在出貨前被攔下'],['d5','D5 永久對策與驗證','對策是什麼、用什麼數據證明有效'],['d6','D6 實施與追蹤','導入後追蹤多久、結果如何'],['d7','D7 防止再發與水平展開','改了哪些文件、還套用到哪裡'],['d8','D8 結案','誰確認、學到什麼']];
+var EX={d1:'鑽孔與除膠渣製程負責人（主導）、客戶品質工程師、生產工程師、設備工程師',d2:'客戶回焊後發現料號 A、批號 B 約 0.8% 板子某網路間歇開路；熱應力後切片確認第 3 層內層與孔壁分離',d3:'凍結同批庫存並加做熱應力切片；追查同時段同一除膠渣線的其他料號；提供客戶替換品',d4a:'開路←內層分離←膠渣殘留←咬蝕量不足←藥水濃度偏低←添加泵浦故障且無警報、人工分析一天一次',d4b:'出貨熱應力抽驗頻率低，問題批次未被抽到',d5:'修泵浦、加裝濃度連續監測與警報、分析改每班一次；連續 5 批咬蝕量與熱應力切片全數合格',d6:'導入後追蹤 3 個月，管制圖無異常，客戶端無再發',d7:'更新 SOP 與管制計畫、FMEA 補上泵浦故障；水平展開到全廠其他自動添加藥水槽',d8:'客戶接受報告，團隊結案；教訓：自動化設備也需要失效警報'};
+var d8=$('d8');D8.forEach(function(f){var l=document.createElement('label');l.innerHTML='<span></span><textarea id="'+f[0]+'"></textarea>';l.querySelector('span').textContent=f[1];var ta=l.querySelector('textarea');ta.placeholder=f[2];ta.value=store('pcb-8d-'+f[0])||'';ta.addEventListener('input',function(){store('pcb-8d-'+f[0],ta.value);});d8.appendChild(l);});
+function d8text(){return D8.map(function(f){return f[1]+'\n'+($(f[0]).value||'（未填）');}).join('\n\n');}
+function msg(t){$('d8_msg').textContent=t;setTimeout(function(){$('d8_msg').textContent='';},2500);}
+$('d8_copy').addEventListener('click',function(){var t=d8text();if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(function(){msg('已複製');},function(){fallback(t);});}else fallback(t);});
+function fallback(t){var ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();var ok=false;try{ok=document.execCommand('copy');}catch(e){}document.body.removeChild(ta);msg(ok?'已複製':'無法自動複製，請手動選取文字');}
+$('d8_example').addEventListener('click',function(){D8.forEach(function(f){$(f[0]).value=EX[f[0]];store('pcb-8d-'+f[0],EX[f[0]]);});msg('已載入範例');});
+$('d8_clear').addEventListener('click',function(){D8.forEach(function(f){$(f[0]).value='';store('pcb-8d-'+f[0],'');});msg('已清空');});
+})();
+</script>
+
+</body>
+</html>
